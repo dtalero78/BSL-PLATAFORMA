@@ -82,6 +82,31 @@ const initDB = async () => {
                 fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
+        // Agregar columnas de Wix si no existen
+        const columnsToAdd = [
+            'wix_id VARCHAR(100)',
+            'primer_nombre VARCHAR(100)',
+            'primer_apellido VARCHAR(100)',
+            'numero_id VARCHAR(50)',
+            'celular VARCHAR(20)',
+            'empresa VARCHAR(100)',
+            'cod_empresa VARCHAR(50)',
+            'fecha_atencion VARCHAR(20)'
+        ];
+
+        for (const column of columnsToAdd) {
+            const columnName = column.split(' ')[0];
+            try {
+                await pool.query(`
+                    ALTER TABLE formularios
+                    ADD COLUMN IF NOT EXISTS ${column}
+                `);
+            } catch (err) {
+                // Columna ya existe, continuar
+            }
+        }
+
         console.log('✅ Base de datos inicializada correctamente');
     } catch (error) {
         console.error('❌ Error al inicializar la base de datos:', error);
