@@ -106,7 +106,7 @@ app.get('/api/wix/:id', async (req, res) => {
         const { id } = req.params;
         const fetch = (await import('node-fetch')).default;
 
-        const response = await fetch(`https://www.bsl.com.co/_functions/historiaClinicaPorId?id=${id}`);
+        const response = await fetch(`https://www.bsl.com.co/_functions/historiaClinicaPorId?_id=${id}`);
 
         if (!response.ok) {
             return res.status(404).json({
@@ -115,11 +115,22 @@ app.get('/api/wix/:id', async (req, res) => {
             });
         }
 
-        const data = await response.json();
+        const result = await response.json();
+
+        // Los datos vienen en result.data
+        const wixData = result.data || {};
 
         res.json({
             success: true,
-            data: data
+            data: {
+                primerNombre: wixData.primerNombre,
+                primerApellido: wixData.primerApellido,
+                numeroId: wixData.numeroId,
+                celular: wixData.celular,
+                empresa: wixData.empresa,
+                codEmpresa: wixData.codEmpresa,
+                fechaAtencion: wixData.fechaAtencion
+            }
         });
 
     } catch (error) {
