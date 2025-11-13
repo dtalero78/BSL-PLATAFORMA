@@ -88,6 +88,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+
+                    // Mostrar mensaje de que puede enviar
+                    setTimeout(() => {
+                        if (submitBtn.style.display === 'flex') {
+                            submitBtn.textContent = '¡Listo! Enviar formulario';
+                            submitBtn.style.animation = 'pulse 1s infinite';
+                        }
+                    }, 500);
                 };
                 reader.readAsDataURL(file);
             }
