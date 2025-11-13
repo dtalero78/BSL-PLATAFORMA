@@ -24,6 +24,14 @@ const initDB = async () => {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS formularios (
                 id SERIAL PRIMARY KEY,
+                wix_id VARCHAR(100),
+                primer_nombre VARCHAR(100),
+                primer_apellido VARCHAR(100),
+                numero_id VARCHAR(50),
+                celular VARCHAR(20),
+                empresa VARCHAR(100),
+                cod_empresa VARCHAR(50),
+                fecha_atencion VARCHAR(20),
                 genero VARCHAR(20),
                 edad INTEGER,
                 fecha_nacimiento VARCHAR(20),
@@ -92,6 +100,38 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Ruta para obtener datos de Wix por ID
+app.get('/api/wix/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const fetch = (await import('node-fetch')).default;
+
+        const response = await fetch(`https://www.bsl.com.co/_functions/historiaClinicaPorId?id=${id}`);
+
+        if (!response.ok) {
+            return res.status(404).json({
+                success: false,
+                message: 'No se encontró información en Wix'
+            });
+        }
+
+        const data = await response.json();
+
+        res.json({
+            success: true,
+            data: data
+        });
+
+    } catch (error) {
+        console.error('❌ Error al consultar Wix:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al consultar datos de Wix',
+            error: error.message
+        });
+    }
+});
+
 // Ruta para recibir el formulario
 app.post('/api/formulario', async (req, res) => {
     try {
@@ -108,6 +148,8 @@ app.post('/api/formulario', async (req, res) => {
         // Insertar en PostgreSQL
         const query = `
             INSERT INTO formularios (
+                wix_id, primer_nombre, primer_apellido, numero_id, celular,
+                empresa, cod_empresa, fecha_atencion,
                 genero, edad, fecha_nacimiento, lugar_nacimiento, ciudad_residencia,
                 hijos, profesion_oficio, empresa1, empresa2, estado_civil,
                 nivel_educativo, email, estatura, peso, ejercicio,
@@ -124,11 +166,14 @@ app.post('/api/formulario', async (req, res) => {
                 $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
                 $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
                 $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
-                $41, $42, $43, $44, $45, $46, $47
+                $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
+                $51, $52, $53, $54, $55
             ) RETURNING id
         `;
 
         const values = [
+            datos.wixId, datos.primerNombre, datos.primerApellido, datos.numeroId, datos.celular,
+            datos.empresa, datos.codEmpresa, datos.fechaAtencion,
             datos.genero, datos.edad, datos.fechaNacimiento, datos.lugarDeNacimiento, datos.ciudadDeResidencia,
             datos.hijos, datos.profesionUOficio, datos.empresa1, datos.empresa2, datos.estadoCivil,
             datos.nivelEducativo, datos.email, datos.estatura, datos.peso, datos.ejercicio,

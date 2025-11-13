@@ -179,12 +179,45 @@
                         <div class="formulario-header">
                             <div class="formulario-id">ID: ${form.id}</div>
                             <div class="formulario-fecha">${fecha}</div>
+                            ${form.wix_id ? `<div class="formulario-id" style="background: #10B981; margin-top: 8px;">Wix ID: ${form.wix_id}</div>` : ''}
                         </div>
 
                         ${form.foto ? `
                             <div class="section-title">📷 Foto</div>
                             <div class="foto-container">
                                 <img src="${form.foto}" alt="Foto del paciente">
+                            </div>
+                        ` : ''}
+
+                        ${form.wix_id ? `
+                            <div class="section-title">🔗 Datos de Wix</div>
+                            <div class="dato">
+                                <span class="dato-label">Primer Nombre:</span>
+                                <span class="dato-value">${form.primer_nombre || 'N/A'}</span>
+                            </div>
+                            <div class="dato">
+                                <span class="dato-label">Primer Apellido:</span>
+                                <span class="dato-value">${form.primer_apellido || 'N/A'}</span>
+                            </div>
+                            <div class="dato">
+                                <span class="dato-label">Número ID:</span>
+                                <span class="dato-value">${form.numero_id || 'N/A'}</span>
+                            </div>
+                            <div class="dato">
+                                <span class="dato-label">Celular:</span>
+                                <span class="dato-value">${form.celular || 'N/A'}</span>
+                            </div>
+                            <div class="dato">
+                                <span class="dato-label">Empresa:</span>
+                                <span class="dato-value">${form.empresa || 'N/A'}</span>
+                            </div>
+                            <div class="dato">
+                                <span class="dato-label">Código Empresa:</span>
+                                <span class="dato-value">${form.cod_empresa || 'N/A'}</span>
+                            </div>
+                            <div class="dato">
+                                <span class="dato-label">Fecha Atención:</span>
+                                <span class="dato-value">${form.fecha_atencion || 'N/A'}</span>
                             </div>
                         ` : ''}
 

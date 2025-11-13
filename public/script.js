@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 Aplicación inicializada');
 
     const form = document.getElementById('formularioMedico');
@@ -16,6 +16,33 @@ document.addEventListener('DOMContentLoaded', function() {
         slides: slides.length,
         submitBtn: !!submitBtn
     });
+
+    // Objeto para guardar datos de Wix
+    let wixData = {};
+
+    // Obtener parámetro _id de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const wixId = urlParams.get('_id');
+
+    if (wixId) {
+        console.log('📝 ID de Wix detectado:', wixId);
+        try {
+            const response = await fetch(`/api/wix/${wixId}`);
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                wixData = result.data;
+                console.log('✅ Datos de Wix cargados:', wixData);
+
+                // Pre-llenar campos si existen
+                if (wixData.primerNombre) {
+                    document.querySelector('input[name="primerNombre"]')?.setAttribute('readonly', 'true');
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error al cargar datos de Wix:', error);
+        }
+    }
 
     // Signature canvas
     const signatureCanvas = document.getElementById('signatureCanvas');
@@ -263,6 +290,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(form);
         const datos = {};
 
+        // Agregar datos de Wix si existen
+        if (wixId) {
+            datos.wixId = wixId;
+            datos.primerNombre = wixData.primerNombre || '';
+            datos.primerApellido = wixData.primerApellido || '';
+            datos.numeroId = wixData.numeroId || '';
+            datos.celular = wixData.celular || '';
+            datos.empresa = wixData.empresa || '';
+            datos.codEmpresa = wixData.codEmpresa || '';
+            datos.fechaAtencion = wixData.fechaAtencion || '';
+        }
+
         // Convertir todos los campos
         for (let [key, value] of formData.entries()) {
             // Saltar el campo de foto (file) por ahora
@@ -272,6 +311,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         console.log('📦 Datos recopilados (sin foto):', datos);
+        if (wixId) {
+            console.log('📝 Datos de Wix incluidos:', {
+                wixId: datos.wixId,
+                primerNombre: datos.primerNombre,
+                primerApellido: datos.primerApellido
+            });
+        }
 
         // Agregar la foto como base64 si existe
         const fotoFile = fotoInput.files[0];
