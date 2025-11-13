@@ -25,434 +25,293 @@
 
         <!-- Question counter -->
         <div class="question-counter">
-            <span id="currentQuestion">1</span> → <span id="totalQuestions">30</span>
+            <span id="currentQuestion">1</span> → <span id="totalQuestions">48</span>
         </div>
 
         <form id="formularioMedico">
-            <!-- Pregunta 1: Primer Nombre -->
+            <!-- 1. Género -->
             <div class="question-slide active" data-question="1">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu primer nombre? <span class="required">*</span></label>
-                    <input type="text" name="primerNombre" class="question-input" required placeholder="Escribe tu respuesta aquí">
+                    <label class="question-label">¿Cuál es tu género?</label>
+                    <select name="genero" class="question-select" required>
+                        <option value="">-</option>
+                        <option value="MASCULINO">MASCULINO</option>
+                        <option value="FEMENINO">FEMENINO</option>
+                        <option value="OTRO">OTRO</option>
+                    </select>
                 </div>
             </div>
 
-            <!-- Pregunta 2: Segundo Nombre -->
+            <!-- 2. Edad -->
             <div class="question-slide" data-question="2">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu segundo nombre?</label>
-                    <input type="text" name="segundoNombre" class="question-input" placeholder="Escribe tu respuesta aquí (opcional)">
+                    <label class="question-label">¿Cuál es tu edad? (Solo números)</label>
+                    <input type="number" name="edad" class="question-input" required placeholder="Ej: 25" min="0" max="120">
                 </div>
             </div>
 
-            <!-- Pregunta 3: Primer Apellido -->
+            <!-- 3. Fecha de Nacimiento -->
             <div class="question-slide" data-question="3">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu primer apellido? <span class="required">*</span></label>
-                    <input type="text" name="primerApellido" class="question-input" required placeholder="Escribe tu respuesta aquí">
+                    <label class="question-label">Tu fecha de nacimiento (día/mes/año):</label>
+                    <input type="text" name="fechaNacimiento" class="question-input" required placeholder="DD/MM/AAAA">
                 </div>
             </div>
 
-            <!-- Pregunta 4: Segundo Apellido -->
+            <!-- 4. Lugar de Nacimiento -->
             <div class="question-slide" data-question="4">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu segundo apellido?</label>
-                    <input type="text" name="segundoApellido" class="question-input" placeholder="Escribe tu respuesta aquí (opcional)">
+                    <label class="question-label">¿En qué ciudad naciste?</label>
+                    <input type="text" name="lugarDeNacimiento" class="question-input" required placeholder="Ciudad de nacimiento">
                 </div>
             </div>
 
-            <!-- Pregunta 5: Número de Documento -->
+            <!-- 5. Ciudad de Residencia -->
             <div class="question-slide" data-question="5">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu número de documento? <span class="required">*</span></label>
-                    <input type="text" name="numeroId" class="question-input" required placeholder="Escribe tu número de documento">
+                    <label class="question-label">¿Cuál es tu ciudad de residencia?</label>
+                    <input type="text" name="ciudadDeResidencia" class="question-input" required placeholder="Ciudad donde vives">
                 </div>
             </div>
 
-            <!-- Pregunta 6: Fecha de Nacimiento -->
+            <!-- 6. Hijos -->
             <div class="question-slide" data-question="6">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu fecha de nacimiento? <span class="required">*</span></label>
-                    <input type="date" name="fechaNacimiento" class="question-input" required>
+                    <label class="question-label">¿Cuántos hijos tienes?</label>
+                    <input type="number" name="hijos" class="question-input" required placeholder="Ej: 2" min="0">
                 </div>
             </div>
 
-            <!-- Pregunta 7: Género -->
+            <!-- 7. Profesión u Oficio -->
             <div class="question-slide" data-question="7">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu género? <span class="required">*</span></label>
-                    <div class="options-grid">
-                        <label class="option-card">
-                            <input type="radio" name="genero" value="Masculino" required>
-                            <span>Masculino</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="genero" value="Femenino" required>
-                            <span>Femenino</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="genero" value="Otro" required>
-                            <span>Otro</span>
-                        </label>
-                    </div>
+                    <label class="question-label">¿Cuál es tu profesión u oficio?</label>
+                    <input type="text" name="profesionUOficio" class="question-input" required placeholder="Ej: Ingeniero, Operario">
                 </div>
             </div>
 
-            <!-- Pregunta 8: Estado Civil -->
+            <!-- 8. Ocupación Actual -->
             <div class="question-slide" data-question="8">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu estado civil? <span class="required">*</span></label>
-                    <div class="options-grid">
-                        <label class="option-card">
-                            <input type="radio" name="estadoCivil" value="Soltero" required>
-                            <span>Soltero/a</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="estadoCivil" value="Casado" required>
-                            <span>Casado/a</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="estadoCivil" value="Union Libre" required>
-                            <span>Unión Libre</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="estadoCivil" value="Divorciado" required>
-                            <span>Divorciado/a</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="estadoCivil" value="Viudo" required>
-                            <span>Viudo/a</span>
-                        </label>
-                    </div>
+                    <label class="question-label">¿Cuál es tu ocupación actual?</label>
+                    <input type="text" name="empresa1" class="question-input" required placeholder="Tu trabajo actual">
                 </div>
             </div>
 
-            <!-- Pregunta 9: Celular -->
+            <!-- 9. Ocupación Anterior -->
             <div class="question-slide" data-question="9">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu número de celular? <span class="required">*</span></label>
-                    <input type="tel" name="celular" class="question-input" required placeholder="Ej: 3001234567">
+                    <label class="question-label">¿Cuál fue tu ocupación o cargo anterior?</label>
+                    <input type="text" name="empresa2" class="question-input" placeholder="Tu trabajo anterior (opcional)">
                 </div>
             </div>
 
-            <!-- Pregunta 10: Email -->
+            <!-- 10. Estado Civil -->
             <div class="question-slide" data-question="10">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu correo electrónico?</label>
-                    <input type="email" name="email" class="question-input" placeholder="tucorreo@ejemplo.com (opcional)">
+                    <label class="question-label">¿Cuál es tu estado civil?</label>
+                    <select name="estadoCivil" class="question-select" required>
+                        <option value="">-</option>
+                        <option value="Soltero">Soltero</option>
+                        <option value="Casado">Casado</option>
+                        <option value="Divorciado">Divorciado</option>
+                        <option value="Viudo">Viudo</option>
+                        <option value="Unión Libre">Unión Libre</option>
+                    </select>
                 </div>
             </div>
 
-            <!-- Pregunta 11: Dirección -->
+            <!-- 11. Nivel Educativo -->
             <div class="question-slide" data-question="11">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu dirección?</label>
-                    <input type="text" name="direccion" class="question-input" placeholder="Calle, número, barrio (opcional)">
+                    <label class="question-label">¿Cuál es tu nivel de estudios?</label>
+                    <select name="nivelEducativo" class="question-select" required>
+                        <option value="">-</option>
+                        <option value="Primaria">Primaria</option>
+                        <option value="Secundaria">Secundaria</option>
+                        <option value="Universitario">Universitario</option>
+                        <option value="Postgrado">Postgrado</option>
+                    </select>
                 </div>
             </div>
 
-            <!-- Pregunta 12: Ciudad -->
+            <!-- 12. Email -->
             <div class="question-slide" data-question="12">
                 <div class="question-content">
-                    <label class="question-label">¿En qué ciudad vives? <span class="required">*</span></label>
-                    <input type="text" name="ciudad" class="question-input" required placeholder="Nombre de tu ciudad">
+                    <label class="question-label">Escribe tu email</label>
+                    <input type="email" name="email" class="question-input" required placeholder="tucorreo@ejemplo.com">
                 </div>
             </div>
 
-            <!-- Pregunta 13: EPS -->
+            <!-- 13. Estatura -->
             <div class="question-slide" data-question="13">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu EPS? <span class="required">*</span></label>
-                    <input type="text" name="eps" class="question-input" required placeholder="Nombre de tu EPS">
+                    <label class="question-label">¿Cuál es tu estatura?</label>
+                    <select name="estatura" class="question-select" required>
+                        <option value="">-</option>
+                        <option value="140">1.40 m</option>
+                        <option value="145">1.45 m</option>
+                        <option value="150">1.50 m</option>
+                        <option value="155">1.55 m</option>
+                        <option value="160">1.60 m</option>
+                        <option value="165">1.65 m</option>
+                        <option value="170">1.70 m</option>
+                        <option value="175">1.75 m</option>
+                        <option value="180">1.80 m</option>
+                        <option value="185">1.85 m</option>
+                        <option value="190">1.90 m</option>
+                        <option value="195">1.95 m</option>
+                        <option value="200">2.00 m</option>
+                    </select>
                 </div>
             </div>
 
-            <!-- Pregunta 14: Tipo de Sangre -->
+            <!-- 14. Peso -->
             <div class="question-slide" data-question="14">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu tipo de sangre?</label>
-                    <div class="options-grid">
-                        <label class="option-card">
-                            <input type="radio" name="tipoSangre" value="A+">
-                            <span>A+</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="tipoSangre" value="A-">
-                            <span>A-</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="tipoSangre" value="B+">
-                            <span>B+</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="tipoSangre" value="B-">
-                            <span>B-</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="tipoSangre" value="AB+">
-                            <span>AB+</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="tipoSangre" value="AB-">
-                            <span>AB-</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="tipoSangre" value="O+">
-                            <span>O+</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="tipoSangre" value="O-">
-                            <span>O-</span>
-                        </label>
-                    </div>
+                    <label class="question-label">¿Cuánto pesas? (solo números)</label>
+                    <input type="number" name="peso" class="question-input" required placeholder="Ej: 70" min="0" max="300">
                 </div>
             </div>
 
-            <!-- Pregunta 15: Peso -->
+            <!-- 15. Ejercicio -->
             <div class="question-slide" data-question="15">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu peso en kilogramos?</label>
-                    <input type="number" name="peso" class="question-input" placeholder="Ej: 70" step="0.1" min="0" max="300">
+                    <label class="question-label">¿Con qué frecuencia haces ejercicio?</label>
+                    <div class="options-grid">
+                        <label class="option-card">
+                            <input type="radio" name="ejercicio" value="1 día semanal" required>
+                            <span>1 día semanal</span>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="ejercicio" value="2 días semanales" required>
+                            <span>2 días semanales</span>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="ejercicio" value="+ de 2 días semanales" required>
+                            <span>+ de 2 días semanales</span>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="ejercicio" value="Ocasionalmente" required>
+                            <span>Ocasionalmente</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
-            <!-- Pregunta 16: Altura -->
+            <!-- 16. Cirugía Ocular -->
             <div class="question-slide" data-question="16">
                 <div class="question-content">
-                    <label class="question-label">¿Cuál es tu altura en centímetros?</label>
-                    <input type="number" name="altura" class="question-input" placeholder="Ej: 170" min="0" max="250">
+                    <label class="question-label">¿Has tenido alguna cirugía ocular?</label>
+                    <div class="options-grid options-si-no">
+                        <label class="option-card">
+                            <input type="radio" name="cirugiaOcular" value="SI" required>
+                            <span>Sí</span>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="cirugiaOcular" value="NO" required>
+                            <span>No</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
-            <!-- Pregunta 17: Empresa -->
+            <!-- 17. Consumo Licor -->
             <div class="question-slide" data-question="17">
                 <div class="question-content">
-                    <label class="question-label">¿Para qué empresa trabajas?</label>
-                    <input type="text" name="empresa" class="question-input" placeholder="Nombre de la empresa (opcional)">
-                </div>
-            </div>
-
-            <!-- Pregunta 18: Profesión -->
-            <div class="question-slide" data-question="18">
-                <div class="question-content">
-                    <label class="question-label">¿Cuál es tu profesión u oficio? <span class="required">*</span></label>
-                    <input type="text" name="profesion" class="question-input" required placeholder="Ej: Ingeniero, Operario, Contador">
-                </div>
-            </div>
-
-            <!-- Pregunta 19: Cargo -->
-            <div class="question-slide" data-question="19">
-                <div class="question-content">
-                    <label class="question-label">¿Cuál es tu cargo actual?</label>
-                    <input type="text" name="cargo" class="question-input" placeholder="Tu cargo en la empresa (opcional)">
-                </div>
-            </div>
-
-            <!-- Pregunta 20: Enfermedades -->
-            <div class="question-slide" data-question="20">
-                <div class="question-content">
-                    <label class="question-label">¿Padeces alguna de estas enfermedades actualmente?</label>
-                    <div class="options-grid checkbox-grid">
-                        <label class="option-card">
-                            <input type="checkbox" name="enfermedades" value="Diabetes">
-                            <span>Diabetes</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="checkbox" name="enfermedades" value="Hipertension">
-                            <span>Hipertensión</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="checkbox" name="enfermedades" value="Asma">
-                            <span>Asma</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="checkbox" name="enfermedades" value="Cardiopatia">
-                            <span>Cardiopatía</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="checkbox" name="enfermedades" value="Epilepsia">
-                            <span>Epilepsia</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="checkbox" name="enfermedades" value="Ninguna">
-                            <span>Ninguna</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pregunta 21: Medicamentos -->
-            <div class="question-slide" data-question="21">
-                <div class="question-content">
-                    <label class="question-label">¿Tomas medicamentos actualmente?</label>
+                    <label class="question-label">¿Con qué frecuencia consumes licor?</label>
                     <div class="options-grid">
                         <label class="option-card">
-                            <input type="radio" name="medicamentos" value="Si">
-                            <span>Sí</span>
+                            <input type="radio" name="consumoLicor" value="1 día semanal" required>
+                            <span>1 día semanal</span>
                         </label>
                         <label class="option-card">
-                            <input type="radio" name="medicamentos" value="No">
-                            <span>No</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pregunta 22: Cuáles Medicamentos -->
-            <div class="question-slide" data-question="22" data-conditional="medicamentos" data-conditional-value="Si">
-                <div class="question-content">
-                    <label class="question-label">¿Cuáles medicamentos?</label>
-                    <textarea name="cualesMedicamentos" class="question-textarea" placeholder="Describe los medicamentos que tomas"></textarea>
-                </div>
-            </div>
-
-            <!-- Pregunta 23: Cirugías -->
-            <div class="question-slide" data-question="23">
-                <div class="question-content">
-                    <label class="question-label">¿Has sido operado alguna vez?</label>
-                    <div class="options-grid">
-                        <label class="option-card">
-                            <input type="radio" name="cirugias" value="Si">
-                            <span>Sí</span>
+                            <input type="radio" name="consumoLicor" value="2 días semanales" required>
+                            <span>2 días semanales</span>
                         </label>
                         <label class="option-card">
-                            <input type="radio" name="cirugias" value="No">
-                            <span>No</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pregunta 24: Cuáles Cirugías -->
-            <div class="question-slide" data-question="24" data-conditional="cirugias" data-conditional-value="Si">
-                <div class="question-content">
-                    <label class="question-label">¿Qué cirugías te han realizado?</label>
-                    <textarea name="cualesCirugias" class="question-textarea" placeholder="Describe las cirugías"></textarea>
-                </div>
-            </div>
-
-            <!-- Pregunta 25: Alergias -->
-            <div class="question-slide" data-question="25">
-                <div class="question-content">
-                    <label class="question-label">¿Tienes alergias?</label>
-                    <div class="options-grid">
-                        <label class="option-card">
-                            <input type="radio" name="alergias" value="Si">
-                            <span>Sí</span>
+                            <input type="radio" name="consumoLicor" value="+ de 2 días semanales" required>
+                            <span>+ de 2 días semanales</span>
                         </label>
                         <label class="option-card">
-                            <input type="radio" name="alergias" value="No">
-                            <span>No</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pregunta 26: Cuáles Alergias -->
-            <div class="question-slide" data-question="26" data-conditional="alergias" data-conditional-value="Si">
-                <div class="question-content">
-                    <label class="question-label">¿A qué eres alérgico?</label>
-                    <textarea name="cualesAlergias" class="question-textarea" placeholder="Describe tus alergias"></textarea>
-                </div>
-            </div>
-
-            <!-- Pregunta 27: Antecedentes Familiares -->
-            <div class="question-slide" data-question="27">
-                <div class="question-content">
-                    <label class="question-label">¿Algún familiar ha padecido las siguientes enfermedades?</label>
-                    <div class="options-grid checkbox-grid">
-                        <label class="option-card">
-                            <input type="checkbox" name="antecedentesFamiliares" value="Diabetes">
-                            <span>Diabetes</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="checkbox" name="antecedentesFamiliares" value="Hipertension">
-                            <span>Hipertensión</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="checkbox" name="antecedentesFamiliares" value="Cancer">
-                            <span>Cáncer</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="checkbox" name="antecedentesFamiliares" value="Enfermedad Cardiaca">
-                            <span>Enfermedad Cardíaca</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="checkbox" name="antecedentesFamiliares" value="Asma">
-                            <span>Asma</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="checkbox" name="antecedentesFamiliares" value="Ninguna">
-                            <span>Ninguna</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pregunta 28: Fuma -->
-            <div class="question-slide" data-question="28">
-                <div class="question-content">
-                    <label class="question-label">¿Fumas?</label>
-                    <div class="options-grid">
-                        <label class="option-card">
-                            <input type="radio" name="fuma" value="Si">
-                            <span>Sí</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="fuma" value="No">
-                            <span>No</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="fuma" value="Ocasionalmente">
+                            <input type="radio" name="consumoLicor" value="Ocasionalmente" required>
                             <span>Ocasionalmente</span>
                         </label>
                     </div>
                 </div>
             </div>
 
-            <!-- Pregunta 29: Alcohol -->
-            <div class="question-slide" data-question="29">
+            <!-- Preguntas Sí/No de Encuesta de Salud -->
+            <!-- 18 --> <div class="question-slide" data-question="18"><div class="question-content"><label class="question-label">¿Tienes alguna cirugía programada?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="cirugiaProgramada" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="cirugiaProgramada" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 19 --> <div class="question-slide" data-question="19"><div class="question-content"><label class="question-label">¿Tienes alguna condición médica con tratamiento actual?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="condicionMedica" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="condicionMedica" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 20 --> <div class="question-slide" data-question="20"><div class="question-content"><label class="question-label">¿Sufres de dolor de cabeza?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="dolorCabeza" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="dolorCabeza" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 21 --> <div class="question-slide" data-question="21"><div class="question-content"><label class="question-label">¿Sufres de dolor de espalda?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="dolorEspalda" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="dolorEspalda" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 22 --> <div class="question-slide" data-question="22"><div class="question-content"><label class="question-label">¿El ruido te produce jaqueca?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="ruidoJaqueca" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="ruidoJaqueca" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 23 --> <div class="question-slide" data-question="23"><div class="question-content"><label class="question-label">¿Estás en embarazo actualmente?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="embarazo" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="embarazo" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 24 --> <div class="question-slide" data-question="24"><div class="question-content"><label class="question-label">¿Has tenido enfermedades de hígado?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="enfermedadHigado" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="enfermedadHigado" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 25 --> <div class="question-slide" data-question="25"><div class="question-content"><label class="question-label">¿Has tenido enfermedades pulmonares?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="enfermedadPulmonar" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="enfermedadPulmonar" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 26 --> <div class="question-slide" data-question="26"><div class="question-content"><label class="question-label">¿Fumas o fumabas?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="fuma" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="fuma" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 27 --> <div class="question-slide" data-question="27"><div class="question-content"><label class="question-label">¿Has tenido o tienes hernias?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="hernias" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="hernias" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 28 --> <div class="question-slide" data-question="28"><div class="question-content"><label class="question-label">¿Tienes hormigueos musculares?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="hormigueos" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="hormigueos" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 29 --> <div class="question-slide" data-question="29"><div class="question-content"><label class="question-label">¿Sufres de presión arterial alta?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="presionAlta" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="presionAlta" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 30 --> <div class="question-slide" data-question="30"><div class="question-content"><label class="question-label">¿Tienes problemas azúcar?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="problemasAzucar" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="problemasAzucar" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 31 --> <div class="question-slide" data-question="31"><div class="question-content"><label class="question-label">¿Tienes problemas cardíacos?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="problemasCardiacos" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="problemasCardiacos" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 32 --> <div class="question-slide" data-question="32"><div class="question-content"><label class="question-label">¿Tienes problemas de sueño?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="problemasSueno" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="problemasSueno" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 33 --> <div class="question-slide" data-question="33"><div class="question-content"><label class="question-label">¿Usas anteojos?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="usaAnteojos" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="usaAnteojos" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 34 --> <div class="question-slide" data-question="34"><div class="question-content"><label class="question-label">¿Usas lentes de contacto?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="usaLentesContacto" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="usaLentesContacto" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 35 --> <div class="question-slide" data-question="35"><div class="question-content"><label class="question-label">¿Tienes várices?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="varices" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="varices" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 36 --> <div class="question-slide" data-question="36"><div class="question-content"><label class="question-label">¿Has tenido hepatitis?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="hepatitis" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="hepatitis" value="NO" required><span>No</span></label></div></div></div>
+
+            <!-- Antecedentes Familiares -->
+            <!-- 37 --> <div class="question-slide" data-question="37"><div class="question-content"><label class="question-label">¿En tu familia hay enfermedades hereditarias?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="familiaHereditarias" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="familiaHereditarias" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 38 --> <div class="question-slide" data-question="38"><div class="question-content"><label class="question-label">¿En tu familia hay enfermedades genéticas?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="familiaGeneticas" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="familiaGeneticas" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 39 --> <div class="question-slide" data-question="39"><div class="question-content"><label class="question-label">¿En tu familia hay diabetes?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="familiaDiabetes" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="familiaDiabetes" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 40 --> <div class="question-slide" data-question="40"><div class="question-content"><label class="question-label">¿En tu familia hay hipertensión?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="familiaHipertension" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="familiaHipertension" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 41 --> <div class="question-slide" data-question="41"><div class="question-content"><label class="question-label">¿En tu familia ha habido infartos?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="familiaInfartos" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="familiaInfartos" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 42 --> <div class="question-slide" data-question="42"><div class="question-content"><label class="question-label">¿En tu familia hay antecedentes de cáncer?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="familiaCancer" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="familiaCancer" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 43 --> <div class="question-slide" data-question="43"><div class="question-content"><label class="question-label">¿En tu familia ha habido trastornos mentales o psicológicos?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="familiaTrastornos" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="familiaTrastornos" value="NO" required><span>No</span></label></div></div></div>
+            <!-- 44 --> <div class="question-slide" data-question="44"><div class="question-content"><label class="question-label">¿En tu familia ha habido enfermedades infecciosas?</label><div class="options-grid options-si-no"><label class="option-card"><input type="radio" name="familiaInfecciosas" value="SI" required><span>Sí</span></label><label class="option-card"><input type="radio" name="familiaInfecciosas" value="NO" required><span>No</span></label></div></div></div>
+
+            <!-- 45. Firma -->
+            <div class="question-slide" data-question="45">
                 <div class="question-content">
-                    <label class="question-label">¿Consumes alcohol?</label>
-                    <div class="options-grid">
-                        <label class="option-card">
-                            <input type="radio" name="alcohol" value="Si">
-                            <span>Sí</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="alcohol" value="No">
-                            <span>No</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="alcohol" value="Ocasionalmente">
-                            <span>Ocasionalmente</span>
-                        </label>
+                    <label class="question-label">Firma con tu dedo o con el mouse</label>
+                    <div class="signature-container">
+                        <canvas id="signatureCanvas" width="600" height="200"></canvas>
+                        <button type="button" id="clearSignature" class="clear-signature-btn">Limpiar</button>
                     </div>
+                    <input type="hidden" name="firma" id="firmaData" required>
                 </div>
             </div>
 
-            <!-- Pregunta 30: Ejercicio -->
-            <div class="question-slide" data-question="30">
+            <!-- 46. Boletín WhatsApp -->
+            <div class="question-slide" data-question="46">
                 <div class="question-content">
-                    <label class="question-label">¿Haces ejercicio regularmente?</label>
-                    <div class="options-grid">
-                        <label class="option-card">
-                            <input type="radio" name="ejercicio" value="Si">
-                            <span>Sí</span>
-                        </label>
-                        <label class="option-card">
-                            <input type="radio" name="ejercicio" value="No">
-                            <span>No</span>
-                        </label>
-                    </div>
+                    <label class="question-label">¿Te gustaría recibir consejos de tu médico directamente en tu WhatsApp SIN costo? (Recomendado)</label>
+                    <select name="inscripcionBoletin" class="question-select" required>
+                        <option value="">-</option>
+                        <option value="SI">SI</option>
+                        <option value="NO">NO</option>
+                    </select>
                 </div>
             </div>
 
-            <!-- Pregunta 31: Observaciones -->
-            <div class="question-slide" data-question="31">
+            <!-- 47. Upload Foto -->
+            <div class="question-slide" data-question="47">
                 <div class="question-content">
-                    <label class="question-label">¿Hay algo más que quieras contarnos?</label>
-                    <textarea name="observaciones" class="question-textarea" placeholder="Información adicional que consideres importante (opcional)"></textarea>
+                    <label class="question-label">Sube una foto de tu cara</label>
+                    <div class="upload-container">
+                        <input type="file" name="foto" id="fotoInput" accept="image/*" required>
+                        <label for="fotoInput" class="upload-label">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="#00B8E6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M17 8L12 3L7 8" stroke="#00B8E6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 3V15" stroke="#00B8E6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Click para seleccionar imagen</span>
+                        </label>
+                        <div id="imagePreview" class="image-preview"></div>
+                    </div>
                 </div>
             </div>
         </form>

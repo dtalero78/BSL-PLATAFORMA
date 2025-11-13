@@ -140,12 +140,36 @@ body {
     color: #9CA3AF;
 }
 
+/* Select dropdown */
+.question-select {
+    width: 100%;
+    padding: 16px 0;
+    border: none;
+    border-bottom: 2px solid #E5E7EB;
+    font-size: 18px;
+    font-family: 'Figtree', sans-serif;
+    color: #1F2937;
+    background: transparent;
+    transition: border-color 0.3s ease;
+    outline: none;
+    cursor: pointer;
+}
+
+.question-select:focus {
+    border-bottom-color: #00B8E6;
+}
+
 /* Options grid */
 .options-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 12px;
     margin-top: 8px;
+}
+
+.options-si-no {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 400px;
 }
 
 .checkbox-grid {
@@ -387,4 +411,84 @@ input[type="number"]::-webkit-inner-spin-button {
 .nav-btn:disabled:hover {
     transform: none;
     background: #00B8E6;
+}
+
+/* Signature canvas */
+.signature-container {
+    margin-top: 20px;
+}
+
+#signatureCanvas {
+    border: 2px solid #E5E7EB;
+    border-radius: 8px;
+    cursor: crosshair;
+    width: 100%;
+    max-width: 600px;
+    height: 200px;
+    background: #FAFAFA;
+}
+
+.clear-signature-btn {
+    margin-top: 12px;
+    padding: 10px 20px;
+    border: 2px solid #E5E7EB;
+    border-radius: 6px;
+    background: white;
+    color: #6B7280;
+    font-family: 'Figtree', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-signature-btn:hover {
+    border-color: #00B8E6;
+    color: #00B8E6;
+}
+
+/* Upload container */
+.upload-container {
+    margin-top: 20px;
+}
+
+#fotoInput {
+    display: none;
+}
+
+.upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    border: 2px dashed #E5E7EB;
+    border-radius: 12px;
+    background: #FAFAFA;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-label:hover {
+    border-color: #00B8E6;
+    background: #F0F9FF;
+}
+
+.upload-label span {
+    margin-top: 12px;
+    color: #6B7280;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.image-preview {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
