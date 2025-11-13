@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Formularios - BSL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Figtree', sans-serif;
+            background: #F9FAFB;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .formularios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .formulario-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .formulario-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .formulario-header {
+            border-bottom: 2px solid #E5E7EB;
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+        }
+
+        .formulario-id {
+            display: inline-block;
+            background: #00B8E6;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .formulario-fecha {
+            font-size: 14px;
+            color: #6B7280;
+        }
+
+        .foto-container {
+            margin: 16px 0;
+            text-align: center;
+        }
+
+        .foto-container img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .firma-container {
+            margin: 16px 0;
+            text-align: center;
+        }
+
+        .firma-container img {
+            max-width: 100%;
+            max-height: 100px;
+            border-radius: 8px;
+            border: 2px solid #E5E7EB;
+        }
+
+        .dato {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .dato-label {
+            font-weight: 600;
+            color: #4B5563;
+        }
+
+        .dato-value {
+            color: #1F2937;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6B7280;
+            font-size: 18px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 18px;
+            color: #00B8E6;
+        }
+
+        .error {
+            background: #FEE2E2;
+            border: 2px solid #EF4444;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+            color: #991B1B;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: #1F2937;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Formularios Guardados</h1>
+        <div id="loading" class="loading">Cargando formularios...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="formularios" class="formularios-grid"></div>
+    </div>
+
+    <script>
+        async function cargarFormularios() {
+            try {
+                const response = await fetch('/api/formularios');
+                const result = await response.json();
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (!result.success || result.total === 0) {
+                    document.getElementById('formularios').innerHTML = '<div class="no-data">No hay formularios guardados</div>';
+                    return;
+                }
+
+                const container = document.getElementById('formularios');
+                container.innerHTML = '';
+
+                result.data.forEach(form => {
+                    const card = document.createElement('div');
+                    card.className = 'formulario-card';
+
+                    const fecha = new Date(form.fecha_registro).toLocaleString('es-CO');
+
+                    card.innerHTML = `
+                        <div class="formulario-header">
+                            <div class="formulario-id">ID: ${form.id}</div>
+                            <div class="formulario-fecha">${fecha}</div>
+                        </div>
+
+                        ${form.foto ? `
+                            <div class="section-title">Foto</div>
+                            <div class="foto-container">
+                                <img src="${form.foto}" alt="Foto del paciente">
+                            </div>
+                        ` : ''}
+
+                        <div class="section-title">Datos Personales</div>
+                        <div class="dato">
+                            <span class="dato-label">Género:</span>
+                            <span class="dato-value">${form.genero || 'N/A'}</span>
+                        </div>
+                        <div class="dato">
+                            <span class="dato-label">Edad:</span>
+                            <span class="dato-value">${form.edad || 'N/A'} años</span>
+                        </div>
+                        <div class="dato">
+                            <span class="dato-label">Fecha Nacimiento:</span>
+                            <span class="dato-value">${form.fecha_nacimiento || 'N/A'}</span>
+                        </div>
+                        <div class="dato">
+                            <span class="dato-label">Email:</span>
+                            <span class="dato-value">${form.email || 'N/A'}</span>
+                        </div>
+                        <div class="dato">
+                            <span class="dato-label">Ciudad:</span>
+                            <span class="dato-value">${form.ciudad_residencia || 'N/A'}</span>
+                        </div>
+
+                        <div class="section-title">Datos de Salud</div>
+                        <div class="dato">
+                            <span class="dato-label">Estatura:</span>
+                            <span class="dato-value">${form.estatura || 'N/A'} cm</span>
+                        </div>
+                        <div class="dato">
+                            <span class="dato-label">Peso:</span>
+                            <span class="dato-value">${form.peso || 'N/A'} kg</span>
+                        </div>
+                        <div class="dato">
+                            <span class="dato-label">Ejercicio:</span>
+                            <span class="dato-value">${form.ejercicio || 'N/A'}</span>
+                        </div>
+
+                        ${form.firma ? `
+                            <div class="section-title">Firma</div>
+                            <div class="firma-container">
+                                <img src="${form.firma}" alt="Firma">
+                            </div>
+                        ` : ''}
+                    `;
+
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading').style.display = 'none';
+                const errorDiv = document.getElementById('error');
+                errorDiv.textContent = 'Error al cargar formularios: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Cargar formularios al iniciar
+        cargarFormularios();
+    </script>
+</body>
+</html>
