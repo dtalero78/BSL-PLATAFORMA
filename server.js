@@ -241,44 +241,42 @@ app.post('/api/formulario', async (req, res) => {
         try {
             const fetch = (await import('node-fetch')).default;
 
-            // Mapear encuestaSalud (19 preguntas de condiciones médicas)
-            const encuestaSalud = [
-                { pregunta: "¿Ha tenido cirugía ocular?", respuesta: datos.cirugiaOcular || "No" },
-                { pregunta: "¿Tiene cirugía programada?", respuesta: datos.cirugiaProgramada || "No" },
-                { pregunta: "¿Tiene alguna condición médica?", respuesta: datos.condicionMedica || "No" },
-                { pregunta: "¿Sufre de dolor de cabeza?", respuesta: datos.dolorCabeza || "No" },
-                { pregunta: "¿Sufre de dolor de espalda?", respuesta: datos.dolorEspalda || "No" },
-                { pregunta: "¿Sufre de ruido/jaqueca?", respuesta: datos.ruidoJaqueca || "No" },
-                { pregunta: "¿Está embarazada?", respuesta: datos.embarazo || "No" },
-                { pregunta: "¿Tiene enfermedad de hígado?", respuesta: datos.enfermedadHigado || "No" },
-                { pregunta: "¿Tiene enfermedad pulmonar?", respuesta: datos.enfermedadPulmonar || "No" },
-                { pregunta: "¿Fuma?", respuesta: datos.fuma || "No" },
-                { pregunta: "¿Tiene hernias?", respuesta: datos.hernias || "No" },
-                { pregunta: "¿Tiene hormigueos?", respuesta: datos.hormigueos || "No" },
-                { pregunta: "¿Tiene presión alta?", respuesta: datos.presionAlta || "No" },
-                { pregunta: "¿Tiene problemas de azúcar?", respuesta: datos.problemasAzucar || "No" },
-                { pregunta: "¿Tiene problemas cardíacos?", respuesta: datos.problemasCardiacos || "No" },
-                { pregunta: "¿Tiene problemas de sueño?", respuesta: datos.problemasSueno || "No" },
-                { pregunta: "¿Usa anteojos?", respuesta: datos.usaAnteojos || "No" },
-                { pregunta: "¿Usa lentes de contacto?", respuesta: datos.usaLentesContacto || "No" },
-                { pregunta: "¿Tiene varices?", respuesta: datos.varices || "No" }
-            ];
+            // Mapear encuestaSalud - solo incluir respuestas "Sí" (para tags de Wix)
+            const encuestaSaludTags = [];
+            if (datos.cirugiaOcular === "Sí") encuestaSaludTags.push("Cirugía ocular");
+            if (datos.cirugiaProgramada === "Sí") encuestaSaludTags.push("Cirugías programadas");
+            if (datos.condicionMedica === "Sí") encuestaSaludTags.push("Condición médica con tratamiento actual");
+            if (datos.dolorCabeza === "Sí") encuestaSaludTags.push("Dolor de cabeza");
+            if (datos.dolorEspalda === "Sí") encuestaSaludTags.push("Dolor de espalda");
+            if (datos.ruidoJaqueca === "Sí") encuestaSaludTags.push("El ruido produce jaqueca");
+            if (datos.embarazo === "Sí") encuestaSaludTags.push("Embarazo actual");
+            if (datos.enfermedadHigado === "Sí") encuestaSaludTags.push("Enfermedades hígado");
+            if (datos.enfermedadPulmonar === "Sí") encuestaSaludTags.push("Enfermedades pulmonares");
+            if (datos.fuma === "Sí") encuestaSaludTags.push("Fuma o fumaba");
+            if (datos.hernias === "Sí") encuestaSaludTags.push("Hernias");
+            if (datos.hormigueos === "Sí") encuestaSaludTags.push("Hormigueos");
+            if (datos.presionAlta === "Sí") encuestaSaludTags.push("Presión arterial alta");
+            if (datos.problemasAzucar === "Sí") encuestaSaludTags.push("Problemas azúcar");
+            if (datos.problemasCardiacos === "Sí") encuestaSaludTags.push("Problemas cardíacos");
+            if (datos.problemasSueno === "Sí") encuestaSaludTags.push("Problemas de sueño");
+            if (datos.usaAnteojos === "Sí") encuestaSaludTags.push("Usa anteojos");
+            if (datos.usaLentesContacto === "Sí") encuestaSaludTags.push("Usa lentes de contacto");
+            if (datos.varices === "Sí") encuestaSaludTags.push("Várices");
 
-            // Mapear antecedentesFamiliares (8 preguntas)
-            const antecedentesFamiliares = [
-                { pregunta: "Hepatitis", respuesta: datos.hepatitis || "No" },
-                { pregunta: "Enfermedades hereditarias", respuesta: datos.familiaHereditarias || "No" },
-                { pregunta: "Enfermedades genéticas", respuesta: datos.familiaGeneticas || "No" },
-                { pregunta: "Diabetes", respuesta: datos.familiaDiabetes || "No" },
-                { pregunta: "Hipertensión", respuesta: datos.familiaHipertension || "No" },
-                { pregunta: "Infartos", respuesta: datos.familiaInfartos || "No" },
-                { pregunta: "Cáncer", respuesta: datos.familiaCancer || "No" },
-                { pregunta: "Trastornos mentales", respuesta: datos.familiaTrastornos || "No" }
-            ];
+            // Mapear antecedentesFamiliares - solo incluir respuestas "Sí" (para tags de Wix)
+            const antecedentesFamiliaresTags = [];
+            if (datos.hepatitis === "Sí") antecedentesFamiliaresTags.push("Hepatitis");
+            if (datos.familiaHereditarias === "Sí") antecedentesFamiliaresTags.push("Enfermedades hereditarias");
+            if (datos.familiaGeneticas === "Sí") antecedentesFamiliaresTags.push("Enfermedades genéticas");
+            if (datos.familiaDiabetes === "Sí") antecedentesFamiliaresTags.push("Diabetes");
+            if (datos.familiaHipertension === "Sí") antecedentesFamiliaresTags.push("Hipertensión");
+            if (datos.familiaInfartos === "Sí") antecedentesFamiliaresTags.push("Infarto");
+            if (datos.familiaCancer === "Sí") antecedentesFamiliaresTags.push("Cáncer");
+            if (datos.familiaTrastornos === "Sí") antecedentesFamiliaresTags.push("Trastornos mentales o psicológicos");
 
             const wixPayload = {
-                itemId: datos.wixId || "",
-                numeroId: datos.numeroId || "",
+                // itemId se removió - no es necesario
+                numeroId: datos.wixId || "", // numeroId usa el mismo valor que wixId
                 codEmpresa: datos.codEmpresa || "",
                 primerNombre: datos.primerNombre || "",
                 examenes: "", // No tenemos este dato
@@ -291,8 +289,8 @@ app.post('/api/formulario', async (req, res) => {
                 email: datos.email || "",
                 foto: datos.foto || "",
                 firma: datos.firma || "",
-                encuestaSalud: encuestaSalud,
-                antecedentesFamiliares: antecedentesFamiliares,
+                encuestaSalud: encuestaSaludTags, // Solo tags con respuestas "Sí"
+                antecedentesFamiliares: antecedentesFamiliaresTags, // Solo tags con respuestas "Sí"
                 fechaNacimiento: datos.fechaNacimiento || "",
                 edad: datos.edad || "",
                 genero: datos.genero || "",
@@ -306,7 +304,7 @@ app.post('/api/formulario', async (req, res) => {
                 arl: "", // No lo tenemos en el formulario
                 estatura: datos.estatura || "",
                 peso: datos.peso || "",
-                documentoIdentidad: datos.numeroId || "",
+                documentoIdentidad: datos.wixId || "", // documentoIdentidad también usa wixId
                 idGeneral: datos.wixId || "",
                 inscripcionBoletin: datos.inscripcionBoletin || ""
             };
