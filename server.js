@@ -366,7 +366,18 @@ app.post('/api/formulario', async (req, res) => {
 // Ruta para obtener todos los formularios
 app.get('/api/formularios', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM formularios ORDER BY fecha_registro DESC');
+        // Solo seleccionar los campos necesarios para la vista resumida
+        const result = await pool.query(`
+            SELECT
+                id,
+                wix_id,
+                numero_id,
+                celular,
+                foto,
+                fecha_registro
+            FROM formularios
+            ORDER BY fecha_registro DESC
+        `);
 
         res.json({
             success: true,
