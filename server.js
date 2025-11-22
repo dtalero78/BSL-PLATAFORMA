@@ -435,13 +435,13 @@ app.get('/api/formularios/:id', async (req, res) => {
 
         const formulario = formularioResult.rows[0];
 
-        // Intentar obtener datos de HistoriaClinica usando wix_id
+        // Intentar obtener datos de HistoriaClinica usando numero_id (cédula)
         let historiaClinica = null;
-        if (formulario.wix_id) {
+        if (formulario.numero_id) {
             try {
                 const historiaResult = await pool.query(
-                    'SELECT * FROM "HistoriaClinica" WHERE "idGeneral" = $1',
-                    [formulario.wix_id]
+                    'SELECT * FROM "HistoriaClinica" WHERE "numeroId" = $1',
+                    [formulario.numero_id]
                 );
 
                 if (historiaResult.rows.length > 0) {
