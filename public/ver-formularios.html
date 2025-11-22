@@ -905,65 +905,205 @@
                         <h3 style="color: white; font-size: 20px; font-weight: 700; margin: 0;">📋 Datos de la Consulta Médica</h3>
                     </div>
 
-                    <div class="detalles-section">
-                        <div class="detalles-section-title">Información de la Consulta</div>
-                        <div class="detalles-grid">
-                            ${form.historiaClinica.fechaAtencion ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Fecha de Atención</div>
-                                    <div class="detalle-value">${form.historiaClinica.fechaAtencion}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.nivelRuido ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Nivel de Ruido</div>
-                                    <div class="detalle-value">${form.historiaClinica.nivelRuido}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.elementosProteccionAuditiva ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Elementos de Protección Auditiva</div>
-                                    <div class="detalle-value">${form.historiaClinica.elementosProteccionAuditiva}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.otoscopia ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Otoscopia</div>
-                                    <div class="detalle-value">${form.historiaClinica.otoscopia}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.audiometria ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Audiometría</div>
-                                    <div class="detalle-value">${form.historiaClinica.audiometria}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.visiometria ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Visiometría</div>
-                                    <div class="detalle-value">${form.historiaClinica.visiometria}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.espirometria ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Espirometría</div>
-                                    <div class="detalle-value">${form.historiaClinica.espirometria}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.conceptoMedico ? `
-                                <div class="detalle-item" style="grid-column: 1 / -1;">
-                                    <div class="detalle-label">Concepto Médico</div>
-                                    <div class="detalle-value">${form.historiaClinica.conceptoMedico}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.recomendaciones ? `
-                                <div class="detalle-item" style="grid-column: 1 / -1;">
-                                    <div class="detalle-label">Recomendaciones</div>
-                                    <div class="detalle-value">${form.historiaClinica.recomendaciones}</div>
-                                </div>
-                            ` : ''}
+                    ${form.historiaClinica.motivoConsulta || form.historiaClinica.fechaAtencion ? `
+                        <div class="detalles-section">
+                            <div class="detalles-section-title">Información General</div>
+                            <div class="detalles-grid">
+                                ${form.historiaClinica.fechaAtencion ? `
+                                    <div class="detalle-item">
+                                        <div class="detalle-label">Fecha de Atención</div>
+                                        <div class="detalle-value">${form.historiaClinica.fechaAtencion}</div>
+                                    </div>
+                                ` : ''}
+                                ${form.historiaClinica.motivoConsulta ? `
+                                    <div class="detalle-item" style="grid-column: 1 / -1;">
+                                        <div class="detalle-label">Motivo de Consulta</div>
+                                        <div class="detalle-value">${form.historiaClinica.motivoConsulta}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
-                    </div>
+                    ` : ''}
+
+                    ${form.historiaClinica.talla || form.historiaClinica.peso ? `
+                        <div class="detalles-section">
+                            <div class="detalles-section-title">Datos Físicos</div>
+                            <div class="detalles-grid">
+                                ${form.historiaClinica.talla ? `
+                                    <div class="detalle-item">
+                                        <div class="detalle-label">Talla</div>
+                                        <div class="detalle-value">${form.historiaClinica.talla} cm</div>
+                                    </div>
+                                ` : ''}
+                                ${form.historiaClinica.peso ? `
+                                    <div class="detalle-item">
+                                        <div class="detalle-label">Peso</div>
+                                        <div class="detalle-value">${form.historiaClinica.peso} kg</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${form.historiaClinica.mdAntecedentes ? `
+                        <div class="detalles-section">
+                            <div class="detalles-section-title">Antecedentes Médicos</div>
+                            <div class="detalles-grid">
+                                <div class="detalle-item" style="grid-column: 1 / -1;">
+                                    <div class="detalle-value">${form.historiaClinica.mdAntecedentes}</div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${form.historiaClinica.nivelRuido || form.historiaClinica.elementosProteccionAuditiva ? `
+                        <div class="detalles-section">
+                            <div class="detalles-section-title">Exposición Laboral</div>
+                            <div class="detalles-grid">
+                                ${form.historiaClinica.nivelRuido ? `
+                                    <div class="detalle-item">
+                                        <div class="detalle-label">Nivel de Ruido</div>
+                                        <div class="detalle-value">${form.historiaClinica.nivelRuido}</div>
+                                    </div>
+                                ` : ''}
+                                ${form.historiaClinica.elementosProteccionAuditiva ? `
+                                    <div class="detalle-item">
+                                        <div class="detalle-label">Elementos de Protección Auditiva</div>
+                                        <div class="detalle-value">${form.historiaClinica.elementosProteccionAuditiva}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${form.historiaClinica.otoscopia || form.historiaClinica.audiometria || form.historiaClinica.visiometria || form.historiaClinica.espirometria ? `
+                        <div class="detalles-section">
+                            <div class="detalles-section-title">Exámenes Realizados</div>
+                            <div class="detalles-grid">
+                                ${form.historiaClinica.otoscopia ? `
+                                    <div class="detalle-item">
+                                        <div class="detalle-label">Otoscopia</div>
+                                        <div class="detalle-value">${form.historiaClinica.otoscopia}</div>
+                                    </div>
+                                ` : ''}
+                                ${form.historiaClinica.audiometria ? `
+                                    <div class="detalle-item">
+                                        <div class="detalle-label">Audiometría</div>
+                                        <div class="detalle-value">${form.historiaClinica.audiometria}</div>
+                                    </div>
+                                ` : ''}
+                                ${form.historiaClinica.visiometria ? `
+                                    <div class="detalle-item">
+                                        <div class="detalle-label">Visiometría</div>
+                                        <div class="detalle-value">${form.historiaClinica.visiometria}</div>
+                                    </div>
+                                ` : ''}
+                                ${form.historiaClinica.espirometria ? `
+                                    <div class="detalle-item">
+                                        <div class="detalle-label">Espirometría</div>
+                                        <div class="detalle-value">${form.historiaClinica.espirometria}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${form.historiaClinica.diagnostico || form.historiaClinica.mdDx1 || form.historiaClinica.mdDx2 ? `
+                        <div class="detalles-section">
+                            <div class="detalles-section-title">Diagnóstico</div>
+                            <div class="detalles-grid">
+                                ${form.historiaClinica.diagnostico ? `
+                                    <div class="detalle-item" style="grid-column: 1 / -1;">
+                                        <div class="detalle-label">Diagnóstico Principal</div>
+                                        <div class="detalle-value">${form.historiaClinica.diagnostico}</div>
+                                    </div>
+                                ` : ''}
+                                ${form.historiaClinica.mdDx1 ? `
+                                    <div class="detalle-item" style="grid-column: 1 / -1;">
+                                        <div class="detalle-label">Diagnóstico 1</div>
+                                        <div class="detalle-value">${form.historiaClinica.mdDx1}</div>
+                                    </div>
+                                ` : ''}
+                                ${form.historiaClinica.mdDx2 ? `
+                                    <div class="detalle-item" style="grid-column: 1 / -1;">
+                                        <div class="detalle-label">Diagnóstico 2</div>
+                                        <div class="detalle-value">${form.historiaClinica.mdDx2}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${form.historiaClinica.tratamiento ? `
+                        <div class="detalles-section">
+                            <div class="detalles-section-title">Tratamiento</div>
+                            <div class="detalles-grid">
+                                <div class="detalle-item" style="grid-column: 1 / -1;">
+                                    <div class="detalle-value">${form.historiaClinica.tratamiento}</div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${form.historiaClinica.conceptoMedico || form.historiaClinica.mdConceptoFinal ? `
+                        <div class="detalles-section">
+                            <div class="detalles-section-title">Concepto Médico</div>
+                            <div class="detalles-grid">
+                                ${form.historiaClinica.conceptoMedico ? `
+                                    <div class="detalle-item" style="grid-column: 1 / -1;">
+                                        <div class="detalle-label">Concepto Médico</div>
+                                        <div class="detalle-value">${form.historiaClinica.conceptoMedico}</div>
+                                    </div>
+                                ` : ''}
+                                ${form.historiaClinica.mdConceptoFinal ? `
+                                    <div class="detalle-item" style="grid-column: 1 / -1;">
+                                        <div class="detalle-label">Concepto Final</div>
+                                        <div class="detalle-value">${form.historiaClinica.mdConceptoFinal}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${form.historiaClinica.recomendaciones || form.historiaClinica.mdRecomendacionesMedicasAdicionales ? `
+                        <div class="detalles-section">
+                            <div class="detalles-section-title">Recomendaciones</div>
+                            <div class="detalles-grid">
+                                ${form.historiaClinica.recomendaciones ? `
+                                    <div class="detalle-item" style="grid-column: 1 / -1;">
+                                        <div class="detalle-label">Recomendaciones</div>
+                                        <div class="detalle-value">${form.historiaClinica.recomendaciones}</div>
+                                    </div>
+                                ` : ''}
+                                ${form.historiaClinica.mdRecomendacionesMedicasAdicionales ? `
+                                    <div class="detalle-item" style="grid-column: 1 / -1;">
+                                        <div class="detalle-label">Recomendaciones Médicas Adicionales</div>
+                                        <div class="detalle-value">${form.historiaClinica.mdRecomendacionesMedicasAdicionales}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${form.historiaClinica.mdObsParaMiDocYa || form.historiaClinica.mdObservacionesCertificado ? `
+                        <div class="detalles-section">
+                            <div class="detalles-section-title">Observaciones</div>
+                            <div class="detalles-grid">
+                                ${form.historiaClinica.mdObsParaMiDocYa ? `
+                                    <div class="detalle-item" style="grid-column: 1 / -1;">
+                                        <div class="detalle-label">Observaciones para Mi Doc Ya</div>
+                                        <div class="detalle-value">${form.historiaClinica.mdObsParaMiDocYa}</div>
+                                    </div>
+                                ` : ''}
+                                ${form.historiaClinica.mdObservacionesCertificado ? `
+                                    <div class="detalle-item" style="grid-column: 1 / -1;">
+                                        <div class="detalle-label">Observaciones del Certificado</div>
+                                        <div class="detalle-value">${form.historiaClinica.mdObservacionesCertificado}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
                 ` : ''}
             `;
         }
