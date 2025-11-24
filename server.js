@@ -490,6 +490,9 @@ app.put('/api/formularios/:id', async (req, res) => {
 
         const formularioActual = checkResult.rows[0];
 
+        // Convertir cadenas vacías a null para campos numéricos
+        const parseNumeric = (value) => value === "" ? null : value;
+
         // Actualizar solo los campos que vienen en el body
         const query = `
             UPDATE formularios SET
@@ -517,12 +520,12 @@ app.put('/api/formularios/:id', async (req, res) => {
 
         const values = [
             datos.genero,
-            datos.edad,
+            parseNumeric(datos.edad),
             datos.fecha_nacimiento,
             datos.lugar_nacimiento,
             datos.ciudad_residencia,
             datos.estado_civil,
-            datos.hijos,
+            parseNumeric(datos.hijos),
             datos.nivel_educativo,
             datos.email,
             datos.eps,
@@ -531,8 +534,8 @@ app.put('/api/formularios/:id', async (req, res) => {
             datos.profesion_oficio,
             datos.empresa1,
             datos.empresa2,
-            datos.estatura,
-            datos.peso,
+            parseNumeric(datos.estatura),
+            parseNumeric(datos.peso),
             datos.ejercicio,
             id
         ];
