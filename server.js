@@ -603,6 +603,9 @@ app.put('/api/formularios/:id', async (req, res) => {
                     nivelEducativo: formularioActualizado.nivel_educativo || formularioActual.nivel_educativo,
                     empresa1: formularioActualizado.empresa1 || formularioActual.empresa1,
                     empresa2: formularioActualizado.empresa2 || formularioActual.empresa2,
+                    eps: formularioActualizado.eps || formularioActual.eps || '',
+                    arl: formularioActualizado.arl || formularioActual.arl || '',
+                    pensiones: formularioActualizado.pensiones || formularioActual.pensiones || '',
                     estatura: formularioActualizado.estatura || formularioActual.estatura,
                     peso: formularioActualizado.peso || formularioActual.peso
                 };
