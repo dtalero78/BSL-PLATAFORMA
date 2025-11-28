@@ -6,6 +6,88 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// Función para enviar mensajes de WhatsApp via Whapi Cloud
+function sendWhatsAppMessage(toNumber, messageBody) {
+    const url = "https://gate.whapi.cloud/messages/text";
+    const headers = {
+        "accept": "application/json",
+        "authorization": "Bearer due3eWCwuBM2Xqd6cPujuTRqSbMb68lt",
+        "content-type": "application/json"
+    };
+    const postData = {
+        "typing_time": 0,
+        "to": toNumber,
+        "body": messageBody
+    };
+
+    return fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(postData)
+    })
+    .then(response => response.json())
+    .then(json => {
+        console.log(`📱 WhatsApp enviado a ${toNumber}:`, json);
+        return json;
+    })
+    .catch(err => {
+        console.error(`❌ Error enviando WhatsApp a ${toNumber}:`, err);
+        return null;
+    });
+}
+
+// Función para enviar alertas de preguntas críticas
+async function enviarAlertasPreguntasCriticas(datos) {
+    const alertas = [];
+
+    // Verificar cada pregunta nueva y agregar alertas si es afirmativa
+    if (datos.trastornoPsicologico === "SI") {
+        alertas.push("🧠 Trastorno psicológico o psiquiátrico diagnosticado");
+    }
+    if (datos.sintomasPsicologicos === "SI") {
+        alertas.push("😰 Síntomas psicológicos en los últimos 2 años (ansiedad, depresión, pánico)");
+    }
+    if (datos.diagnosticoCancer === "SI") {
+        alertas.push("🎗️ Diagnóstico o estudio por sospecha de cáncer");
+    }
+    if (datos.enfermedadesLaborales === "SI") {
+        alertas.push("⚠️ Enfermedades laborales o accidentes de trabajo previos");
+    }
+    if (datos.enfermedadOsteomuscular === "SI") {
+        alertas.push("🦴 Enfermedad osteomuscular diagnosticada");
+    }
+    if (datos.enfermedadAutoinmune === "SI") {
+        alertas.push("🔬 Enfermedad autoinmune diagnosticada");
+    }
+
+    // Si hay alertas, enviar mensaje a los números configurados
+    if (alertas.length > 0) {
+        const nombreCompleto = `${datos.primerNombre || ''} ${datos.primerApellido || ''}`.trim() || 'No especificado';
+        const mensaje = `🚨 *ALERTA - Formulario Médico BSL*\n\n` +
+            `👤 *Paciente:* ${nombreCompleto}\n` +
+            `🆔 *Cédula:* ${datos.numeroId || 'No especificada'}\n` +
+            `📱 *Celular:* ${datos.celular || 'No especificado'}\n` +
+            `🏢 *Empresa:* ${datos.empresa || 'No especificada'}\n\n` +
+            `⚠️ *Condiciones reportadas:*\n${alertas.map(a => `• ${a}`).join('\n')}\n\n` +
+            `_Revisar historia clínica antes de la consulta._`;
+
+        // Números a notificar (formato internacional sin espacios)
+        const numerosAlerta = [
+            "573008021701",
+            "573045792035",
+            "573138232201"
+        ];
+
+        console.log('🚨 Enviando alertas de preguntas críticas...');
+
+        // Enviar a todos los números
+        const promesas = numerosAlerta.map(numero => sendWhatsAppMessage(numero, mensaje));
+        await Promise.all(promesas);
+
+        console.log('✅ Alertas enviadas a', numerosAlerta.length, 'números');
+    }
+}
+
 // Configuración de PostgreSQL
 const pool = new Pool({
     host: process.env.DB_HOST,
@@ -257,6 +339,14 @@ app.post('/api/formulario', async (req, res) => {
         const result = await pool.query(query, values);
 
         console.log('✅ Formulario guardado en PostgreSQL:', result.rows[0].id);
+
+        // Enviar alertas por WhatsApp si hay respuestas afirmativas en preguntas críticas
+        try {
+            await enviarAlertasPreguntasCriticas(datos);
+        } catch (alertaError) {
+            console.error('❌ Error al enviar alertas WhatsApp:', alertaError.message);
+            // No bloqueamos la respuesta si falla el envío de alertas
+        }
 
         // Enviar datos a Wix
         try {
