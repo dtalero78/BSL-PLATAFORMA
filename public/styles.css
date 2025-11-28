@@ -11,18 +11,20 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(0, 0, 0, 0.95);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 10000;
+    z-index: 2147483647;  /* Máximo z-index posible para estar sobre dropdowns nativos */
     opacity: 1;
     transition: opacity 0.5s ease;
+    isolation: isolate;  /* Crea nuevo contexto de apilamiento */
 }
 
 .video-modal.hidden {
     opacity: 0;
     pointer-events: none;
+    z-index: -1;
 }
 
 .video-modal-content {
@@ -32,6 +34,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    z-index: 2147483647;
 }
 
 .video-modal-content video {

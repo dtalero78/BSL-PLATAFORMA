@@ -7,10 +7,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     const skipVideoBtn = document.getElementById('skipVideoBtn');
     const playVideoBtn = document.getElementById('playVideoBtn');
 
+    // Desenfocar cualquier elemento activo para evitar que dropdowns aparezcan sobre el modal
+    if (videoModal && !videoModal.classList.contains('hidden')) {
+        document.activeElement?.blur();
+        // Prevenir que el formulario reciba focus mientras el modal está visible
+        document.body.style.overflow = 'hidden';
+    }
+
     // Función para cerrar el modal de video
     function closeVideoModal() {
         videoModal.classList.add('hidden');
         introVideo.pause();
+        // Restaurar scroll del body
+        document.body.style.overflow = '';
         // Remover el modal del DOM después de la transición
         setTimeout(() => {
             videoModal.style.display = 'none';
