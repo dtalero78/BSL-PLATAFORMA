@@ -660,6 +660,105 @@
                     </div>
                 </div>
 
+                <!-- Sección Historia Clínica -->
+                <div id="seccionHistoriaClinica" class="form-section" style="display: none; background: #F0FDF4; padding: 24px; border-radius: 12px; margin-top: 24px;">
+                    <div class="form-section-title" style="color: #059669;">📋 Historia Clínica</div>
+                    <input type="hidden" id="edit-hc-id" name="hc_id">
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Tipo de Examen</label>
+                            <input type="text" class="form-input" id="edit-hc-tipoExamen" name="hc_tipoExamen">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cargo</label>
+                            <input type="text" class="form-input" id="edit-hc-cargo" name="hc_cargo">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Médico</label>
+                            <input type="text" class="form-input" id="edit-hc-medico" name="hc_medico">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Estado Atención</label>
+                            <select class="form-input" id="edit-hc-atendido" name="hc_atendido">
+                                <option value="">Seleccionar...</option>
+                                <option value="ATENDIDO">ATENDIDO</option>
+                                <option value="PENDIENTE">PENDIENTE</option>
+                                <option value="EN PROCESO">EN PROCESO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Estado PV</label>
+                            <input type="text" class="form-input" id="edit-hc-pvEstado" name="hc_pvEstado">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Talla (cm)</label>
+                            <input type="text" class="form-input" id="edit-hc-talla" name="hc_talla">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Peso (kg)</label>
+                            <input type="text" class="form-input" id="edit-hc-peso" name="hc_peso">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label class="form-label">Motivo de Consulta</label>
+                        <textarea class="form-input" id="edit-hc-motivoConsulta" name="hc_motivoConsulta" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Diagnóstico Principal</label>
+                        <textarea class="form-input" id="edit-hc-diagnostico" name="hc_diagnostico" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Diagnóstico 1 (CIE-10)</label>
+                            <input type="text" class="form-input" id="edit-hc-mdDx1" name="hc_mdDx1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Diagnóstico 2 (CIE-10)</label>
+                            <input type="text" class="form-input" id="edit-hc-mdDx2" name="hc_mdDx2">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Tratamiento</label>
+                        <textarea class="form-input" id="edit-hc-tratamiento" name="hc_tratamiento" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Concepto Médico Final</label>
+                        <select class="form-input" id="edit-hc-mdConceptoFinal" name="hc_mdConceptoFinal">
+                            <option value="">Seleccionar...</option>
+                            <option value="ELEGIBLE PARA EL CARGO SIN RECOMENDACIONES LABORALES">ELEGIBLE PARA EL CARGO SIN RECOMENDACIONES LABORALES</option>
+                            <option value="ELEGIBLE PARA EL CARGO CON RECOMENDACIONES LABORALES">ELEGIBLE PARA EL CARGO CON RECOMENDACIONES LABORALES</option>
+                            <option value="NO ELEGIBLE PARA EL CARGO">NO ELEGIBLE PARA EL CARGO</option>
+                            <option value="APLAZADO">APLAZADO</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Recomendaciones Médicas Adicionales</label>
+                        <textarea class="form-input" id="edit-hc-mdRecomendacionesMedicasAdicionales" name="hc_mdRecomendacionesMedicasAdicionales" rows="4"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Observaciones del Certificado</label>
+                        <textarea class="form-input" id="edit-hc-mdObservacionesCertificado" name="hc_mdObservacionesCertificado" rows="4"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Antecedentes Médicos</label>
+                        <textarea class="form-input" id="edit-hc-mdAntecedentes" name="hc_mdAntecedentes" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Observaciones para Mi Doc Ya</label>
+                        <textarea class="form-input" id="edit-hc-mdObsParaMiDocYa" name="hc_mdObsParaMiDocYa" rows="3"></textarea>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn-guardar" id="btnGuardar">💾 Guardar Cambios</button>
             </form>
         </div>
@@ -1287,6 +1386,34 @@
                 document.getElementById('edit-peso').value = formularioActual.peso || '';
                 document.getElementById('edit-ejercicio').value = formularioActual.ejercicio || '';
 
+                // Sección Historia Clínica
+                const seccionHC = document.getElementById('seccionHistoriaClinica');
+                if (formularioActual.historiaClinica) {
+                    const hc = formularioActual.historiaClinica;
+                    seccionHC.style.display = 'block';
+
+                    document.getElementById('edit-hc-id').value = hc._id || '';
+                    document.getElementById('edit-hc-tipoExamen').value = hc.tipoExamen || '';
+                    document.getElementById('edit-hc-cargo').value = hc.cargo || '';
+                    document.getElementById('edit-hc-medico').value = hc.medico || '';
+                    document.getElementById('edit-hc-atendido').value = hc.atendido || '';
+                    document.getElementById('edit-hc-pvEstado').value = hc.pvEstado || '';
+                    document.getElementById('edit-hc-talla').value = hc.talla || '';
+                    document.getElementById('edit-hc-peso').value = hc.peso || '';
+                    document.getElementById('edit-hc-motivoConsulta').value = hc.motivoConsulta || '';
+                    document.getElementById('edit-hc-diagnostico').value = hc.diagnostico || '';
+                    document.getElementById('edit-hc-mdDx1').value = hc.mdDx1 || '';
+                    document.getElementById('edit-hc-mdDx2').value = hc.mdDx2 || '';
+                    document.getElementById('edit-hc-tratamiento').value = hc.tratamiento || '';
+                    document.getElementById('edit-hc-mdConceptoFinal').value = hc.mdConceptoFinal || '';
+                    document.getElementById('edit-hc-mdRecomendacionesMedicasAdicionales').value = hc.mdRecomendacionesMedicasAdicionales || '';
+                    document.getElementById('edit-hc-mdObservacionesCertificado').value = hc.mdObservacionesCertificado || '';
+                    document.getElementById('edit-hc-mdAntecedentes').value = hc.mdAntecedentes || '';
+                    document.getElementById('edit-hc-mdObsParaMiDocYa').value = hc.mdObsParaMiDocYa || '';
+                } else {
+                    seccionHC.style.display = 'none';
+                }
+
                 // Abrir el modal
                 document.getElementById('modalEdicion').classList.add('active');
             } catch (error) {
@@ -1318,26 +1445,73 @@
 
             try {
                 const formData = new FormData(event.target);
-                const data = Object.fromEntries(formData.entries());
+                const allData = Object.fromEntries(formData.entries());
 
-                const response = await fetch(`/api/formularios/${data.id}`, {
+                // Separar datos del formulario y de historia clínica
+                const formulariosData = {};
+                const historiaClinicaData = {};
+
+                for (const [key, value] of Object.entries(allData)) {
+                    if (key.startsWith('hc_')) {
+                        // Campo de Historia Clínica
+                        const campo = key.replace('hc_', '');
+                        if (value !== '') {
+                            historiaClinicaData[campo] = value;
+                        }
+                    } else {
+                        // Campo de formularios
+                        formulariosData[key] = value;
+                    }
+                }
+
+                // 1. Guardar datos del formulario
+                const response = await fetch(`/api/formularios/${formulariosData.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(formulariosData)
                 });
 
                 const result = await response.json();
 
-                if (result.success) {
-                    alert('✅ Formulario actualizado exitosamente');
-                    cerrarModal();
-                    // Recargar los formularios
-                    cargarFormularios();
-                } else {
-                    alert('❌ Error al actualizar: ' + (result.error || 'Error desconocido'));
+                if (!result.success) {
+                    alert('❌ Error al actualizar formulario: ' + (result.error || 'Error desconocido'));
+                    return;
                 }
+
+                // 2. Guardar datos de Historia Clínica si hay un ID
+                const hcId = historiaClinicaData.id;
+                delete historiaClinicaData.id; // Remover el ID del objeto de datos
+
+                if (hcId && Object.keys(historiaClinicaData).length > 0) {
+                    const hcResponse = await fetch(`/api/historia-clinica/${hcId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(historiaClinicaData)
+                    });
+
+                    const hcResult = await hcResponse.json();
+
+                    if (!hcResult.success) {
+                        alert('⚠️ Formulario guardado pero hubo error en Historia Clínica: ' + (hcResult.error || 'Error desconocido'));
+                        cerrarModal();
+                        cargarFormularios();
+                        // Limpiar cache para forzar recarga
+                        delete detallesCache[formulariosData.id];
+                        return;
+                    }
+                }
+
+                alert('✅ Formulario actualizado exitosamente');
+                cerrarModal();
+                // Limpiar cache para forzar recarga de datos actualizados
+                delete detallesCache[formulariosData.id];
+                // Recargar los formularios
+                cargarFormularios();
+
             } catch (error) {
                 console.error('Error:', error);
                 alert('❌ Error al guardar: ' + error.message);
