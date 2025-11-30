@@ -1007,7 +1007,7 @@ app.post('/api/ordenes', async (req, res) => {
                 examenes: examenes || ''
             };
 
-            const wixResponse = await fetch('https://www.bsl.com.co/_functions/actualizarHistoriaClinica', {
+            const wixResponse = await fetch('https://www.bsl.com.co/_functions/crearHistoriaClinica', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
