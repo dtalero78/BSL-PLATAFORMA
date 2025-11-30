@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formularios - BSL</title>
+    <title>Órdenes - BSL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -961,8 +961,8 @@
         <!-- Main Content -->
         <main class="main-content">
             <div class="page-header">
-                <h1 class="page-title">Formularios</h1>
-                <p class="page-subtitle">Gestiona los formularios de pacientes</p>
+                <h1 class="page-title">Órdenes</h1>
+                <p class="page-subtitle">Gestiona las órdenes y pacientes del sistema</p>
             </div>
 
             <!-- Filters Bar -->
@@ -984,7 +984,7 @@
             <!-- Loading State -->
             <div id="loadingState" class="loading-state">
                 <div class="loading-spinner"></div>
-                <p>Cargando formularios...</p>
+                <p>Cargando órdenes...</p>
             </div>
 
             <!-- Table Container (Desktop) -->
@@ -994,10 +994,11 @@
                         <tr>
                             <th>Paciente</th>
                             <th>Cédula</th>
-                            <th>Teléfono</th>
+                            <th>Celular</th>
                             <th>Empresa</th>
+                            <th>Tipo Examen</th>
                             <th>Estado</th>
-                            <th>Fecha Consulta</th>
+                            <th>Fecha</th>
                             <th style="text-align: right;">Acciones</th>
                         </tr>
                     </thead>
@@ -1015,8 +1016,8 @@
             <!-- Empty State -->
             <div id="emptyState" class="empty-state" style="display: none;">
                 <div class="empty-state-icon">📋</div>
-                <p class="empty-state-title">No hay formularios</p>
-                <p class="empty-state-text">Aún no se han registrado formularios</p>
+                <p class="empty-state-title">No hay órdenes</p>
+                <p class="empty-state-text">Aún no se han registrado órdenes</p>
             </div>
         </main>
     </div>
@@ -1309,42 +1310,47 @@
         }
 
         // ========== RENDER FUNCTIONS ==========
-        function renderTable(formularios) {
+        function renderTable(ordenes) {
             const tbody = document.getElementById('tableBody');
 
-            if (formularios.length === 0) {
+            if (ordenes.length === 0) {
                 tbody.innerHTML = '';
                 return;
             }
 
-            tbody.innerHTML = formularios.map(form => {
-                const wixId = form.wix_id || '';
+            tbody.innerHTML = ordenes.map(orden => {
+                const wixId = orden._id || '';
                 const hasWixId = wixId && wixId.trim() !== '';
-                const statusClass = getStatusClass(form.estado_atencion);
+                const statusClass = getStatusClass(orden.atendido);
 
                 return `
-                    <tr onclick="abrirModalDetalles(${form.id})">
+                    <tr onclick="abrirModalDetalles('${orden._id}')">
                         <td>
                             <div class="cell-name">
-                                <div class="avatar">${getInitials(form.primer_nombre, form.primer_apellido)}</div>
+                                <div class="avatar">${getInitials(orden.primerNombre, orden.primerApellido)}</div>
                                 <div class="name-info">
-                                    <span class="name-primary">${form.primer_nombre || ''} ${form.primer_apellido || ''}</span>
-                                    <span class="name-secondary">${form.email || '—'}</span>
+                                    <span class="name-primary">${orden.primerNombre || ''} ${orden.primerApellido || ''}</span>
+                                    <span class="name-secondary">${orden.cargo || '—'}</span>
                                 </div>
                             </div>
                         </td>
-                        <td>${form.numero_id || '—'}</td>
-                        <td>${form.celular || '—'}</td>
-                        <td>${form.cod_empresa || '—'}</td>
+                        <td>${orden.numeroId || '—'}</td>
+                        <td>${orden.celular || '—'}</td>
+                        <td>${orden.codEmpresa || '—'}</td>
+                        <td>${orden.tipoExamen || '—'}</td>
                         <td>
                             <span class="status-badge ${statusClass}">
                                 <span class="status-dot"></span>
-                                ${getStatusText(form.estado_atencion)}
+                                ${getStatusText(orden.atendido)}
                             </span>
                         </td>
-                        <td>${formatearFecha(form.fecha_consulta)}</td>
+                        <td>${formatearFecha(orden._createdDate)}</td>
                         <td>
                             <div class="actions-cell" onclick="event.stopPropagation()">
+                                <a href="/?_id=${wixId}"
+                                   target="_blank"
+                                   class="btn-icon view ${!hasWixId ? 'disabled' : ''}"
+                                   title="Abrir formulario">📝</a>
                                 <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${wixId}"
                                    target="_blank"
                                    class="btn-icon whatsapp ${!hasWixId ? 'disabled' : ''}"
@@ -1360,52 +1366,60 @@
             }).join('');
         }
 
-        function renderMobileCards(formularios) {
+        function renderMobileCards(ordenes) {
             const container = document.getElementById('mobileCards');
 
-            if (formularios.length === 0) {
+            if (ordenes.length === 0) {
                 container.innerHTML = '';
                 return;
             }
 
-            container.innerHTML = formularios.map(form => {
-                const wixId = form.wix_id || '';
+            container.innerHTML = ordenes.map(orden => {
+                const wixId = orden._id || '';
                 const hasWixId = wixId && wixId.trim() !== '';
-                const statusClass = getStatusClass(form.estado_atencion);
+                const statusClass = getStatusClass(orden.atendido);
 
                 return `
                     <div class="mobile-card">
                         <div class="mobile-card-header">
-                            <div class="mobile-card-avatar">${getInitials(form.primer_nombre, form.primer_apellido)}</div>
+                            <div class="mobile-card-avatar">${getInitials(orden.primerNombre, orden.primerApellido)}</div>
                             <div class="mobile-card-name">
-                                <h3>${form.primer_nombre || ''} ${form.primer_apellido || ''}</h3>
-                                <span>${form.numero_id || '—'}</span>
+                                <h3>${orden.primerNombre || ''} ${orden.primerApellido || ''}</h3>
+                                <span>${orden.numeroId || '—'}</span>
                             </div>
                         </div>
                         <div class="mobile-card-info">
                             <div class="mobile-card-info-item">
-                                <div class="mobile-card-info-label">Teléfono</div>
-                                <div class="mobile-card-info-value">${form.celular || '—'}</div>
+                                <div class="mobile-card-info-label">Celular</div>
+                                <div class="mobile-card-info-value">${orden.celular || '—'}</div>
                             </div>
                             <div class="mobile-card-info-item">
                                 <div class="mobile-card-info-label">Empresa</div>
-                                <div class="mobile-card-info-value">${form.cod_empresa || '—'}</div>
+                                <div class="mobile-card-info-value">${orden.codEmpresa || '—'}</div>
+                            </div>
+                            <div class="mobile-card-info-item">
+                                <div class="mobile-card-info-label">Tipo Examen</div>
+                                <div class="mobile-card-info-value">${orden.tipoExamen || '—'}</div>
+                            </div>
+                            <div class="mobile-card-info-item">
+                                <div class="mobile-card-info-label">Cargo</div>
+                                <div class="mobile-card-info-value">${orden.cargo || '—'}</div>
                             </div>
                         </div>
                         <div class="mobile-card-status">
                             <span class="status-badge ${statusClass}">
                                 <span class="status-dot"></span>
-                                ${getStatusText(form.estado_atencion)}
+                                ${getStatusText(orden.atendido)}
                             </span>
                         </div>
                         <div class="mobile-card-actions">
+                            <a href="/?_id=${wixId}"
+                               target="_blank"
+                               class="mobile-card-btn ${!hasWixId ? 'disabled' : ''}">📝 Formulario</a>
                             <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${wixId}"
                                target="_blank"
                                class="mobile-card-btn ${!hasWixId ? 'disabled' : ''}">📱 WhatsApp</a>
-                            <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/generar-certificado-desde-wix/${wixId}"
-                               target="_blank"
-                               class="mobile-card-btn ${!hasWixId ? 'disabled' : ''}">📥 Descargar</a>
-                            <button class="mobile-card-btn primary" onclick="abrirModalDetalles(${form.id})">Ver</button>
+                            <button class="mobile-card-btn primary" onclick="abrirModalDetalles('${orden._id}')">Ver</button>
                         </div>
                     </div>
                 `;
@@ -1418,26 +1432,30 @@
 
             // Filter by status
             if (filtroActual === 'atendido') {
-                resultado = resultado.filter(f => f.estado_atencion && f.estado_atencion.toUpperCase() === 'ATENDIDO');
+                resultado = resultado.filter(f => f.atendido && f.atendido.toUpperCase() === 'ATENDIDO');
             } else if (filtroActual === 'pendiente') {
-                resultado = resultado.filter(f => !f.estado_atencion || f.estado_atencion.toUpperCase() !== 'ATENDIDO');
+                resultado = resultado.filter(f => !f.atendido || f.atendido.toUpperCase() !== 'ATENDIDO');
             }
 
             // Filter by search
             if (busquedaActual) {
                 const busqueda = busquedaActual.toLowerCase();
                 resultado = resultado.filter(f => {
-                    const nombre = (f.primer_nombre || '').toLowerCase();
-                    const apellido = (f.primer_apellido || '').toLowerCase();
-                    const cedula = (f.numero_id || '').toString();
-                    const empresa = (f.cod_empresa || '').toLowerCase();
+                    const nombre = (f.primerNombre || '').toLowerCase();
+                    const apellido = (f.primerApellido || '').toLowerCase();
+                    const cedula = (f.numeroId || '').toString();
+                    const empresa = (f.codEmpresa || '').toLowerCase();
                     const telefono = (f.celular || '').toString();
+                    const cargo = (f.cargo || '').toLowerCase();
+                    const tipoExamen = (f.tipoExamen || '').toLowerCase();
 
                     return nombre.includes(busqueda) ||
                            apellido.includes(busqueda) ||
                            cedula.includes(busqueda) ||
                            empresa.includes(busqueda) ||
                            telefono.includes(busqueda) ||
+                           cargo.includes(busqueda) ||
+                           tipoExamen.includes(busqueda) ||
                            `${nombre} ${apellido}`.includes(busqueda);
                 });
             }
@@ -1467,7 +1485,7 @@
         // ========== DATA LOADING ==========
         async function cargarFormularios() {
             try {
-                const response = await fetch('/api/formularios');
+                const response = await fetch('/api/historia-clinica/list');
                 if (!response.ok) throw new Error('Error del servidor');
 
                 const result = await response.json();
@@ -1494,7 +1512,7 @@
         }
 
         // ========== MODAL: DETALLES ==========
-        async function abrirModalDetalles(formId) {
+        async function abrirModalDetalles(ordenId) {
             const modal = document.getElementById('modalDetalles');
             const body = document.getElementById('modalDetallesBody');
 
@@ -1502,142 +1520,98 @@
             body.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Cargando...</p></div>';
 
             try {
-                let form;
-                if (detallesCache[formId]) {
-                    form = detallesCache[formId];
+                let orden;
+                if (detallesCache[ordenId]) {
+                    orden = detallesCache[ordenId];
                 } else {
-                    const response = await fetch(`/api/formularios/${formId}`);
+                    const response = await fetch(`/api/historia-clinica/${ordenId}`);
                     const result = await response.json();
                     if (!result.success) throw new Error('No se pudo cargar');
-                    form = result.data;
-                    detallesCache[formId] = form;
+                    orden = result.data;
+                    detallesCache[ordenId] = orden;
                 }
 
-                renderModalDetalles(form);
+                renderModalDetalles(orden);
 
             } catch (error) {
                 body.innerHTML = `<div class="empty-state"><p class="empty-state-title">Error al cargar</p></div>`;
             }
         }
 
-        function renderModalDetalles(form) {
-            document.getElementById('modalDetallesTitulo').textContent = `${form.primer_nombre || ''} ${form.primer_apellido || ''}`.trim() || 'Sin nombre';
-            document.getElementById('modalDetallesSubtitulo').textContent = `Cédula: ${form.numero_id || 'N/A'} • ID: ${form.id}`;
+        function renderModalDetalles(orden) {
+            const nombreCompleto = `${orden.primerNombre || ''} ${orden.segundoNombre || ''} ${orden.primerApellido || ''} ${orden.segundoApellido || ''}`.replace(/\s+/g, ' ').trim() || 'Sin nombre';
+            document.getElementById('modalDetallesTitulo').textContent = nombreCompleto;
+            document.getElementById('modalDetallesSubtitulo').textContent = `Cédula: ${orden.numeroId || 'N/A'} • ID: ${orden._id}`;
 
             // Configure buttons
             document.getElementById('btnEditarFromModal').onclick = () => {
                 cerrarModalDetalles();
-                editarFormulario(form.id);
+                editarOrden(orden._id);
             };
             document.getElementById('btnEliminarFromModal').onclick = () => {
-                eliminarFormulario(form.id, form.numero_id, form.primer_nombre, form.primer_apellido);
+                eliminarOrden(orden._id, orden.numeroId, orden.primerNombre, orden.primerApellido);
             };
 
             const body = document.getElementById('modalDetallesBody');
-            const fecha = new Date(form.fecha_registro).toLocaleString('es-CO');
+            const fechaCreacion = orden._createdDate ? new Date(orden._createdDate).toLocaleString('es-CO') : '—';
+            const fechaConsulta = orden.fechaConsulta ? new Date(orden.fechaConsulta).toLocaleString('es-CO') : '—';
 
             body.innerHTML = `
-                ${form.foto ? `<div class="detail-photo"><img src="${form.foto}" alt="Foto"></div>` : ''}
-
                 <div class="detail-section">
-                    <div class="detail-section-title">Información General</div>
+                    <div class="detail-section-title">Información del Paciente</div>
                     <div class="detail-grid">
-                        <div class="detail-item"><div class="detail-label">Registro</div><div class="detail-value">${fecha}</div></div>
-                        ${form.wix_id ? `<div class="detail-item"><div class="detail-label">Wix ID</div><div class="detail-value">${form.wix_id}</div></div>` : ''}
-                        <div class="detail-item"><div class="detail-label">Género</div><div class="detail-value">${form.genero || '—'}</div></div>
-                        <div class="detail-item"><div class="detail-label">Edad</div><div class="detail-value">${form.edad || '—'} años</div></div>
-                        <div class="detail-item"><div class="detail-label">Nacimiento</div><div class="detail-value">${form.fecha_nacimiento || '—'}</div></div>
-                        <div class="detail-item"><div class="detail-label">Lugar Nac.</div><div class="detail-value">${form.lugar_nacimiento || '—'}</div></div>
-                        <div class="detail-item"><div class="detail-label">Ciudad Res.</div><div class="detail-value">${form.ciudad_residencia || '—'}</div></div>
-                        <div class="detail-item"><div class="detail-label">Estado Civil</div><div class="detail-value">${form.estado_civil || '—'}</div></div>
-                        <div class="detail-item"><div class="detail-label">Hijos</div><div class="detail-value">${form.hijos || '—'}</div></div>
-                        <div class="detail-item"><div class="detail-label">Educación</div><div class="detail-value">${form.nivel_educativo || '—'}</div></div>
-                        <div class="detail-item full"><div class="detail-label">Email</div><div class="detail-value">${form.email || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Primer Nombre</div><div class="detail-value">${orden.primerNombre || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Segundo Nombre</div><div class="detail-value">${orden.segundoNombre || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Primer Apellido</div><div class="detail-value">${orden.primerApellido || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Segundo Apellido</div><div class="detail-value">${orden.segundoApellido || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Cédula</div><div class="detail-value">${orden.numeroId || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Celular</div><div class="detail-value">${orden.celular || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Ciudad</div><div class="detail-value">${orden.ciudad || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Fecha Creación</div><div class="detail-value">${fechaCreacion}</div></div>
                     </div>
                 </div>
 
-                ${form.eps || form.arl || form.pensiones ? `
+                <div class="detail-section">
+                    <div class="detail-section-title">Información Laboral</div>
+                    <div class="detail-grid">
+                        <div class="detail-item"><div class="detail-label">Empresa</div><div class="detail-value">${orden.empresa || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Código Empresa</div><div class="detail-value">${orden.codEmpresa || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Cargo</div><div class="detail-value">${orden.cargo || '—'}</div></div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Información del Examen</div>
+                    <div class="detail-grid">
+                        <div class="detail-item"><div class="detail-label">Tipo de Examen</div><div class="detail-value">${orden.tipoExamen || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Estado</div><div class="detail-value"><span class="status-badge ${getStatusClass(orden.atendido)}"><span class="status-dot"></span>${orden.atendido || 'PENDIENTE'}</span></div></div>
+                        <div class="detail-item"><div class="detail-label">Médico</div><div class="detail-value">${orden.medico || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Fecha Consulta</div><div class="detail-value">${fechaConsulta}</div></div>
+                        ${orden.examenes ? `<div class="detail-item full"><div class="detail-label">Exámenes</div><div class="detail-value">${orden.examenes}</div></div>` : ''}
+                    </div>
+                </div>
+
+                ${orden.diagnostico || orden.mdDx1 || orden.mdConceptoFinal ? `
                     <div class="detail-section">
-                        <div class="detail-section-title">Seguridad Social</div>
+                        <div class="detail-section-title">Diagnóstico y Concepto</div>
                         <div class="detail-grid">
-                            ${form.eps ? `<div class="detail-item"><div class="detail-label">EPS</div><div class="detail-value">${form.eps}</div></div>` : ''}
-                            ${form.arl ? `<div class="detail-item"><div class="detail-label">ARL</div><div class="detail-value">${form.arl}</div></div>` : ''}
-                            ${form.pensiones ? `<div class="detail-item full"><div class="detail-label">Pensiones</div><div class="detail-value">${form.pensiones}</div></div>` : ''}
+                            ${orden.diagnostico ? `<div class="detail-item full"><div class="detail-label">Diagnóstico</div><div class="detail-value">${orden.diagnostico}</div></div>` : ''}
+                            ${orden.mdDx1 ? `<div class="detail-item"><div class="detail-label">DX1 (CIE-10)</div><div class="detail-value">${orden.mdDx1}</div></div>` : ''}
+                            ${orden.mdDx2 ? `<div class="detail-item"><div class="detail-label">DX2 (CIE-10)</div><div class="detail-value">${orden.mdDx2}</div></div>` : ''}
+                            ${orden.mdConceptoFinal ? `<div class="detail-item full"><div class="detail-label">Concepto Final</div><div class="detail-value">${orden.mdConceptoFinal}</div></div>` : ''}
+                            ${orden.tratamiento ? `<div class="detail-item full"><div class="detail-label">Tratamiento</div><div class="detail-value">${orden.tratamiento}</div></div>` : ''}
                         </div>
                     </div>
                 ` : ''}
 
                 <div class="detail-section">
-                    <div class="detail-section-title">Datos Laborales</div>
-                    <div class="detail-grid">
-                        <div class="detail-item full"><div class="detail-label">Profesión</div><div class="detail-value">${form.profesion_oficio || '—'}</div></div>
-                        <div class="detail-item"><div class="detail-label">Empresa 1</div><div class="detail-value">${form.empresa1 || '—'}</div></div>
-                        <div class="detail-item"><div class="detail-label">Empresa 2</div><div class="detail-value">${form.empresa2 || '—'}</div></div>
+                    <div class="detail-section-title">Acciones Rápidas</div>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <a href="/?_id=${orden._id}" target="_blank" class="btn btn-primary">📝 Abrir Formulario</a>
+                        <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${orden._id}" target="_blank" class="btn btn-secondary">📱 WhatsApp</a>
+                        <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/generar-certificado-desde-wix/${orden._id}" target="_blank" class="btn btn-secondary">📥 Certificado</a>
                     </div>
                 </div>
-
-                <div class="detail-section">
-                    <div class="detail-section-title">Datos Físicos</div>
-                    <div class="detail-grid">
-                        <div class="detail-item"><div class="detail-label">Estatura</div><div class="detail-value">${form.estatura || '—'} cm</div></div>
-                        <div class="detail-item"><div class="detail-label">Peso</div><div class="detail-value">${form.peso || '—'} kg</div></div>
-                        <div class="detail-item full"><div class="detail-label">Ejercicio</div><div class="detail-value">${form.ejercicio || '—'}</div></div>
-                    </div>
-                </div>
-
-                ${form.firma ? `
-                    <div class="detail-section">
-                        <div class="detail-section-title">Firma</div>
-                        <div style="text-align: center; padding: 16px; background: #F9FAFB; border-radius: 8px;">
-                            <img src="${form.firma}" alt="Firma" style="max-width: 200px; border-radius: 4px;">
-                        </div>
-                    </div>
-                ` : ''}
-
-                ${form.historiaClinica ? `
-                    <div class="detail-banner">📋 Historia Clínica</div>
-
-                    <div class="detail-section">
-                        <div class="detail-section-title">Consulta</div>
-                        <div class="detail-grid">
-                            ${form.historiaClinica.tipoExamen ? `<div class="detail-item"><div class="detail-label">Tipo Examen</div><div class="detail-value">${form.historiaClinica.tipoExamen}</div></div>` : ''}
-                            ${form.historiaClinica.cargo ? `<div class="detail-item"><div class="detail-label">Cargo</div><div class="detail-value">${form.historiaClinica.cargo}</div></div>` : ''}
-                            ${form.historiaClinica.medico ? `<div class="detail-item"><div class="detail-label">Médico</div><div class="detail-value">${form.historiaClinica.medico}</div></div>` : ''}
-                            ${form.historiaClinica.atendido ? `<div class="detail-item"><div class="detail-label">Estado</div><div class="detail-value">${form.historiaClinica.atendido}</div></div>` : ''}
-                            ${form.historiaClinica.fechaConsulta ? `<div class="detail-item"><div class="detail-label">Fecha Consulta</div><div class="detail-value">${new Date(form.historiaClinica.fechaConsulta).toLocaleString('es-CO')}</div></div>` : ''}
-                            ${form.historiaClinica.motivoConsulta ? `<div class="detail-item full"><div class="detail-label">Motivo</div><div class="detail-value">${form.historiaClinica.motivoConsulta}</div></div>` : ''}
-                        </div>
-                    </div>
-
-                    ${form.historiaClinica.diagnostico || form.historiaClinica.mdDx1 ? `
-                        <div class="detail-section">
-                            <div class="detail-section-title">Diagnóstico</div>
-                            <div class="detail-grid">
-                                ${form.historiaClinica.diagnostico ? `<div class="detail-item full"><div class="detail-label">Principal</div><div class="detail-value">${form.historiaClinica.diagnostico}</div></div>` : ''}
-                                ${form.historiaClinica.mdDx1 ? `<div class="detail-item full"><div class="detail-label">DX1</div><div class="detail-value">${form.historiaClinica.mdDx1}</div></div>` : ''}
-                                ${form.historiaClinica.mdDx2 ? `<div class="detail-item full"><div class="detail-label">DX2</div><div class="detail-value">${form.historiaClinica.mdDx2}</div></div>` : ''}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${form.historiaClinica.mdConceptoFinal ? `
-                        <div class="detail-section">
-                            <div class="detail-section-title">Concepto Final</div>
-                            <div class="detail-grid">
-                                <div class="detail-item full"><div class="detail-value">${form.historiaClinica.mdConceptoFinal}</div></div>
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${form.historiaClinica.mdRecomendacionesMedicasAdicionales ? `
-                        <div class="detail-section">
-                            <div class="detail-section-title">Recomendaciones</div>
-                            <div class="detail-grid">
-                                <div class="detail-item full"><div class="detail-value">${form.historiaClinica.mdRecomendacionesMedicasAdicionales}</div></div>
-                            </div>
-                        </div>
-                    ` : ''}
-                ` : ''}
             `;
         }
 
@@ -1646,72 +1620,67 @@
         }
 
         // ========== MODAL: EDITAR ==========
-        async function editarFormulario(id) {
+        async function editarOrden(ordenId) {
             try {
-                const response = await fetch(`/api/formularios/${id}`);
+                const response = await fetch(`/api/historia-clinica/${ordenId}`);
                 const result = await response.json();
 
                 if (!result.success) {
-                    alert('Error al cargar el formulario');
+                    alert('Error al cargar la orden');
                     return;
                 }
 
                 formularioActual = result.data;
 
-                // Fill form
-                document.getElementById('edit-id').value = formularioActual.id || '';
-                document.getElementById('edit-wix_id').value = formularioActual.wix_id || '';
-                document.getElementById('edit-genero').value = formularioActual.genero || '';
-                document.getElementById('edit-edad').value = formularioActual.edad || '';
-                document.getElementById('edit-fecha_nacimiento').value = formularioActual.fecha_nacimiento || '';
-                document.getElementById('edit-lugar_nacimiento').value = formularioActual.lugar_nacimiento || '';
-                document.getElementById('edit-ciudad_residencia').value = formularioActual.ciudad_residencia || '';
-                document.getElementById('edit-estado_civil').value = formularioActual.estado_civil || '';
-                document.getElementById('edit-hijos').value = formularioActual.hijos || '';
-                document.getElementById('edit-nivel_educativo').value = formularioActual.nivel_educativo || '';
-                document.getElementById('edit-email').value = formularioActual.email || '';
-                document.getElementById('edit-eps').value = formularioActual.eps || '';
-                document.getElementById('edit-arl').value = formularioActual.arl || '';
-                document.getElementById('edit-pensiones').value = formularioActual.pensiones || '';
-                document.getElementById('edit-profesion_oficio').value = formularioActual.profesion_oficio || '';
-                document.getElementById('edit-empresa1').value = formularioActual.empresa1 || '';
-                document.getElementById('edit-empresa2').value = formularioActual.empresa2 || '';
-                document.getElementById('edit-estatura').value = formularioActual.estatura || '';
-                document.getElementById('edit-peso').value = formularioActual.peso || '';
-                document.getElementById('edit-ejercicio').value = formularioActual.ejercicio || '';
+                // Fill form with orden data
+                document.getElementById('edit-id').value = formularioActual._id || '';
+                document.getElementById('edit-wix_id').value = formularioActual._id || '';
+                document.getElementById('edit-genero').value = '';
+                document.getElementById('edit-edad').value = '';
+                document.getElementById('edit-fecha_nacimiento').value = '';
+                document.getElementById('edit-lugar_nacimiento').value = '';
+                document.getElementById('edit-ciudad_residencia').value = formularioActual.ciudad || '';
+                document.getElementById('edit-estado_civil').value = '';
+                document.getElementById('edit-hijos').value = '';
+                document.getElementById('edit-nivel_educativo').value = '';
+                document.getElementById('edit-email').value = '';
+                document.getElementById('edit-eps').value = '';
+                document.getElementById('edit-arl').value = '';
+                document.getElementById('edit-pensiones').value = '';
+                document.getElementById('edit-profesion_oficio').value = '';
+                document.getElementById('edit-empresa1').value = formularioActual.empresa || '';
+                document.getElementById('edit-empresa2').value = '';
+                document.getElementById('edit-estatura').value = '';
+                document.getElementById('edit-peso').value = '';
+                document.getElementById('edit-ejercicio').value = '';
 
-                // Historia Clínica
+                // Historia Clínica section - always show for orders
                 const seccionHC = document.getElementById('seccionHistoriaClinica');
-                if (formularioActual.historiaClinica) {
-                    const hc = formularioActual.historiaClinica;
-                    seccionHC.style.display = 'block';
+                seccionHC.style.display = 'block';
 
-                    document.getElementById('edit-hc-id').value = hc._id || '';
-                    document.getElementById('edit-hc-tipoExamen').value = hc.tipoExamen || '';
-                    document.getElementById('edit-hc-cargo').value = hc.cargo || '';
-                    document.getElementById('edit-hc-medico').value = hc.medico || '';
-                    document.getElementById('edit-hc-atendido').value = hc.atendido || '';
-                    document.getElementById('edit-hc-pvEstado').value = hc.pvEstado || '';
-                    document.getElementById('edit-hc-talla').value = hc.talla || '';
-                    document.getElementById('edit-hc-peso').value = hc.peso || '';
-                    document.getElementById('edit-hc-motivoConsulta').value = hc.motivoConsulta || '';
-                    document.getElementById('edit-hc-diagnostico').value = hc.diagnostico || '';
-                    document.getElementById('edit-hc-mdDx1').value = hc.mdDx1 || '';
-                    document.getElementById('edit-hc-mdDx2').value = hc.mdDx2 || '';
-                    document.getElementById('edit-hc-tratamiento').value = hc.tratamiento || '';
-                    document.getElementById('edit-hc-mdConceptoFinal').value = hc.mdConceptoFinal || '';
-                    document.getElementById('edit-hc-mdRecomendacionesMedicasAdicionales').value = hc.mdRecomendacionesMedicasAdicionales || '';
-                    document.getElementById('edit-hc-mdObservacionesCertificado').value = hc.mdObservacionesCertificado || '';
-                    document.getElementById('edit-hc-mdAntecedentes').value = hc.mdAntecedentes || '';
-                    document.getElementById('edit-hc-mdObsParaMiDocYa').value = hc.mdObsParaMiDocYa || '';
-                } else {
-                    seccionHC.style.display = 'none';
-                }
+                document.getElementById('edit-hc-id').value = formularioActual._id || '';
+                document.getElementById('edit-hc-tipoExamen').value = formularioActual.tipoExamen || '';
+                document.getElementById('edit-hc-cargo').value = formularioActual.cargo || '';
+                document.getElementById('edit-hc-medico').value = formularioActual.medico || '';
+                document.getElementById('edit-hc-atendido').value = formularioActual.atendido || '';
+                document.getElementById('edit-hc-pvEstado').value = formularioActual.pvEstado || '';
+                document.getElementById('edit-hc-talla').value = formularioActual.talla || '';
+                document.getElementById('edit-hc-peso').value = formularioActual.peso || '';
+                document.getElementById('edit-hc-motivoConsulta').value = formularioActual.motivoConsulta || '';
+                document.getElementById('edit-hc-diagnostico').value = formularioActual.diagnostico || '';
+                document.getElementById('edit-hc-mdDx1').value = formularioActual.mdDx1 || '';
+                document.getElementById('edit-hc-mdDx2').value = formularioActual.mdDx2 || '';
+                document.getElementById('edit-hc-tratamiento').value = formularioActual.tratamiento || '';
+                document.getElementById('edit-hc-mdConceptoFinal').value = formularioActual.mdConceptoFinal || '';
+                document.getElementById('edit-hc-mdRecomendacionesMedicasAdicionales').value = formularioActual.mdRecomendacionesMedicasAdicionales || '';
+                document.getElementById('edit-hc-mdObservacionesCertificado').value = formularioActual.mdObservacionesCertificado || '';
+                document.getElementById('edit-hc-mdAntecedentes').value = formularioActual.mdAntecedentes || '';
+                document.getElementById('edit-hc-mdObsParaMiDocYa').value = formularioActual.mdObsParaMiDocYa || '';
 
                 document.getElementById('modalEdicion').classList.add('active');
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error al cargar el formulario');
+                alert('Error al cargar la orden');
             }
         }
 
@@ -1731,45 +1700,38 @@
                 const formData = new FormData(event.target);
                 const allData = Object.fromEntries(formData.entries());
 
-                const formulariosData = {};
+                // Build historia clinica data
                 const historiaClinicaData = {};
 
                 for (const [key, value] of Object.entries(allData)) {
                     if (key.startsWith('hc_')) {
                         const campo = key.replace('hc_', '');
-                        if (value !== '') historiaClinicaData[campo] = value;
-                    } else {
-                        formulariosData[key] = value;
+                        if (campo !== 'id' && value !== '') {
+                            historiaClinicaData[campo] = value;
+                        }
                     }
                 }
 
-                const response = await fetch(`/api/formularios/${formulariosData.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formulariosData)
-                });
+                const ordenId = allData.id || allData.hc_id;
 
-                const result = await response.json();
-
-                if (!result.success) {
-                    alert('Error al actualizar: ' + (result.error || 'Error desconocido'));
-                    return;
-                }
-
-                const hcId = historiaClinicaData.id;
-                delete historiaClinicaData.id;
-
-                if (hcId && Object.keys(historiaClinicaData).length > 0) {
-                    await fetch(`/api/historia-clinica/${hcId}`, {
+                if (ordenId && Object.keys(historiaClinicaData).length > 0) {
+                    const response = await fetch(`/api/historia-clinica/${ordenId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(historiaClinicaData)
                     });
+
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        alert('Error al actualizar: ' + (result.error || 'Error desconocido'));
+                        return;
+                    }
                 }
 
-                alert('✓ Formulario actualizado');
+                alert('✓ Orden actualizada');
                 cerrarModalEdicion();
-                delete detallesCache[formulariosData.id];
+                delete detallesCache[ordenId];
                 cargarFormularios();
 
             } catch (error) {
@@ -1782,28 +1744,27 @@
         }
 
         // ========== DELETE ==========
-        async function eliminarFormulario(id, numeroId, primerNombre, primerApellido) {
+        async function eliminarOrden(ordenId, numeroId, primerNombre, primerApellido) {
             const nombre = `${primerNombre || ''} ${primerApellido || ''}`.trim() || 'Sin nombre';
 
-            if (!confirm(`¿Eliminar el registro de "${nombre}"?\n\nEsta acción no se puede deshacer.`)) return;
+            if (!confirm(`¿Eliminar la orden de "${nombre}"?\n\nEsta acción no se puede deshacer.`)) return;
             if (!confirm(`⚠️ ¿Confirmar eliminación de "${nombre}"?`)) return;
 
             try {
-                const response = await fetch(`/api/formularios/${id}`, {
+                const response = await fetch(`/api/historia-clinica/${ordenId}`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ numeroId })
+                    headers: { 'Content-Type': 'application/json' }
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    alert('✓ Registro eliminado');
+                    alert('✓ Orden eliminada');
                     cerrarModalDetalles();
-                    delete detallesCache[id];
+                    delete detallesCache[ordenId];
                     cargarFormularios();
                 } else {
-                    alert('Error: ' + (result.error || 'Error desconocido'));
+                    alert('Error: ' + (result.error || result.message || 'Error desconocido'));
                 }
             } catch (error) {
                 alert('Error: ' + error.message);

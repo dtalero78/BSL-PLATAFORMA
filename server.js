@@ -1374,6 +1374,38 @@ app.put('/api/historia-clinica/:id', async (req, res) => {
     }
 });
 
+// Endpoint para listar todas las HistoriaClinica (órdenes)
+app.get('/api/historia-clinica/list', async (req, res) => {
+    try {
+        console.log('📋 Listando todas las órdenes de HistoriaClinica...');
+
+        const result = await pool.query(`
+            SELECT "_id", "numeroId", "primerNombre", "segundoNombre", "primerApellido", "segundoApellido",
+                   "celular", "cargo", "ciudad", "tipoExamen", "codEmpresa", "empresa", "medico",
+                   "atendido", "examenes", "_createdDate", "fechaConsulta"
+            FROM "HistoriaClinica"
+            ORDER BY "_createdDate" DESC
+            LIMIT 500
+        `);
+
+        console.log(`✅ Se encontraron ${result.rows.length} órdenes`);
+
+        res.json({
+            success: true,
+            total: result.rows.length,
+            data: result.rows
+        });
+
+    } catch (error) {
+        console.error('❌ Error al listar HistoriaClinica:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al listar HistoriaClinica',
+            error: error.message
+        });
+    }
+});
+
 // Endpoint para obtener HistoriaClinica por _id
 app.get('/api/historia-clinica/:id', async (req, res) => {
     try {
@@ -1398,6 +1430,43 @@ app.get('/api/historia-clinica/:id', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al obtener HistoriaClinica',
+            error: error.message
+        });
+    }
+});
+
+// Endpoint para eliminar HistoriaClinica por _id
+app.delete('/api/historia-clinica/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        console.log('');
+        console.log('🗑️ ========== ELIMINANDO ORDEN ==========');
+        console.log(`📋 ID: ${id}`);
+
+        // Eliminar de PostgreSQL
+        const result = await pool.query('DELETE FROM "HistoriaClinica" WHERE "_id" = $1 RETURNING *', [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Registro no encontrado en HistoriaClinica'
+            });
+        }
+
+        console.log('✅ Orden eliminada de PostgreSQL');
+
+        res.json({
+            success: true,
+            message: 'Orden eliminada correctamente',
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('❌ Error al eliminar orden:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al eliminar orden',
             error: error.message
         });
     }
