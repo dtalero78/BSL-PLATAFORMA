@@ -1780,14 +1780,6 @@
             let formularioSection = '';
             if (form) {
                 formularioSection = `
-                    <div class="detail-banner success">
-                        <div class="banner-icon">✓</div>
-                        <div class="banner-content">
-                            <div class="banner-title">Formulario Diligenciado</div>
-                            <div class="banner-subtitle">El paciente completó el formulario médico</div>
-                        </div>
-                    </div>
-
                     <div class="detail-card">
                         <div class="detail-card-title">
                             <div class="detail-card-icon blue">👤</div>
@@ -1915,16 +1907,6 @@
                             </div>
                         </div>
                     ` : ''}
-                `;
-            } else {
-                formularioSection = `
-                    <div class="detail-banner warning">
-                        <div class="banner-icon">⏳</div>
-                        <div class="banner-content">
-                            <div class="banner-title">Formulario Pendiente</div>
-                            <div class="banner-subtitle">El paciente aún no ha diligenciado el formulario</div>
-                        </div>
-                    </div>
                 `;
             }
 
