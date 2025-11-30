@@ -908,6 +908,158 @@ app.delete('/api/formularios/:id', async (req, res) => {
     }
 });
 
+// Endpoint para crear nueva orden (guarda en PostgreSQL y Wix HistoriaClinica)
+app.post('/api/ordenes', async (req, res) => {
+    try {
+        const {
+            codEmpresa,
+            numeroId,
+            primerNombre,
+            segundoNombre,
+            primerApellido,
+            segundoApellido,
+            celular,
+            cargo,
+            ciudad,
+            tipoExamen,
+            medico,
+            fechaAtencion,
+            atendido,
+            examenes,
+            empresa
+        } = req.body;
+
+        console.log('');
+        console.log('═══════════════════════════════════════════════════════════');
+        console.log('📋 CREANDO NUEVA ORDEN');
+        console.log('═══════════════════════════════════════════════════════════');
+        console.log('📦 Datos recibidos:', JSON.stringify(req.body, null, 2));
+
+        // Validar campos requeridos
+        if (!numeroId || !primerNombre || !primerApellido || !codEmpresa || !celular) {
+            return res.status(400).json({
+                success: false,
+                message: 'Faltan campos requeridos: numeroId, primerNombre, primerApellido, codEmpresa, celular'
+            });
+        }
+
+        // Generar un _id único para Wix (formato UUID-like)
+        const wixId = `orden_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        // 1. Guardar en PostgreSQL HistoriaClinica
+        console.log('');
+        console.log('💾 Guardando en PostgreSQL HistoriaClinica...');
+
+        const insertQuery = `
+            INSERT INTO "HistoriaClinica" (
+                "_id", "numeroId", "primerNombre", "segundoNombre", "primerApellido", "segundoApellido",
+                "celular", "codEmpresa", "empresa", "cargo", "ciudad", "tipoExamen", "medico",
+                "fechaAtencion", "atendido", "examenes", "_createdDate", "_updatedDate"
+            ) VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW()
+            )
+            RETURNING "_id", "numeroId", "primerNombre", "primerApellido"
+        `;
+
+        const insertValues = [
+            wixId,
+            numeroId,
+            primerNombre,
+            segundoNombre || null,
+            primerApellido,
+            segundoApellido || null,
+            celular,
+            codEmpresa,
+            empresa || null,
+            cargo || null,
+            ciudad || null,
+            tipoExamen || null,
+            medico || null,
+            fechaAtencion ? new Date(fechaAtencion) : null,
+            atendido || 'PENDIENTE',
+            examenes || null
+        ];
+
+        const pgResult = await pool.query(insertQuery, insertValues);
+        console.log('✅ PostgreSQL: Orden guardada con _id:', wixId);
+
+        // 2. Sincronizar con Wix
+        console.log('');
+        console.log('📤 Sincronizando con Wix...');
+
+        try {
+            const wixPayload = {
+                _id: wixId,
+                numeroId,
+                primerNombre,
+                segundoNombre: segundoNombre || '',
+                primerApellido,
+                segundoApellido: segundoApellido || '',
+                celular,
+                codEmpresa,
+                empresa: empresa || '',
+                cargo: cargo || '',
+                ciudad: ciudad || '',
+                tipoExamen: tipoExamen || '',
+                medico: medico || '',
+                fechaAtencion: fechaAtencion || '',
+                atendido: atendido || 'PENDIENTE',
+                examenes: examenes || ''
+            };
+
+            const wixResponse = await fetch('https://www.bsl.com.co/_functions/actualizarHistoriaClinica', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(wixPayload)
+            });
+
+            if (wixResponse.ok) {
+                const wixResult = await wixResponse.json();
+                console.log('✅ Wix: Sincronizado exitosamente');
+                console.log('   Respuesta:', JSON.stringify(wixResult, null, 2));
+            } else {
+                const errorText = await wixResponse.text();
+                console.error('⚠️ Wix: Error al sincronizar');
+                console.error('   Status:', wixResponse.status);
+                console.error('   Response:', errorText);
+            }
+        } catch (wixError) {
+            console.error('⚠️ Wix: Excepción al sincronizar:', wixError.message);
+            // No bloqueamos si Wix falla
+        }
+
+        console.log('');
+        console.log('═══════════════════════════════════════════════════════════');
+        console.log('🎉 ORDEN CREADA EXITOSAMENTE');
+        console.log('   _id:', wixId);
+        console.log('   Paciente:', primerNombre, primerApellido);
+        console.log('   Cédula:', numeroId);
+        console.log('═══════════════════════════════════════════════════════════');
+        console.log('');
+
+        res.json({
+            success: true,
+            message: 'Orden creada exitosamente',
+            data: {
+                _id: wixId,
+                numeroId,
+                primerNombre,
+                primerApellido
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error al crear orden:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al crear la orden',
+            error: error.message
+        });
+    }
+});
+
 // Endpoint para marcar como atendido desde Wix (upsert en HistoriaClinica)
 app.post('/api/marcar-atendido', async (req, res) => {
     try {

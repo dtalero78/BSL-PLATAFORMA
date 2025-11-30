@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Orden - BSL Sistema Médico</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #FAFAFA;
+            color: #1F2937;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: white;
+            border-right: 1px solid #E5E7EB;
+            padding: 24px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-logo {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid #E5E7EB;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .sidebar-logo img {
+            max-width: 140px;
+            height: auto;
+        }
+
+        .sidebar-logo span {
+            display: block;
+            font-size: 11px;
+            color: #6B7280;
+            font-weight: 400;
+            margin-top: 8px;
+        }
+
+        .sidebar-nav {
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #4B5563;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            transition: all 0.15s ease;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background: #F3F4F6;
+            color: #111827;
+        }
+
+        .nav-item.active {
+            background: #E6F7FA;
+            color: #0099B2;
+            font-weight: 500;
+        }
+
+        .nav-icon {
+            font-size: 18px;
+        }
+
+        /* Main content */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 32px;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #6B7280;
+        }
+
+        /* Form Card */
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 32px;
+            max-width: 800px;
+        }
+
+        .form-section {
+            margin-bottom: 32px;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-label .required {
+            color: #EF4444;
+            margin-left: 2px;
+        }
+
+        .form-input,
+        .form-select {
+            padding: 10px 14px;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1F2937;
+            transition: all 0.15s ease;
+            background: white;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #0099B2;
+            box-shadow: 0 0 0 3px rgba(0, 153, 178, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #9CA3AF;
+        }
+
+        .form-select {
+            cursor: pointer;
+        }
+
+        /* Buttons */
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #E5E7EB;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+        }
+
+        .btn-secondary {
+            background: #F3F4F6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #E5E7EB;
+        }
+
+        .btn-primary {
+            background: #0099B2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #007A8C;
+        }
+
+        .btn-primary:disabled {
+            background: #9CA3AF;
+            cursor: not-allowed;
+        }
+
+        /* Loading state */
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Success message */
+        .success-message {
+            display: none;
+            background: #ECFDF5;
+            border: 1px solid #10B981;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-message h4 {
+            color: #065F46;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .success-message p {
+            color: #047857;
+            font-size: 13px;
+        }
+
+        .success-message a {
+            color: #0099B2;
+            text-decoration: underline;
+        }
+
+        /* Error message */
+        .error-message {
+            display: none;
+            background: #FEF2F2;
+            border: 1px solid #EF4444;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .error-message h4 {
+            color: #991B1B;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .error-message p {
+            color: #B91C1C;
+            font-size: 13px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-card {
+                padding: 20px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="/bsl-logo.png" alt="BSL - Bienestar & Salud Laboral">
+                <span>Sistema Médico</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/" class="nav-item">
+                    <span class="nav-icon">📝</span>
+                    Formulario Médico
+                </a>
+                <a href="/ver-formularios.html" class="nav-item">
+                    <span class="nav-icon">📋</span>
+                    Formularios
+                </a>
+                <a href="/nueva-orden.html" class="nav-item active">
+                    <span class="nav-icon">➕</span>
+                    Nueva Orden
+                </a>
+                <a href="/ver-historia-clinica.html" class="nav-item">
+                    <span class="nav-icon">🏥</span>
+                    Historia Clínica
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Nueva Orden</h1>
+                <p class="page-subtitle">Crear una nueva orden para examen médico ocupacional</p>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                <h4>✓ Orden creada exitosamente</h4>
+                <p id="successText"></p>
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                <h4>✕ Error al crear la orden</h4>
+                <p id="errorText"></p>
+            </div>
+
+            <div class="form-card">
+                <form id="ordenForm">
+                    <!-- Datos de la Empresa -->
+                    <div class="form-section">
+                        <h3 class="section-title">Datos de la Empresa</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Código Empresa <span class="required">*</span></label>
+                                <input type="text" class="form-input" name="codEmpresa" required placeholder="Ej: SIIGO">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nombre Empresa <span class="required">*</span></label>
+                                <input type="text" class="form-input" name="empresa" required placeholder="Nombre de la empresa">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Datos del Paciente -->
+                    <div class="form-section">
+                        <h3 class="section-title">Datos del Paciente</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Número de Identificación <span class="required">*</span></label>
+                                <input type="text" class="form-input" name="numeroId" required placeholder="Cédula o documento">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Celular <span class="required">*</span></label>
+                                <input type="tel" class="form-input" name="celular" required placeholder="Número de celular">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Primer Nombre <span class="required">*</span></label>
+                                <input type="text" class="form-input" name="primerNombre" required placeholder="Primer nombre">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Segundo Nombre</label>
+                                <input type="text" class="form-input" name="segundoNombre" placeholder="Segundo nombre">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Primer Apellido <span class="required">*</span></label>
+                                <input type="text" class="form-input" name="primerApellido" required placeholder="Primer apellido">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Segundo Apellido</label>
+                                <input type="text" class="form-input" name="segundoApellido" placeholder="Segundo apellido">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Cargo <span class="required">*</span></label>
+                                <input type="text" class="form-input" name="cargo" required placeholder="Cargo del trabajador">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Ciudad <span class="required">*</span></label>
+                                <input type="text" class="form-input" name="ciudad" required placeholder="Ciudad">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Datos del Examen -->
+                    <div class="form-section">
+                        <h3 class="section-title">Datos del Examen</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Tipo de Examen <span class="required">*</span></label>
+                                <select class="form-select" name="tipoExamen" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="INGRESO">Ingreso</option>
+                                    <option value="PERIODICO">Periódico</option>
+                                    <option value="RETIRO">Retiro</option>
+                                    <option value="REUBICACION">Reubicación</option>
+                                    <option value="POST-INCAPACIDAD">Post-incapacidad</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Exámenes</label>
+                                <input type="text" class="form-input" name="examenes" placeholder="Ej: Audiometría, Visiometría">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Médico</label>
+                                <input type="text" class="form-input" name="medico" placeholder="Nombre del médico">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Fecha de Atención</label>
+                                <input type="date" class="form-input" name="fechaAtencion">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Estado</label>
+                                <select class="form-select" name="atendido">
+                                    <option value="PENDIENTE">Pendiente</option>
+                                    <option value="ATENDIDO">Atendido</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="limpiarFormulario()">Limpiar</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Crear Orden</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const form = document.getElementById('ordenForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const successText = document.getElementById('successText');
+        const errorText = document.getElementById('errorText');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Hide messages
+            successMessage.classList.remove('show');
+            errorMessage.classList.remove('show');
+
+            // Show loading
+            submitBtn.classList.add('btn-loading');
+            submitBtn.disabled = true;
+
+            const formData = new FormData(form);
+            const datos = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/ordenes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(datos)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const wixId = result.data._id;
+                    const formUrl = `${window.location.origin}/?_id=${wixId}`;
+
+                    successText.innerHTML = `
+                        ID de la orden: <strong>${wixId}</strong><br>
+                        <a href="${formUrl}" target="_blank">Abrir formulario médico</a>
+                    `;
+                    successMessage.classList.add('show');
+
+                    // Clear form
+                    form.reset();
+                } else {
+                    errorText.textContent = result.message || 'Error desconocido';
+                    errorMessage.classList.add('show');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorText.textContent = error.message || 'Error de conexión';
+                errorMessage.classList.add('show');
+            } finally {
+                submitBtn.classList.remove('btn-loading');
+                submitBtn.disabled = false;
+            }
+        });
+
+        function limpiarFormulario() {
+            form.reset();
+            successMessage.classList.remove('show');
+            errorMessage.classList.remove('show');
+        }
+    </script>
+</body>
+</html>
