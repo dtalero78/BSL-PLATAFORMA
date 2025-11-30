@@ -559,6 +559,40 @@ app.get('/api/formulario/:id', async (req, res) => {
     }
 });
 
+// Buscar formulario por numeroId (cédula)
+app.get('/api/formularios/buscar/:numeroId', async (req, res) => {
+    try {
+        const { numeroId } = req.params;
+
+        console.log(`🔍 Buscando formulario por numeroId: ${numeroId}`);
+
+        const result = await pool.query(
+            'SELECT * FROM formularios WHERE numero_id = $1 ORDER BY fecha_registro DESC LIMIT 1',
+            [numeroId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.json({
+                success: false,
+                message: 'No se encontró formulario para este paciente'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('❌ Error buscando formulario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al buscar formulario',
+            error: error.message
+        });
+    }
+});
+
 // También crear una ruta con /api/formularios/:id para compatibilidad con el frontend
 app.get('/api/formularios/:id', async (req, res) => {
     try {

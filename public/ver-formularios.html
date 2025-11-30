@@ -1520,25 +1520,45 @@
             body.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Cargando...</p></div>';
 
             try {
-                let orden;
+                let datos;
                 if (detallesCache[ordenId]) {
-                    orden = detallesCache[ordenId];
+                    datos = detallesCache[ordenId];
                 } else {
-                    const response = await fetch(`/api/historia-clinica/${ordenId}`);
-                    const result = await response.json();
-                    if (!result.success) throw new Error('No se pudo cargar');
-                    orden = result.data;
-                    detallesCache[ordenId] = orden;
+                    // Cargar datos de HistoriaClinica
+                    const ordenResponse = await fetch(`/api/historia-clinica/${ordenId}`);
+                    const ordenResult = await ordenResponse.json();
+                    if (!ordenResult.success) throw new Error('No se pudo cargar la orden');
+
+                    const orden = ordenResult.data;
+                    datos = { orden, formulario: null };
+
+                    // Buscar formulario por numeroId si existe
+                    if (orden.numeroId) {
+                        try {
+                            const formResponse = await fetch(`/api/formularios/buscar/${orden.numeroId}`);
+                            const formResult = await formResponse.json();
+                            if (formResult.success && formResult.data) {
+                                datos.formulario = formResult.data;
+                            }
+                        } catch (e) {
+                            console.log('No se encontró formulario para este paciente');
+                        }
+                    }
+
+                    detallesCache[ordenId] = datos;
                 }
 
-                renderModalDetalles(orden);
+                renderModalDetalles(datos);
 
             } catch (error) {
                 body.innerHTML = `<div class="empty-state"><p class="empty-state-title">Error al cargar</p></div>`;
             }
         }
 
-        function renderModalDetalles(orden) {
+        function renderModalDetalles(datos) {
+            const orden = datos.orden;
+            const form = datos.formulario;
+
             const nombreCompleto = `${orden.primerNombre || ''} ${orden.segundoNombre || ''} ${orden.primerApellido || ''} ${orden.segundoApellido || ''}`.replace(/\s+/g, ' ').trim() || 'Sin nombre';
             document.getElementById('modalDetallesTitulo').textContent = nombreCompleto;
             document.getElementById('modalDetallesSubtitulo').textContent = `Cédula: ${orden.numeroId || 'N/A'} • ID: ${orden._id}`;
@@ -1556,9 +1576,80 @@
             const fechaCreacion = orden._createdDate ? new Date(orden._createdDate).toLocaleString('es-CO') : '—';
             const fechaConsulta = orden.fechaConsulta ? new Date(orden.fechaConsulta).toLocaleString('es-CO') : '—';
 
+            // Sección de formulario (si existe)
+            let formularioHTML = '';
+            if (form) {
+                formularioHTML = `
+                    <div class="detail-banner" style="background: linear-gradient(135deg, #10B981, #059669);">📋 Formulario Médico Diligenciado</div>
+
+                    ${form.foto ? `<div class="detail-photo"><img src="${form.foto}" alt="Foto"></div>` : ''}
+
+                    <div class="detail-section">
+                        <div class="detail-section-title">Datos Personales (Formulario)</div>
+                        <div class="detail-grid">
+                            <div class="detail-item"><div class="detail-label">Género</div><div class="detail-value">${form.genero || '—'}</div></div>
+                            <div class="detail-item"><div class="detail-label">Edad</div><div class="detail-value">${form.edad || '—'} años</div></div>
+                            <div class="detail-item"><div class="detail-label">Fecha Nacimiento</div><div class="detail-value">${form.fecha_nacimiento || '—'}</div></div>
+                            <div class="detail-item"><div class="detail-label">Lugar Nacimiento</div><div class="detail-value">${form.lugar_nacimiento || '—'}</div></div>
+                            <div class="detail-item"><div class="detail-label">Ciudad Residencia</div><div class="detail-value">${form.ciudad_residencia || '—'}</div></div>
+                            <div class="detail-item"><div class="detail-label">Estado Civil</div><div class="detail-value">${form.estado_civil || '—'}</div></div>
+                            <div class="detail-item"><div class="detail-label">Hijos</div><div class="detail-value">${form.hijos || '—'}</div></div>
+                            <div class="detail-item"><div class="detail-label">Nivel Educativo</div><div class="detail-value">${form.nivel_educativo || '—'}</div></div>
+                            <div class="detail-item full"><div class="detail-label">Email</div><div class="detail-value">${form.email || '—'}</div></div>
+                        </div>
+                    </div>
+
+                    ${form.eps || form.arl || form.pensiones ? `
+                        <div class="detail-section">
+                            <div class="detail-section-title">Seguridad Social</div>
+                            <div class="detail-grid">
+                                <div class="detail-item"><div class="detail-label">EPS</div><div class="detail-value">${form.eps || '—'}</div></div>
+                                <div class="detail-item"><div class="detail-label">ARL</div><div class="detail-value">${form.arl || '—'}</div></div>
+                                <div class="detail-item full"><div class="detail-label">Fondo Pensiones</div><div class="detail-value">${form.pensiones || '—'}</div></div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="detail-section">
+                        <div class="detail-section-title">Datos Laborales (Formulario)</div>
+                        <div class="detail-grid">
+                            <div class="detail-item full"><div class="detail-label">Profesión/Oficio</div><div class="detail-value">${form.profesion_oficio || '—'}</div></div>
+                            <div class="detail-item"><div class="detail-label">Empresa 1</div><div class="detail-value">${form.empresa1 || '—'}</div></div>
+                            <div class="detail-item"><div class="detail-label">Empresa 2</div><div class="detail-value">${form.empresa2 || '—'}</div></div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <div class="detail-section-title">Datos Físicos</div>
+                        <div class="detail-grid">
+                            <div class="detail-item"><div class="detail-label">Estatura</div><div class="detail-value">${form.estatura || '—'} cm</div></div>
+                            <div class="detail-item"><div class="detail-label">Peso</div><div class="detail-value">${form.peso || '—'} kg</div></div>
+                            <div class="detail-item full"><div class="detail-label">Ejercicio</div><div class="detail-value">${form.ejercicio || '—'}</div></div>
+                        </div>
+                    </div>
+
+                    ${form.firma ? `
+                        <div class="detail-section">
+                            <div class="detail-section-title">Firma del Paciente</div>
+                            <div style="text-align: center; padding: 16px; background: #F9FAFB; border-radius: 8px;">
+                                <img src="${form.firma}" alt="Firma" style="max-width: 200px; border-radius: 4px;">
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+            } else {
+                formularioHTML = `
+                    <div style="background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;">
+                        <div style="font-size: 24px; margin-bottom: 8px;">⏳</div>
+                        <div style="font-weight: 600; color: #92400E;">Formulario Pendiente</div>
+                        <div style="font-size: 13px; color: #B45309;">El paciente aún no ha diligenciado el formulario médico</div>
+                    </div>
+                `;
+            }
+
             body.innerHTML = `
                 <div class="detail-section">
-                    <div class="detail-section-title">Información del Paciente</div>
+                    <div class="detail-section-title">Información de la Orden</div>
                     <div class="detail-grid">
                         <div class="detail-item"><div class="detail-label">Primer Nombre</div><div class="detail-value">${orden.primerNombre || '—'}</div></div>
                         <div class="detail-item"><div class="detail-label">Segundo Nombre</div><div class="detail-value">${orden.segundoNombre || '—'}</div></div>
@@ -1603,6 +1694,8 @@
                         </div>
                     </div>
                 ` : ''}
+
+                ${formularioHTML}
 
                 <div class="detail-section">
                     <div class="detail-section-title">Acciones Rápidas</div>
