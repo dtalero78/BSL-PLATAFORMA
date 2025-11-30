@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ver Formularios - BSL</title>
+    <title>Formularios - BSL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -15,423 +15,442 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: #F9FAFB;
-            padding: 40px 20px;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            font-size: 32px;
-            font-weight: 700;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #FAFAFA;
             color: #1F2937;
-            margin-bottom: 40px;
-            text-align: center;
+            min-height: 100vh;
         }
 
-        .formularios-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 24px;
+        /* ========== LAYOUT ========== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
         }
 
-        .formulario-card {
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
             background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-right: 1px solid #E5E7EB;
+            padding: 24px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
         }
 
-        .formulario-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-        }
-
-        .formulario-header {
-            border-bottom: 2px solid #E5E7EB;
-            padding-bottom: 16px;
+        .sidebar-logo {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid #E5E7EB;
             margin-bottom: 16px;
         }
 
-        .formulario-id {
-            display: inline-block;
-            background: #00B8E6;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 8px;
+        .sidebar-logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #111827;
         }
 
-        .formulario-fecha {
-            font-size: 14px;
-            color: #6B7280;
-        }
-
-        .foto-container {
-            margin: 16px 0;
-            text-align: center;
-        }
-
-        .foto-container img {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .firma-container {
-            margin: 16px 0;
-            text-align: center;
-        }
-
-        .firma-container img {
-            max-width: 100%;
-            max-height: 100px;
-            border-radius: 8px;
-            border: 2px solid #E5E7EB;
-        }
-
-        .dato {
-            margin: 8px 0;
-            font-size: 14px;
-        }
-
-        .dato-label {
-            font-weight: 600;
-            color: #4B5563;
-        }
-
-        .dato-value {
-            color: #1F2937;
-        }
-
-        .no-data {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6B7280;
-            font-size: 18px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-            font-size: 18px;
-            color: #00B8E6;
-        }
-
-        .error {
-            background: #FEE2E2;
-            border: 2px solid #EF4444;
-            border-radius: 8px;
-            padding: 16px;
-            margin: 20px 0;
-            color: #991B1B;
-        }
-
-        .section-title {
-            font-weight: 600;
-            color: #1F2937;
-            margin-top: 16px;
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
-
-        .btn-editar {
-            background: #00B8E6;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 16px;
-            transition: background 0.2s ease;
-        }
-
-        .btn-editar:hover {
-            background: #009FC7;
-        }
-
-        .btn-editar:active {
-            transform: scale(0.98);
-        }
-
-        .btn-eliminar {
-            background: #EF4444;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .btn-eliminar:hover {
-            background: #DC2626;
-        }
-
-        .btn-eliminar:active {
-            transform: scale(0.98);
-        }
-
-        /* Botones de acciones rápidas en cards */
-        .card-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .btn-action {
-            background: transparent;
-            border: 1px solid #E5E7EB;
-            color: #6B7280;
-            padding: 6px 10px;
-            border-radius: 6px;
+        .sidebar-logo span {
             font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            color: #6B7280;
+            font-weight: 400;
+        }
+
+        .sidebar-nav {
+            padding: 0 12px;
+        }
+
+        .nav-item {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #4B5563;
             text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            margin-bottom: 4px;
         }
 
-        .btn-action:hover {
+        .nav-item:hover {
             background: #F3F4F6;
-            border-color: #D1D5DB;
+            color: #111827;
+        }
+
+        .nav-item.active {
+            background: #EEF2FF;
+            color: #4F46E5;
+        }
+
+        .nav-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 32px 40px;
+        }
+
+        /* ========== HEADER ========== */
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #6B7280;
+        }
+
+        /* ========== TABS & FILTERS ========== */
+        .filters-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: #F3F4F6;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6B7280;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tab:hover {
             color: #374151;
         }
 
-        .btn-action.whatsapp:hover {
+        .tab.active {
+            background: white;
+            color: #111827;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 320px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+            transition: all 0.15s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: #9CA3AF;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9CA3AF;
+            font-size: 16px;
+        }
+
+        .stats-badge {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #6B7280;
+        }
+
+        .stats-badge strong {
+            color: #111827;
+        }
+
+        /* ========== TABLE ========== */
+        .table-container {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            background: #F9FAFB;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .data-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tbody tr {
+            border-bottom: 1px solid #F3F4F6;
+            transition: background 0.15s ease;
+        }
+
+        .data-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .data-table tbody tr:hover {
+            background: #F9FAFB;
+        }
+
+        .data-table td {
+            padding: 16px;
+            font-size: 14px;
+            color: #374151;
+            vertical-align: middle;
+        }
+
+        .cell-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6B7280;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .name-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .name-primary {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .name-secondary {
+            font-size: 12px;
+            color: #9CA3AF;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.atendido {
             background: #DCFCE7;
-            border-color: #22C55E;
-            color: #16A34A;
+            color: #166534;
         }
 
-        .btn-action.download:hover {
+        .status-badge.pendiente {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-badge.proceso {
             background: #DBEAFE;
-            border-color: #3B82F6;
-            color: #2563EB;
+            color: #1E40AF;
         }
 
-        .btn-action.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Action buttons */
+        .actions-cell {
+            display: flex;
+            gap: 4px;
+            justify-content: flex-end;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #6B7280;
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+
+        .btn-icon:hover {
+            background: #F3F4F6;
+            color: #374151;
+        }
+
+        .btn-icon.whatsapp:hover {
+            background: #DCFCE7;
+            color: #166534;
+        }
+
+        .btn-icon.download:hover {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .btn-icon.view:hover {
+            background: #EEF2FF;
+            color: #4F46E5;
+        }
+
+        .btn-icon.disabled {
+            opacity: 0.3;
             pointer-events: none;
         }
 
-        /* Estilos del modal */
+        /* ========== EMPTY STATE ========== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6B7280;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+        }
+
+        /* Loading */
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6B7280;
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #E5E7EB;
+            border-top-color: #4F46E5;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========== MODAL BASE ========== */
         .modal-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             background: rgba(0, 0, 0, 0.5);
             z-index: 1000;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 20px;
             overflow-y: auto;
         }
 
         .modal-overlay.active {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
         }
 
         .modal {
             background: white;
             border-radius: 12px;
-            padding: 32px;
-            max-width: 800px;
             width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 640px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            animation: modalSlide 0.2s ease-out;
         }
 
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid #E5E7EB;
-        }
-
-        .modal-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1F2937;
-        }
-
-        .btn-cerrar {
-            background: #EF4444;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .btn-cerrar:hover {
-            background: #DC2626;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-label {
-            display: block;
-            font-weight: 600;
-            color: #4B5563;
-            margin-bottom: 6px;
-            font-size: 14px;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 2px solid #E5E7EB;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            transition: border-color 0.2s ease;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #00B8E6;
-        }
-
-        .form-section {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 2px solid #E5E7EB;
-        }
-
-        .form-section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1F2937;
-            margin-bottom: 16px;
-        }
-
-        .btn-guardar {
-            background: #10B981;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 24px;
-            transition: background 0.2s ease;
-        }
-
-        .btn-guardar:hover {
-            background: #059669;
-        }
-
-        .btn-guardar:disabled {
-            background: #9CA3AF;
-            cursor: not-allowed;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-        }
-
-        /* Estilos para vista resumida */
-        .card-summary {
-            display: block;
-        }
-
-        .btn-expand {
-            background: #6366F1;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 16px;
-            transition: background 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-expand:hover {
-            background: #4F46E5;
-        }
-
-        .btn-expand:active {
-            transform: scale(0.98);
-        }
-
-        /* Modal de detalles */
-        .modal-detalles-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 2000;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .modal-detalles-overlay.active {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            padding-top: 40px;
-            padding-bottom: 40px;
-        }
-
-        .modal-detalles {
-            background: white;
-            border-radius: 16px;
-            padding: 0;
+        .modal.large {
             max-width: 900px;
-            width: 100%;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-            margin: auto;
-            animation: slideDown 0.3s ease-out;
         }
 
-        @keyframes slideDown {
+        @keyframes modalSlide {
             from {
                 opacity: 0;
-                transform: translateY(-30px);
+                transform: translateY(-20px);
             }
             to {
                 opacity: 1;
@@ -439,1280 +458,1172 @@
             }
         }
 
-        .modal-detalles-header {
-            background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
-            color: white;
-            padding: 24px 32px;
-            border-radius: 16px 16px 0 0;
+        .modal-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid #E5E7EB;
         }
 
-        .modal-detalles-title {
-            font-size: 24px;
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .modal-detalles-subtitle {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-top: 4px;
-        }
-
-        .btn-cerrar-detalles {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            font-size: 20px;
+        .modal-title {
+            font-size: 18px;
             font-weight: 600;
+            color: #111827;
+        }
+
+        .modal-subtitle {
+            font-size: 13px;
+            color: #6B7280;
+            margin-top: 2px;
+        }
+
+        .btn-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #F3F4F6;
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
+            font-size: 18px;
+            color: #6B7280;
+            transition: all 0.15s ease;
         }
 
-        .btn-cerrar-detalles:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.1);
+        .btn-close:hover {
+            background: #E5E7EB;
+            color: #374151;
         }
 
-        .modal-detalles-body {
-            padding: 32px;
-            max-height: calc(90vh - 200px);
+        .modal-body {
+            padding: 24px;
+            max-height: calc(80vh - 140px);
             overflow-y: auto;
         }
 
-        .modal-detalles-foto {
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            padding: 16px 24px;
+            border-top: 1px solid #E5E7EB;
+            background: #F9FAFB;
+            border-radius: 0 0 12px 12px;
+        }
+
+        /* ========== DETAIL MODAL ========== */
+        .detail-photo {
             text-align: center;
-            margin-bottom: 32px;
-            padding: 24px;
-            background: #F9FAFB;
-            border-radius: 12px;
+            margin-bottom: 24px;
         }
 
-        .modal-detalles-foto img {
-            max-width: 200px;
-            height: 200px;
+        .detail-photo img {
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
             object-fit: cover;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 3px solid #E5E7EB;
         }
 
-        .detalles-section {
-            margin-bottom: 32px;
+        .detail-section {
+            margin-bottom: 24px;
         }
 
-        .detalles-section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1F2937;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 3px solid #6366F1;
-            display: inline-block;
+        .detail-section:last-child {
+            margin-bottom: 0;
         }
 
-        .detalles-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-        }
-
-        .detalle-item {
-            background: #F9FAFB;
-            padding: 12px 16px;
-            border-radius: 8px;
-            border-left: 3px solid #6366F1;
-        }
-
-        .detalle-label {
+        .detail-section-title {
             font-size: 12px;
             font-weight: 600;
             color: #6B7280;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #E5E7EB;
         }
 
-        .detalle-value {
-            font-size: 15px;
-            color: #1F2937;
-            font-weight: 500;
-        }
-
-        .modal-detalles-footer {
-            padding: 24px 32px;
-            background: #F9FAFB;
-            border-radius: 0 0 16px 16px;
-            border-top: 1px solid #E5E7EB;
-        }
-
-        .summary-info {
+        .detail-grid {
             display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
 
-        .summary-dato {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            background: #F3F4F6;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .summary-dato-label {
-            font-weight: 600;
-            color: #4B5563;
-        }
-
-        .summary-dato-value {
-            color: #1F2937;
-            font-weight: 500;
-        }
-
-        .foto-container-summary {
-            margin: 16px 0;
-            text-align: center;
-        }
-
-        .foto-container-summary img {
-            width: 100%;
-            max-width: 150px;
-            height: 150px;
-            object-fit: cover;
+        .detail-item {
+            padding: 10px 12px;
+            background: #F9FAFB;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        /* Estilos del buscador */
-        .search-container {
-            margin-bottom: 32px;
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .search-input-wrapper {
-            flex: 1;
-            min-width: 280px;
-            position: relative;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 14px 20px 14px 50px;
-            border: 2px solid #E5E7EB;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.2s ease;
-            background: white;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #00B8E6;
-            box-shadow: 0 0 0 4px rgba(0, 184, 230, 0.1);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 20px;
-            color: #9CA3AF;
-        }
-
-        .search-stats {
-            background: #EEF2FF;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            color: #4F46E5;
-            font-weight: 500;
-        }
-
-        .fecha-consulta-badge {
-            display: inline-block;
-            background: #10B981;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 8px;
-        }
-
-        .fecha-consulta-badge.pendiente {
-            background: #F59E0B;
-        }
-
-        .no-results {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6B7280;
-            font-size: 18px;
+        .detail-item.full {
             grid-column: 1 / -1;
         }
 
-        /* ========== ESTILOS RESPONSIVE MÓVIL ========== */
-        @media (max-width: 768px) {
-            body {
-                padding: 16px 12px;
+        .detail-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: #9CA3AF;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 2px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #111827;
+            font-weight: 500;
+        }
+
+        .detail-banner {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            margin: 24px 0;
+        }
+
+        /* ========== FORM STYLES ========== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            padding: 10px 12px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.15s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #E5E7EB;
+        }
+
+        .form-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 16px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary {
+            background: #4F46E5;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4338CA;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #374151;
+            border: 1px solid #E5E7EB;
+        }
+
+        .btn-secondary:hover {
+            background: #F9FAFB;
+        }
+
+        .btn-danger {
+            background: #EF4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #DC2626;
+        }
+
+        .btn-success {
+            background: #10B981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .btn-flex {
+            flex: 1;
+        }
+
+        /* Historia Clínica Section */
+        .hc-section {
+            background: #F0FDF4;
+            border: 1px solid #BBF7D0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 24px;
+        }
+
+        .hc-section .form-section-title {
+            color: #166534;
+        }
+
+        /* ========== MOBILE STYLES ========== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                display: none;
             }
 
-            h1 {
-                font-size: 24px;
-                margin-bottom: 20px;
-            }
-
-            /* Buscador móvil */
-            .search-container {
-                flex-direction: column;
-                gap: 12px;
-                margin-bottom: 20px;
-            }
-
-            .search-input-wrapper {
-                min-width: 100%;
-            }
-
-            .search-input {
-                padding: 12px 16px 12px 44px;
-                font-size: 16px;
-                border-radius: 10px;
-            }
-
-            .search-icon {
-                left: 14px;
-                font-size: 18px;
-            }
-
-            .search-stats {
-                width: 100%;
-                text-align: center;
-                padding: 8px 16px;
-                font-size: 13px;
-            }
-
-            /* Grid de cards móvil */
-            .formularios-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-
-            .formulario-card {
-                padding: 16px;
-                border-radius: 10px;
-            }
-
-            .formulario-card:hover {
-                transform: none;
-            }
-
-            .formulario-header {
-                padding-bottom: 12px;
-                margin-bottom: 12px;
-            }
-
-            .formulario-id {
-                font-size: 15px;
-                padding: 6px 12px;
-                width: 100%;
-                text-align: center;
-                display: block;
-            }
-
-            .summary-info {
-                gap: 8px;
-            }
-
-            .summary-dato {
-                padding: 10px 12px;
-                font-size: 14px;
-            }
-
-            .fecha-consulta-badge {
-                display: block;
-                text-align: center;
-                margin-top: 12px;
-                padding: 8px 12px;
-                font-size: 13px;
-            }
-
-            .btn-expand {
-                padding: 14px 20px;
-                font-size: 15px;
-                margin-top: 12px;
-            }
-
-            /* Modal de detalles móvil */
-            .modal-detalles-overlay.active {
-                padding: 10px;
-                padding-top: 20px;
-            }
-
-            .modal-detalles {
-                border-radius: 12px;
-                max-height: 95vh;
-            }
-
-            .modal-detalles-header {
-                padding: 16px 20px;
-                border-radius: 12px 12px 0 0;
-            }
-
-            .modal-detalles-title {
-                font-size: 18px;
-            }
-
-            .modal-detalles-subtitle {
-                font-size: 12px;
-            }
-
-            .btn-cerrar-detalles {
-                width: 32px;
-                height: 32px;
-                font-size: 16px;
-            }
-
-            .modal-detalles-body {
-                padding: 16px;
-                max-height: calc(85vh - 180px);
-            }
-
-            .modal-detalles-foto img {
-                max-width: 150px;
-                height: 150px;
-            }
-
-            .detalles-grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-
-            .detalle-item {
-                padding: 10px 14px;
-            }
-
-            .detalle-label {
-                font-size: 11px;
-            }
-
-            .detalle-value {
-                font-size: 14px;
-            }
-
-            .detalles-section-title {
-                font-size: 16px;
-            }
-
-            .modal-detalles-footer {
-                padding: 16px 20px;
-            }
-
-            /* Modal de edición móvil */
-            .modal-overlay.active {
-                padding: 10px;
-                align-items: flex-start;
-                padding-top: 20px;
-            }
-
-            .modal {
-                padding: 20px;
-                border-radius: 12px;
-                max-height: 90vh;
-            }
-
-            .modal-header {
-                flex-direction: column;
-                gap: 12px;
-                margin-bottom: 20px;
-                padding-bottom: 12px;
-            }
-
-            .modal-title {
-                font-size: 20px;
-                text-align: center;
-            }
-
-            .btn-cerrar {
-                width: 100%;
-                padding: 10px 16px;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-
-            .form-section {
-                margin-top: 20px;
-                padding-top: 20px;
-            }
-
-            .form-section-title {
-                font-size: 16px;
-                margin-bottom: 12px;
-            }
-
-            .form-group {
-                margin-bottom: 12px;
-            }
-
-            .form-label {
-                font-size: 13px;
-                margin-bottom: 4px;
-            }
-
-            .form-input {
-                padding: 12px;
-                font-size: 16px;
-                border-radius: 8px;
-            }
-
-            /* Evitar zoom en inputs en iOS */
-            .form-input, .search-input, select, textarea {
-                font-size: 16px !important;
-            }
-
-            .btn-guardar {
-                padding: 14px 20px;
-                font-size: 16px;
-                margin-top: 20px;
-            }
-
-            .btn-editar {
-                padding: 14px 20px;
-                font-size: 15px;
-            }
-
-            /* Sección Historia Clínica móvil */
-            #seccionHistoriaClinica {
-                padding: 16px !important;
-                margin-top: 16px !important;
-            }
-
-            /* Loading y mensajes */
-            .loading, .no-data, .no-results {
-                padding: 40px 16px;
-                font-size: 16px;
-            }
-
-            .error {
-                padding: 12px;
-                font-size: 14px;
+            .main-content {
+                margin-left: 0;
+                padding: 20px 16px;
             }
         }
 
-        /* Tablets */
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .formularios-grid {
-                grid-template-columns: repeat(2, 1fr);
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 20px;
+            }
+
+            .filters-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .tabs {
+                order: 2;
+            }
+
+            .search-box {
+                order: 1;
+                max-width: 100%;
+            }
+
+            .stats-badge {
+                order: 3;
+                text-align: center;
+            }
+
+            /* Hide table on mobile */
+            .table-container {
+                display: none;
+            }
+
+            /* Mobile Cards */
+            .mobile-cards {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .mobile-card {
+                background: white;
+                border: 1px solid #E5E7EB;
+                border-radius: 12px;
+                padding: 16px;
+            }
+
+            .mobile-card-header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+
+            .mobile-card-avatar {
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                background: #E5E7EB;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                font-weight: 600;
+                color: #6B7280;
+                flex-shrink: 0;
+                overflow: hidden;
+            }
+
+            .mobile-card-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .mobile-card-name {
+                flex: 1;
+            }
+
+            .mobile-card-name h3 {
+                font-size: 16px;
+                font-weight: 600;
+                color: #111827;
+                margin-bottom: 2px;
+            }
+
+            .mobile-card-name span {
+                font-size: 13px;
+                color: #6B7280;
+            }
+
+            .mobile-card-info {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+
+            .mobile-card-info-item {
+                background: #F9FAFB;
+                padding: 8px 10px;
+                border-radius: 6px;
+            }
+
+            .mobile-card-info-label {
+                font-size: 11px;
+                color: #9CA3AF;
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
+            }
+
+            .mobile-card-info-value {
+                font-size: 13px;
+                color: #111827;
+                font-weight: 500;
+            }
+
+            .mobile-card-status {
+                margin-bottom: 12px;
+            }
+
+            .mobile-card-actions {
+                display: flex;
+                gap: 8px;
+            }
+
+            .mobile-card-btn {
+                flex: 1;
+                padding: 10px;
+                border: 1px solid #E5E7EB;
+                background: white;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 500;
+                color: #374151;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                transition: all 0.15s ease;
+                text-decoration: none;
+            }
+
+            .mobile-card-btn:hover {
+                background: #F9FAFB;
+            }
+
+            .mobile-card-btn.primary {
+                background: #4F46E5;
+                border-color: #4F46E5;
+                color: white;
+            }
+
+            .mobile-card-btn.primary:hover {
+                background: #4338CA;
+            }
+
+            .mobile-card-btn.disabled {
+                opacity: 0.4;
+                pointer-events: none;
+            }
+
+            /* Modal adjustments */
+            .modal-overlay {
+                padding: 16px;
+                align-items: flex-start;
             }
 
             .modal {
-                max-width: 90%;
+                max-width: 100%;
             }
 
-            .modal-detalles {
-                max-width: 90%;
+            .modal-body {
+                max-height: calc(85vh - 140px);
+            }
+
+            .detail-grid, .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+        }
+
+        /* Desktop: hide mobile cards */
+        @media (min-width: 769px) {
+            .mobile-cards {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📋 Formularios Guardados</h1>
-
-        <!-- Buscador -->
-        <div class="search-container">
-            <div class="search-input-wrapper">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre, cédula, teléfono o empresa..." oninput="filtrarFormularios()">
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <h1>BSL</h1>
+                <span>Sistema Médico</span>
             </div>
-            <div class="search-stats" id="searchStats">Total: 0 registros</div>
-        </div>
+            <nav class="sidebar-nav">
+                <a href="/" class="nav-item">
+                    <span class="nav-icon">📝</span>
+                    Nuevo Formulario
+                </a>
+                <a href="/ver-formularios.html" class="nav-item active">
+                    <span class="nav-icon">📋</span>
+                    Formularios
+                </a>
+                <a href="/ver-historia-clinica.html" class="nav-item">
+                    <span class="nav-icon">🏥</span>
+                    Historia Clínica
+                </a>
+                <a href="/actualizar-foto.html" class="nav-item">
+                    <span class="nav-icon">📷</span>
+                    Actualizar Foto
+                </a>
+            </nav>
+        </aside>
 
-        <div id="loading" class="loading">Cargando formularios...</div>
-        <div id="error" class="error" style="display: none;"></div>
-        <div id="formularios" class="formularios-grid"></div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Formularios</h1>
+                <p class="page-subtitle">Gestiona los formularios de pacientes</p>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="filters-bar">
+                <div class="tabs">
+                    <button class="tab active" data-filter="todos">Todos</button>
+                    <button class="tab" data-filter="atendido">Atendidos</button>
+                    <button class="tab" data-filter="pendiente">Pendientes</button>
+                </div>
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nombre, cédula o empresa...">
+                </div>
+                <div class="stats-badge" id="statsCounter">
+                    <strong>0</strong> registros
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Cargando formularios...</p>
+            </div>
+
+            <!-- Table Container (Desktop) -->
+            <div class="table-container" id="tableContainer" style="display: none;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Paciente</th>
+                            <th>Cédula</th>
+                            <th>Teléfono</th>
+                            <th>Empresa</th>
+                            <th>Estado</th>
+                            <th>Fecha Consulta</th>
+                            <th style="text-align: right;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Data rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="mobile-cards" id="mobileCards">
+                <!-- Mobile cards will be inserted here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📋</div>
+                <p class="empty-state-title">No hay formularios</p>
+                <p class="empty-state-text">Aún no se han registrado formularios</p>
+            </div>
+        </main>
     </div>
 
-    <!-- Modal de detalles del formulario -->
-    <div id="modalDetalles" class="modal-detalles-overlay">
-        <div class="modal-detalles">
-            <div class="modal-detalles-header">
-                <div>
-                    <h2 class="modal-detalles-title" id="modalDetallesTitulo">Detalles del Formulario</h2>
-                    <div class="modal-detalles-subtitle" id="modalDetallesSubtitulo"></div>
-                </div>
-                <button class="btn-cerrar-detalles" onclick="cerrarModalDetalles()">✕</button>
-            </div>
-            <div class="modal-detalles-body" id="modalDetallesContenido">
-                <!-- El contenido se cargará dinámicamente -->
-            </div>
-            <div class="modal-detalles-footer">
-                <div style="display: flex; gap: 12px;">
-                    <button class="btn-editar" id="btnEditarFromModal" style="margin-top: 0; flex: 1;">
-                        Editar Formulario
-                    </button>
-                    <button class="btn-eliminar" id="btnEliminarFromModal" style="margin-top: 0;">
-                        Eliminar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de edición -->
-    <div id="modalEdicion" class="modal-overlay">
-        <div class="modal">
+    <!-- Modal: Ver Detalles -->
+    <div id="modalDetalles" class="modal-overlay">
+        <div class="modal large">
             <div class="modal-header">
-                <h2 class="modal-title">✏️ Editar Formulario</h2>
-                <button class="btn-cerrar" onclick="cerrarModal()">✕ Cerrar</button>
+                <div>
+                    <h2 class="modal-title" id="modalDetallesTitulo">Detalles del Paciente</h2>
+                    <p class="modal-subtitle" id="modalDetallesSubtitulo"></p>
+                </div>
+                <button class="btn-close" onclick="cerrarModalDetalles()">✕</button>
             </div>
-            <form id="formEdicion" onsubmit="guardarCambios(event)">
-                <input type="hidden" id="edit-id" name="id">
+            <div class="modal-body" id="modalDetallesBody">
+                <!-- Content loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-flex" id="btnEditarFromModal">Editar</button>
+                <button class="btn btn-danger" id="btnEliminarFromModal">Eliminar</button>
+            </div>
+        </div>
+    </div>
 
-                <div class="form-section-title">🔗 Datos de Wix</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Wix ID</label>
-                        <input type="text" class="form-input" id="edit-wix_id" name="wix_id" placeholder="ID de Wix">
-                    </div>
+    <!-- Modal: Editar Formulario -->
+    <div id="modalEdicion" class="modal-overlay">
+        <div class="modal large">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Editar Formulario</h2>
                 </div>
+                <button class="btn-close" onclick="cerrarModalEdicion()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="formEdicion" onsubmit="guardarCambios(event)">
+                    <input type="hidden" id="edit-id" name="id">
 
-                <div class="form-section">
-                    <div class="form-section-title">👤 Datos Personales</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Género</label>
-                        <input type="text" class="form-input" id="edit-genero" name="genero">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Edad</label>
-                        <input type="number" class="form-input" id="edit-edad" name="edad">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Fecha Nacimiento</label>
-                        <input type="date" class="form-input" id="edit-fecha_nacimiento" name="fecha_nacimiento">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Lugar Nacimiento</label>
-                        <input type="text" class="form-input" id="edit-lugar_nacimiento" name="lugar_nacimiento">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Ciudad Residencia</label>
-                        <input type="text" class="form-input" id="edit-ciudad_residencia" name="ciudad_residencia">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Estado Civil</label>
-                        <input type="text" class="form-input" id="edit-estado_civil" name="estado_civil">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Hijos</label>
-                        <input type="text" class="form-input" id="edit-hijos" name="hijos">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Nivel Educativo</label>
-                        <input type="text" class="form-input" id="edit-nivel_educativo" name="nivel_educativo">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-input" id="edit-email" name="email">
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <div class="form-section-title">🏥 Seguridad Social</div>
+                    <!-- Wix ID -->
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label">EPS</label>
-                            <input type="text" class="form-input" id="edit-eps" name="eps">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">ARL</label>
-                            <input type="text" class="form-input" id="edit-arl" name="arl">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Fondo de Pensiones</label>
-                            <input type="text" class="form-input" id="edit-pensiones" name="pensiones">
+                            <label class="form-label">Wix ID</label>
+                            <input type="text" class="form-input" id="edit-wix_id" name="wix_id" placeholder="ID de Wix">
                         </div>
                     </div>
-                </div>
 
-                <div class="form-section">
-                    <div class="form-section-title">💼 Datos Laborales</div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Profesión/Oficio</label>
-                            <input type="text" class="form-input" id="edit-profesion_oficio" name="profesion_oficio">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Empresa 1</label>
-                            <input type="text" class="form-input" id="edit-empresa1" name="empresa1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Empresa 2</label>
-                            <input type="text" class="form-input" id="edit-empresa2" name="empresa2">
+                    <!-- Datos Personales -->
+                    <div class="form-section">
+                        <div class="form-section-title">Datos Personales</div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Género</label>
+                                <input type="text" class="form-input" id="edit-genero" name="genero">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Edad</label>
+                                <input type="number" class="form-input" id="edit-edad" name="edad">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Fecha Nacimiento</label>
+                                <input type="date" class="form-input" id="edit-fecha_nacimiento" name="fecha_nacimiento">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Lugar Nacimiento</label>
+                                <input type="text" class="form-input" id="edit-lugar_nacimiento" name="lugar_nacimiento">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Ciudad Residencia</label>
+                                <input type="text" class="form-input" id="edit-ciudad_residencia" name="ciudad_residencia">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Estado Civil</label>
+                                <input type="text" class="form-input" id="edit-estado_civil" name="estado_civil">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Hijos</label>
+                                <input type="text" class="form-input" id="edit-hijos" name="hijos">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nivel Educativo</label>
+                                <input type="text" class="form-input" id="edit-nivel_educativo" name="nivel_educativo">
+                            </div>
+                            <div class="form-group full">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" id="edit-email" name="email">
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="form-section">
-                    <div class="form-section-title">📊 Datos Físicos</div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Estatura (cm)</label>
-                            <input type="number" class="form-input" id="edit-estatura" name="estatura">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Peso (kg)</label>
-                            <input type="number" class="form-input" id="edit-peso" name="peso">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Ejercicio</label>
-                            <input type="text" class="form-input" id="edit-ejercicio" name="ejercicio">
+                    <!-- Seguridad Social -->
+                    <div class="form-section">
+                        <div class="form-section-title">Seguridad Social</div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">EPS</label>
+                                <input type="text" class="form-input" id="edit-eps" name="eps">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">ARL</label>
+                                <input type="text" class="form-input" id="edit-arl" name="arl">
+                            </div>
+                            <div class="form-group full">
+                                <label class="form-label">Fondo de Pensiones</label>
+                                <input type="text" class="form-input" id="edit-pensiones" name="pensiones">
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Sección Historia Clínica -->
-                <div id="seccionHistoriaClinica" class="form-section" style="display: none; background: #F0FDF4; padding: 24px; border-radius: 12px; margin-top: 24px;">
-                    <div class="form-section-title" style="color: #059669;">📋 Historia Clínica</div>
-                    <input type="hidden" id="edit-hc-id" name="hc_id">
+                    <!-- Datos Laborales -->
+                    <div class="form-section">
+                        <div class="form-section-title">Datos Laborales</div>
+                        <div class="form-grid">
+                            <div class="form-group full">
+                                <label class="form-label">Profesión/Oficio</label>
+                                <input type="text" class="form-input" id="edit-profesion_oficio" name="profesion_oficio">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Empresa 1</label>
+                                <input type="text" class="form-input" id="edit-empresa1" name="empresa1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Empresa 2</label>
+                                <input type="text" class="form-input" id="edit-empresa2" name="empresa2">
+                            </div>
+                        </div>
+                    </div>
 
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Tipo de Examen</label>
-                            <input type="text" class="form-input" id="edit-hc-tipoExamen" name="hc_tipoExamen">
+                    <!-- Datos Físicos -->
+                    <div class="form-section">
+                        <div class="form-section-title">Datos Físicos</div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Estatura (cm)</label>
+                                <input type="number" class="form-input" id="edit-estatura" name="estatura">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Peso (kg)</label>
+                                <input type="number" class="form-input" id="edit-peso" name="peso">
+                            </div>
+                            <div class="form-group full">
+                                <label class="form-label">Ejercicio</label>
+                                <input type="text" class="form-input" id="edit-ejercicio" name="ejercicio">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Cargo</label>
-                            <input type="text" class="form-input" id="edit-hc-cargo" name="hc_cargo">
+                    </div>
+
+                    <!-- Historia Clínica -->
+                    <div id="seccionHistoriaClinica" class="hc-section" style="display: none;">
+                        <div class="form-section-title">📋 Historia Clínica</div>
+                        <input type="hidden" id="edit-hc-id" name="hc_id">
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Tipo de Examen</label>
+                                <input type="text" class="form-input" id="edit-hc-tipoExamen" name="hc_tipoExamen">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Cargo</label>
+                                <input type="text" class="form-input" id="edit-hc-cargo" name="hc_cargo">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Médico</label>
+                                <input type="text" class="form-input" id="edit-hc-medico" name="hc_medico">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Estado Atención</label>
+                                <select class="form-input" id="edit-hc-atendido" name="hc_atendido">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="ATENDIDO">ATENDIDO</option>
+                                    <option value="PENDIENTE">PENDIENTE</option>
+                                    <option value="EN PROCESO">EN PROCESO</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Estado PV</label>
+                                <input type="text" class="form-input" id="edit-hc-pvEstado" name="hc_pvEstado">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Talla (cm)</label>
+                                <input type="text" class="form-input" id="edit-hc-talla" name="hc_talla">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Peso (kg)</label>
+                                <input type="text" class="form-input" id="edit-hc-peso" name="hc_peso">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Médico</label>
-                            <input type="text" class="form-input" id="edit-hc-medico" name="hc_medico">
+
+                        <div class="form-group full" style="margin-top: 16px;">
+                            <label class="form-label">Motivo de Consulta</label>
+                            <textarea class="form-input" id="edit-hc-motivoConsulta" name="hc_motivoConsulta" rows="2"></textarea>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Estado Atención</label>
-                            <select class="form-input" id="edit-hc-atendido" name="hc_atendido">
+
+                        <div class="form-group full">
+                            <label class="form-label">Diagnóstico Principal</label>
+                            <textarea class="form-input" id="edit-hc-diagnostico" name="hc_diagnostico" rows="2"></textarea>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Diagnóstico 1 (CIE-10)</label>
+                                <input type="text" class="form-input" id="edit-hc-mdDx1" name="hc_mdDx1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Diagnóstico 2 (CIE-10)</label>
+                                <input type="text" class="form-input" id="edit-hc-mdDx2" name="hc_mdDx2">
+                            </div>
+                        </div>
+
+                        <div class="form-group full">
+                            <label class="form-label">Tratamiento</label>
+                            <textarea class="form-input" id="edit-hc-tratamiento" name="hc_tratamiento" rows="2"></textarea>
+                        </div>
+
+                        <div class="form-group full">
+                            <label class="form-label">Concepto Médico Final</label>
+                            <select class="form-input" id="edit-hc-mdConceptoFinal" name="hc_mdConceptoFinal">
                                 <option value="">Seleccionar...</option>
-                                <option value="ATENDIDO">ATENDIDO</option>
-                                <option value="PENDIENTE">PENDIENTE</option>
-                                <option value="EN PROCESO">EN PROCESO</option>
+                                <option value="ELEGIBLE PARA EL CARGO SIN RECOMENDACIONES LABORALES">ELEGIBLE SIN RECOMENDACIONES</option>
+                                <option value="ELEGIBLE PARA EL CARGO CON RECOMENDACIONES LABORALES">ELEGIBLE CON RECOMENDACIONES</option>
+                                <option value="NO ELEGIBLE PARA EL CARGO">NO ELEGIBLE</option>
+                                <option value="APLAZADO">APLAZADO</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Estado PV</label>
-                            <input type="text" class="form-input" id="edit-hc-pvEstado" name="hc_pvEstado">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Talla (cm)</label>
-                            <input type="text" class="form-input" id="edit-hc-talla" name="hc_talla">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Peso (kg)</label>
-                            <input type="text" class="form-input" id="edit-hc-peso" name="hc_peso">
-                        </div>
-                    </div>
 
-                    <div class="form-group" style="margin-top: 16px;">
-                        <label class="form-label">Motivo de Consulta</label>
-                        <textarea class="form-input" id="edit-hc-motivoConsulta" name="hc_motivoConsulta" rows="3"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Diagnóstico Principal</label>
-                        <textarea class="form-input" id="edit-hc-diagnostico" name="hc_diagnostico" rows="3"></textarea>
-                    </div>
-
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Diagnóstico 1 (CIE-10)</label>
-                            <input type="text" class="form-input" id="edit-hc-mdDx1" name="hc_mdDx1">
+                        <div class="form-group full">
+                            <label class="form-label">Recomendaciones Médicas</label>
+                            <textarea class="form-input" id="edit-hc-mdRecomendacionesMedicasAdicionales" name="hc_mdRecomendacionesMedicasAdicionales" rows="2"></textarea>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Diagnóstico 2 (CIE-10)</label>
-                            <input type="text" class="form-input" id="edit-hc-mdDx2" name="hc_mdDx2">
+
+                        <div class="form-group full">
+                            <label class="form-label">Observaciones del Certificado</label>
+                            <textarea class="form-input" id="edit-hc-mdObservacionesCertificado" name="hc_mdObservacionesCertificado" rows="2"></textarea>
+                        </div>
+
+                        <div class="form-group full">
+                            <label class="form-label">Antecedentes Médicos</label>
+                            <textarea class="form-input" id="edit-hc-mdAntecedentes" name="hc_mdAntecedentes" rows="2"></textarea>
+                        </div>
+
+                        <div class="form-group full">
+                            <label class="form-label">Observaciones para Mi Doc Ya</label>
+                            <textarea class="form-input" id="edit-hc-mdObsParaMiDocYa" name="hc_mdObsParaMiDocYa" rows="2"></textarea>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Tratamiento</label>
-                        <textarea class="form-input" id="edit-hc-tratamiento" name="hc_tratamiento" rows="3"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Concepto Médico Final</label>
-                        <select class="form-input" id="edit-hc-mdConceptoFinal" name="hc_mdConceptoFinal">
-                            <option value="">Seleccionar...</option>
-                            <option value="ELEGIBLE PARA EL CARGO SIN RECOMENDACIONES LABORALES">ELEGIBLE PARA EL CARGO SIN RECOMENDACIONES LABORALES</option>
-                            <option value="ELEGIBLE PARA EL CARGO CON RECOMENDACIONES LABORALES">ELEGIBLE PARA EL CARGO CON RECOMENDACIONES LABORALES</option>
-                            <option value="NO ELEGIBLE PARA EL CARGO">NO ELEGIBLE PARA EL CARGO</option>
-                            <option value="APLAZADO">APLAZADO</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Recomendaciones Médicas Adicionales</label>
-                        <textarea class="form-input" id="edit-hc-mdRecomendacionesMedicasAdicionales" name="hc_mdRecomendacionesMedicasAdicionales" rows="4"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Observaciones del Certificado</label>
-                        <textarea class="form-input" id="edit-hc-mdObservacionesCertificado" name="hc_mdObservacionesCertificado" rows="4"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Antecedentes Médicos</label>
-                        <textarea class="form-input" id="edit-hc-mdAntecedentes" name="hc_mdAntecedentes" rows="3"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Observaciones para Mi Doc Ya</label>
-                        <textarea class="form-input" id="edit-hc-mdObsParaMiDocYa" name="hc_mdObsParaMiDocYa" rows="3"></textarea>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-guardar" id="btnGuardar">💾 Guardar Cambios</button>
-            </form>
+                    <button type="submit" class="btn btn-success btn-block" id="btnGuardar" style="margin-top: 24px;">
+                        Guardar Cambios
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
     <script>
-        // Cache para almacenar los detalles cargados
+        // ========== STATE ==========
+        let todosLosFormularios = [];
+        let formulariosFiltrados = [];
+        let filtroActual = 'todos';
+        let busquedaActual = '';
         const detallesCache = {};
-        let formularioActualId = null;
+        let formularioActual = null;
 
-        // Función para abrir el modal con los detalles
-        async function abrirModalDetalles(formId) {
-            const modal = document.getElementById('modalDetalles');
-            const contenido = document.getElementById('modalDetallesContenido');
+        // ========== UTILITY FUNCTIONS ==========
+        function formatearFecha(fecha) {
+            if (!fecha) return '—';
+            const date = new Date(fecha);
+            return date.toLocaleDateString('es-CO', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
 
-            formularioActualId = formId;
+        function getInitials(nombre, apellido) {
+            const n = (nombre || '')[0] || '';
+            const a = (apellido || '')[0] || '';
+            return (n + a).toUpperCase() || '?';
+        }
 
-            // Mostrar modal con loading
-            modal.classList.add('active');
-            contenido.innerHTML = '<div style="text-align: center; padding: 60px; color: #00B8E6; font-size: 18px;">Cargando información...</div>';
+        function getStatusClass(estado) {
+            if (!estado) return 'pendiente';
+            const s = estado.toUpperCase();
+            if (s === 'ATENDIDO') return 'atendido';
+            if (s.includes('PROCESO')) return 'proceso';
+            return 'pendiente';
+        }
 
-            // Cargar detalles si no están en cache
-            if (!detallesCache[formId]) {
-                try {
-                    const response = await fetch(`/api/formularios/${formId}`);
-                    const result = await response.json();
+        function getStatusText(estado) {
+            if (!estado) return 'Pendiente';
+            return estado;
+        }
 
-                    if (result.success) {
-                        detallesCache[formId] = result.data;
-                        renderizarModalDetalles(result.data);
-                    } else {
-                        contenido.innerHTML = '<div style="text-align: center; padding: 60px; color: #EF4444; font-size: 18px;">Error al cargar información</div>';
-                    }
-                } catch (error) {
-                    console.error('Error al cargar detalles:', error);
-                    contenido.innerHTML = '<div style="text-align: center; padding: 60px; color: #EF4444; font-size: 18px;">Error al cargar información</div>';
-                }
+        // ========== RENDER FUNCTIONS ==========
+        function renderTable(formularios) {
+            const tbody = document.getElementById('tableBody');
+
+            if (formularios.length === 0) {
+                tbody.innerHTML = '';
+                return;
+            }
+
+            tbody.innerHTML = formularios.map(form => {
+                const wixId = form.wix_id || '';
+                const hasWixId = wixId && wixId.trim() !== '';
+                const statusClass = getStatusClass(form.estado_atencion);
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="cell-name">
+                                <div class="avatar">${getInitials(form.primer_nombre, form.primer_apellido)}</div>
+                                <div class="name-info">
+                                    <span class="name-primary">${form.primer_nombre || ''} ${form.primer_apellido || ''}</span>
+                                    <span class="name-secondary">${form.email || '—'}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${form.numero_id || '—'}</td>
+                        <td>${form.celular || '—'}</td>
+                        <td>${form.cod_empresa || '—'}</td>
+                        <td>
+                            <span class="status-badge ${statusClass}">
+                                <span class="status-dot"></span>
+                                ${getStatusText(form.estado_atencion)}
+                            </span>
+                        </td>
+                        <td>${formatearFecha(form.fecha_consulta)}</td>
+                        <td>
+                            <div class="actions-cell">
+                                <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${wixId}"
+                                   target="_blank"
+                                   class="btn-icon whatsapp ${!hasWixId ? 'disabled' : ''}"
+                                   title="Enviar por WhatsApp">📱</a>
+                                <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/generar-certificado-desde-wix/${wixId}"
+                                   target="_blank"
+                                   class="btn-icon download ${!hasWixId ? 'disabled' : ''}"
+                                   title="Descargar certificado">📥</a>
+                                <button class="btn-icon view" onclick="abrirModalDetalles(${form.id})" title="Ver detalles">👁️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderMobileCards(formularios) {
+            const container = document.getElementById('mobileCards');
+
+            if (formularios.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = formularios.map(form => {
+                const wixId = form.wix_id || '';
+                const hasWixId = wixId && wixId.trim() !== '';
+                const statusClass = getStatusClass(form.estado_atencion);
+
+                return `
+                    <div class="mobile-card">
+                        <div class="mobile-card-header">
+                            <div class="mobile-card-avatar">${getInitials(form.primer_nombre, form.primer_apellido)}</div>
+                            <div class="mobile-card-name">
+                                <h3>${form.primer_nombre || ''} ${form.primer_apellido || ''}</h3>
+                                <span>${form.numero_id || '—'}</span>
+                            </div>
+                        </div>
+                        <div class="mobile-card-info">
+                            <div class="mobile-card-info-item">
+                                <div class="mobile-card-info-label">Teléfono</div>
+                                <div class="mobile-card-info-value">${form.celular || '—'}</div>
+                            </div>
+                            <div class="mobile-card-info-item">
+                                <div class="mobile-card-info-label">Empresa</div>
+                                <div class="mobile-card-info-value">${form.cod_empresa || '—'}</div>
+                            </div>
+                        </div>
+                        <div class="mobile-card-status">
+                            <span class="status-badge ${statusClass}">
+                                <span class="status-dot"></span>
+                                ${getStatusText(form.estado_atencion)}
+                            </span>
+                        </div>
+                        <div class="mobile-card-actions">
+                            <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${wixId}"
+                               target="_blank"
+                               class="mobile-card-btn ${!hasWixId ? 'disabled' : ''}">📱 WhatsApp</a>
+                            <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/generar-certificado-desde-wix/${wixId}"
+                               target="_blank"
+                               class="mobile-card-btn ${!hasWixId ? 'disabled' : ''}">📥 Descargar</a>
+                            <button class="mobile-card-btn primary" onclick="abrirModalDetalles(${form.id})">Ver</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function actualizarVista() {
+            // Apply filters
+            let resultado = [...todosLosFormularios];
+
+            // Filter by status
+            if (filtroActual === 'atendido') {
+                resultado = resultado.filter(f => f.estado_atencion && f.estado_atencion.toUpperCase() === 'ATENDIDO');
+            } else if (filtroActual === 'pendiente') {
+                resultado = resultado.filter(f => !f.estado_atencion || f.estado_atencion.toUpperCase() !== 'ATENDIDO');
+            }
+
+            // Filter by search
+            if (busquedaActual) {
+                const busqueda = busquedaActual.toLowerCase();
+                resultado = resultado.filter(f => {
+                    const nombre = (f.primer_nombre || '').toLowerCase();
+                    const apellido = (f.primer_apellido || '').toLowerCase();
+                    const cedula = (f.numero_id || '').toString();
+                    const empresa = (f.cod_empresa || '').toLowerCase();
+                    const telefono = (f.celular || '').toString();
+
+                    return nombre.includes(busqueda) ||
+                           apellido.includes(busqueda) ||
+                           cedula.includes(busqueda) ||
+                           empresa.includes(busqueda) ||
+                           telefono.includes(busqueda) ||
+                           `${nombre} ${apellido}`.includes(busqueda);
+                });
+            }
+
+            formulariosFiltrados = resultado;
+
+            // Update stats
+            document.getElementById('statsCounter').innerHTML = `<strong>${resultado.length}</strong> de ${todosLosFormularios.length} registros`;
+
+            // Show/hide states
+            const tableContainer = document.getElementById('tableContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            if (resultado.length === 0) {
+                tableContainer.style.display = 'none';
+                emptyState.style.display = 'block';
             } else {
-                renderizarModalDetalles(detallesCache[formId]);
+                tableContainer.style.display = 'block';
+                emptyState.style.display = 'none';
+            }
+
+            // Render
+            renderTable(resultado);
+            renderMobileCards(resultado);
+        }
+
+        // ========== DATA LOADING ==========
+        async function cargarFormularios() {
+            try {
+                const response = await fetch('/api/formularios');
+                if (!response.ok) throw new Error('Error del servidor');
+
+                const result = await response.json();
+
+                document.getElementById('loadingState').style.display = 'none';
+
+                if (!result.success || result.total === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    document.getElementById('statsCounter').innerHTML = '<strong>0</strong> registros';
+                    return;
+                }
+
+                todosLosFormularios = result.data;
+                actualizarVista();
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loadingState').innerHTML = `
+                    <div class="empty-state-icon">⚠️</div>
+                    <p class="empty-state-title">Error al cargar</p>
+                    <p class="empty-state-text">${error.message}</p>
+                `;
             }
         }
 
-        // Función para cerrar el modal de detalles
-        function cerrarModalDetalles() {
-            document.getElementById('modalDetalles').classList.remove('active');
-            formularioActualId = null;
+        // ========== MODAL: DETALLES ==========
+        async function abrirModalDetalles(formId) {
+            const modal = document.getElementById('modalDetalles');
+            const body = document.getElementById('modalDetallesBody');
+
+            modal.classList.add('active');
+            body.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Cargando...</p></div>';
+
+            try {
+                let form;
+                if (detallesCache[formId]) {
+                    form = detallesCache[formId];
+                } else {
+                    const response = await fetch(`/api/formularios/${formId}`);
+                    const result = await response.json();
+                    if (!result.success) throw new Error('No se pudo cargar');
+                    form = result.data;
+                    detallesCache[formId] = form;
+                }
+
+                renderModalDetalles(form);
+
+            } catch (error) {
+                body.innerHTML = `<div class="empty-state"><p class="empty-state-title">Error al cargar</p></div>`;
+            }
         }
 
-        // Cerrar modal al hacer clic fuera
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('modalDetalles').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    cerrarModalDetalles();
-                }
-            });
-        });
+        function renderModalDetalles(form) {
+            document.getElementById('modalDetallesTitulo').textContent = `${form.primer_nombre || ''} ${form.primer_apellido || ''}`.trim() || 'Sin nombre';
+            document.getElementById('modalDetallesSubtitulo').textContent = `Cédula: ${form.numero_id || 'N/A'} • ID: ${form.id}`;
 
-        // Función para renderizar los detalles en el modal
-        function renderizarModalDetalles(form) {
-            const titulo = document.getElementById('modalDetallesTitulo');
-            const subtitulo = document.getElementById('modalDetallesSubtitulo');
-            const contenido = document.getElementById('modalDetallesContenido');
-            const btnEditar = document.getElementById('btnEditarFromModal');
-            const btnEliminar = document.getElementById('btnEliminarFromModal');
-
-            // Actualizar título
-            titulo.textContent = `${form.primer_nombre || ''} ${form.primer_apellido || 'Formulario'}`.trim();
-            subtitulo.textContent = `ID: ${form.id} | Cédula: ${form.numero_id || 'N/A'}`;
-
-            // Configurar botón editar
-            btnEditar.onclick = () => {
+            // Configure buttons
+            document.getElementById('btnEditarFromModal').onclick = () => {
                 cerrarModalDetalles();
                 editarFormulario(form.id);
             };
-
-            // Configurar botón eliminar
-            btnEliminar.onclick = () => {
+            document.getElementById('btnEliminarFromModal').onclick = () => {
                 eliminarFormulario(form.id, form.numero_id, form.primer_nombre, form.primer_apellido);
             };
 
+            const body = document.getElementById('modalDetallesBody');
             const fecha = new Date(form.fecha_registro).toLocaleString('es-CO');
 
-            contenido.innerHTML = `
-                ${form.foto ? `
-                    <div class="modal-detalles-foto">
-                        <img src="${form.foto}" alt="Foto del paciente">
-                    </div>
-                ` : ''}
+            body.innerHTML = `
+                ${form.foto ? `<div class="detail-photo"><img src="${form.foto}" alt="Foto"></div>` : ''}
 
-                <div style="text-align: center; margin-bottom: 32px; padding: 12px; background: #EEF2FF; border-radius: 8px;">
-                    <div style="font-size: 14px; color: #6366F1; font-weight: 600;">Fecha de Registro</div>
-                    <div style="font-size: 16px; color: #1F2937; font-weight: 500; margin-top: 4px;">${fecha}</div>
-                </div>
-
-                ${form.wix_id ? `
-                    <div class="detalles-section">
-                        <div class="detalles-section-title">Datos de Wix</div>
-                        <div class="detalles-grid">
-                            <div class="detalle-item">
-                                <div class="detalle-label">Wix ID</div>
-                                <div class="detalle-value">${form.wix_id}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Primer Nombre</div>
-                                <div class="detalle-value">${form.primer_nombre || 'N/A'}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Primer Apellido</div>
-                                <div class="detalle-value">${form.primer_apellido || 'N/A'}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Empresa</div>
-                                <div class="detalle-value">${form.empresa || 'N/A'}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Código Empresa</div>
-                                <div class="detalle-value">${form.cod_empresa || 'N/A'}</div>
-                            </div>
-                            <div class="detalle-item">
-                                <div class="detalle-label">Fecha Atención</div>
-                                <div class="detalle-value">${form.fecha_atencion || 'N/A'}</div>
-                            </div>
-                        </div>
-                    </div>
-                ` : ''}
-
-                <div class="detalles-section">
-                    <div class="detalles-section-title">Datos Personales</div>
-                    <div class="detalles-grid">
-                        <div class="detalle-item">
-                            <div class="detalle-label">Género</div>
-                            <div class="detalle-value">${form.genero || 'N/A'}</div>
-                        </div>
-                        <div class="detalle-item">
-                            <div class="detalle-label">Edad</div>
-                            <div class="detalle-value">${form.edad || 'N/A'} años</div>
-                        </div>
-                        <div class="detalle-item">
-                            <div class="detalle-label">Fecha Nacimiento</div>
-                            <div class="detalle-value">${form.fecha_nacimiento || 'N/A'}</div>
-                        </div>
-                        <div class="detalle-item">
-                            <div class="detalle-label">Lugar Nacimiento</div>
-                            <div class="detalle-value">${form.lugar_nacimiento || 'N/A'}</div>
-                        </div>
-                        <div class="detalle-item">
-                            <div class="detalle-label">Ciudad Residencia</div>
-                            <div class="detalle-value">${form.ciudad_residencia || 'N/A'}</div>
-                        </div>
-                        <div class="detalle-item">
-                            <div class="detalle-label">Estado Civil</div>
-                            <div class="detalle-value">${form.estado_civil || 'N/A'}</div>
-                        </div>
-                        <div class="detalle-item">
-                            <div class="detalle-label">Hijos</div>
-                            <div class="detalle-value">${form.hijos || 'N/A'}</div>
-                        </div>
-                        <div class="detalle-item">
-                            <div class="detalle-label">Nivel Educativo</div>
-                            <div class="detalle-value">${form.nivel_educativo || 'N/A'}</div>
-                        </div>
-                        <div class="detalle-item">
-                            <div class="detalle-label">Email</div>
-                            <div class="detalle-value">${form.email || 'N/A'}</div>
-                        </div>
+                <div class="detail-section">
+                    <div class="detail-section-title">Información General</div>
+                    <div class="detail-grid">
+                        <div class="detail-item"><div class="detail-label">Registro</div><div class="detail-value">${fecha}</div></div>
+                        ${form.wix_id ? `<div class="detail-item"><div class="detail-label">Wix ID</div><div class="detail-value">${form.wix_id}</div></div>` : ''}
+                        <div class="detail-item"><div class="detail-label">Género</div><div class="detail-value">${form.genero || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Edad</div><div class="detail-value">${form.edad || '—'} años</div></div>
+                        <div class="detail-item"><div class="detail-label">Nacimiento</div><div class="detail-value">${form.fecha_nacimiento || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Lugar Nac.</div><div class="detail-value">${form.lugar_nacimiento || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Ciudad Res.</div><div class="detail-value">${form.ciudad_residencia || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Estado Civil</div><div class="detail-value">${form.estado_civil || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Hijos</div><div class="detail-value">${form.hijos || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Educación</div><div class="detail-value">${form.nivel_educativo || '—'}</div></div>
+                        <div class="detail-item full"><div class="detail-label">Email</div><div class="detail-value">${form.email || '—'}</div></div>
                     </div>
                 </div>
 
                 ${form.eps || form.arl || form.pensiones ? `
-                    <div class="detalles-section">
-                        <div class="detalles-section-title">Seguridad Social</div>
-                        <div class="detalles-grid">
-                            ${form.eps ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">EPS</div>
-                                    <div class="detalle-value">${form.eps}</div>
-                                </div>
-                            ` : ''}
-                            ${form.arl ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">ARL</div>
-                                    <div class="detalle-value">${form.arl}</div>
-                                </div>
-                            ` : ''}
-                            ${form.pensiones ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Fondo de Pensiones</div>
-                                    <div class="detalle-value">${form.pensiones}</div>
-                                </div>
-                            ` : ''}
+                    <div class="detail-section">
+                        <div class="detail-section-title">Seguridad Social</div>
+                        <div class="detail-grid">
+                            ${form.eps ? `<div class="detail-item"><div class="detail-label">EPS</div><div class="detail-value">${form.eps}</div></div>` : ''}
+                            ${form.arl ? `<div class="detail-item"><div class="detail-label">ARL</div><div class="detail-value">${form.arl}</div></div>` : ''}
+                            ${form.pensiones ? `<div class="detail-item full"><div class="detail-label">Pensiones</div><div class="detail-value">${form.pensiones}</div></div>` : ''}
                         </div>
                     </div>
                 ` : ''}
 
-                <div class="detalles-section">
-                    <div class="detalles-section-title">Datos Laborales</div>
-                    <div class="detalles-grid">
-                        <div class="detalle-item">
-                            <div class="detalle-label">Profesión/Oficio</div>
-                            <div class="detalle-value">${form.profesion_oficio || 'N/A'}</div>
-                        </div>
-                        <div class="detalle-item">
-                            <div class="detalle-label">Empresa 1</div>
-                            <div class="detalle-value">${form.empresa1 || 'N/A'}</div>
-                        </div>
-                        <div class="detalle-item">
-                            <div class="detalle-label">Empresa 2</div>
-                            <div class="detalle-value">${form.empresa2 || 'N/A'}</div>
-                        </div>
+                <div class="detail-section">
+                    <div class="detail-section-title">Datos Laborales</div>
+                    <div class="detail-grid">
+                        <div class="detail-item full"><div class="detail-label">Profesión</div><div class="detail-value">${form.profesion_oficio || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Empresa 1</div><div class="detail-value">${form.empresa1 || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Empresa 2</div><div class="detail-value">${form.empresa2 || '—'}</div></div>
                     </div>
                 </div>
 
-                <div class="detalles-section">
-                    <div class="detalles-section-title">Datos Físicos</div>
-                    <div class="detalles-grid">
-                        <div class="detalle-item">
-                            <div class="detalle-label">Estatura</div>
-                            <div class="detalle-value">${form.estatura || 'N/A'} cm</div>
-                        </div>
-                        <div class="detalle-item">
-                            <div class="detalle-label">Peso</div>
-                            <div class="detalle-value">${form.peso || 'N/A'} kg</div>
-                        </div>
-                        <div class="detalle-item">
-                            <div class="detalle-label">Ejercicio</div>
-                            <div class="detalle-value">${form.ejercicio || 'N/A'}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="detalles-section">
-                    <div class="detalles-section-title">Condiciones de Salud</div>
-                    <div class="detalles-grid">
-                        <div class="detalle-item"><div class="detalle-label">Cirugía Ocular</div><div class="detalle-value">${form.cirugia_ocular || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Consumo de Licor</div><div class="detalle-value">${form.consumo_licor || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Cirugía Programada</div><div class="detalle-value">${form.cirugia_programada || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Condición Médica</div><div class="detalle-value">${form.condicion_medica || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Dolor de Cabeza</div><div class="detalle-value">${form.dolor_cabeza || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Dolor de Espalda</div><div class="detalle-value">${form.dolor_espalda || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Ruido/Jaqueca</div><div class="detalle-value">${form.ruido_jaqueca || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Embarazo</div><div class="detalle-value">${form.embarazo || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Enfermedad Hígado</div><div class="detalle-value">${form.enfermedad_higado || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Enfermedad Pulmonar</div><div class="detalle-value">${form.enfermedad_pulmonar || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Fuma</div><div class="detalle-value">${form.fuma || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Hernias</div><div class="detalle-value">${form.hernias || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Hormigueos</div><div class="detalle-value">${form.hormigueos || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Presión Alta</div><div class="detalle-value">${form.presion_alta || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Problemas de Azúcar</div><div class="detalle-value">${form.problemas_azucar || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Problemas Cardíacos</div><div class="detalle-value">${form.problemas_cardiacos || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Problemas de Sueño</div><div class="detalle-value">${form.problemas_sueno || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Usa Anteojos</div><div class="detalle-value">${form.usa_anteojos || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Usa Lentes de Contacto</div><div class="detalle-value">${form.usa_lentes_contacto || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Varices</div><div class="detalle-value">${form.varices || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Hepatitis</div><div class="detalle-value">${form.hepatitis || 'N/A'}</div></div>
-                    </div>
-                </div>
-
-                <div class="detalles-section">
-                    <div class="detalles-section-title">Antecedentes Familiares</div>
-                    <div class="detalles-grid">
-                        <div class="detalle-item"><div class="detalle-label">Enfermedades Hereditarias</div><div class="detalle-value">${form.familia_hereditarias || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Enfermedades Genéticas</div><div class="detalle-value">${form.familia_geneticas || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Diabetes</div><div class="detalle-value">${form.familia_diabetes || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Hipertensión</div><div class="detalle-value">${form.familia_hipertension || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Infartos</div><div class="detalle-value">${form.familia_infartos || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Cáncer</div><div class="detalle-value">${form.familia_cancer || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Trastornos</div><div class="detalle-value">${form.familia_trastornos || 'N/A'}</div></div>
-                        <div class="detalle-item"><div class="detalle-label">Enfermedades Infecciosas</div><div class="detalle-value">${form.familia_infecciosas || 'N/A'}</div></div>
-                    </div>
-                </div>
-
-                <div class="detalles-section">
-                    <div class="detalles-section-title">Otros</div>
-                    <div class="detalles-grid">
-                        <div class="detalle-item">
-                            <div class="detalle-label">Inscripción Boletín</div>
-                            <div class="detalle-value">${form.inscripcion_boletin || 'N/A'}</div>
-                        </div>
+                <div class="detail-section">
+                    <div class="detail-section-title">Datos Físicos</div>
+                    <div class="detail-grid">
+                        <div class="detail-item"><div class="detail-label">Estatura</div><div class="detail-value">${form.estatura || '—'} cm</div></div>
+                        <div class="detail-item"><div class="detail-label">Peso</div><div class="detail-value">${form.peso || '—'} kg</div></div>
+                        <div class="detail-item full"><div class="detail-label">Ejercicio</div><div class="detail-value">${form.ejercicio || '—'}</div></div>
                     </div>
                 </div>
 
                 ${form.firma ? `
-                    <div class="detalles-section">
-                        <div class="detalles-section-title">Firma</div>
-                        <div style="text-align: center; padding: 24px; background: #F9FAFB; border-radius: 12px;">
-                            <img src="${form.firma}" alt="Firma" style="max-width: 300px; border-radius: 8px; border: 2px solid #E5E7EB;">
+                    <div class="detail-section">
+                        <div class="detail-section-title">Firma</div>
+                        <div style="text-align: center; padding: 16px; background: #F9FAFB; border-radius: 8px;">
+                            <img src="${form.firma}" alt="Firma" style="max-width: 200px; border-radius: 4px;">
                         </div>
                     </div>
                 ` : ''}
 
                 ${form.historiaClinica ? `
-                    <div style="margin: 32px 0; padding: 16px; background: linear-gradient(135deg, #10B981 0%, #059669 100%); border-radius: 12px; text-align: center;">
-                        <h3 style="color: white; font-size: 20px; font-weight: 700; margin: 0;">📋 Datos de Historia Clínica</h3>
-                    </div>
+                    <div class="detail-banner">📋 Historia Clínica</div>
 
-                    <div class="detalles-section">
-                        <div class="detalles-section-title">Información de la Consulta</div>
-                        <div class="detalles-grid">
-                            ${form.historiaClinica.tipoExamen ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Tipo de Examen</div>
-                                    <div class="detalle-value">${form.historiaClinica.tipoExamen}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.cargo ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Cargo</div>
-                                    <div class="detalle-value">${form.historiaClinica.cargo}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.medico ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Médico</div>
-                                    <div class="detalle-value">${form.historiaClinica.medico}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.atendido ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Estado Atención</div>
-                                    <div class="detalle-value">${form.historiaClinica.atendido}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.pvEstado ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Estado PV</div>
-                                    <div class="detalle-value">${form.historiaClinica.pvEstado}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.fechaAtencion ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Fecha de Atención</div>
-                                    <div class="detalle-value">${new Date(form.historiaClinica.fechaAtencion).toLocaleString('es-CO')}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.fechaConsulta ? `
-                                <div class="detalle-item">
-                                    <div class="detalle-label">Fecha de Consulta</div>
-                                    <div class="detalle-value">${new Date(form.historiaClinica.fechaConsulta).toLocaleString('es-CO')}</div>
-                                </div>
-                            ` : ''}
-                            ${form.historiaClinica.motivoConsulta ? `
-                                <div class="detalle-item" style="grid-column: 1 / -1;">
-                                    <div class="detalle-label">Motivo de Consulta</div>
-                                    <div class="detalle-value">${form.historiaClinica.motivoConsulta}</div>
-                                </div>
-                            ` : ''}
+                    <div class="detail-section">
+                        <div class="detail-section-title">Consulta</div>
+                        <div class="detail-grid">
+                            ${form.historiaClinica.tipoExamen ? `<div class="detail-item"><div class="detail-label">Tipo Examen</div><div class="detail-value">${form.historiaClinica.tipoExamen}</div></div>` : ''}
+                            ${form.historiaClinica.cargo ? `<div class="detail-item"><div class="detail-label">Cargo</div><div class="detail-value">${form.historiaClinica.cargo}</div></div>` : ''}
+                            ${form.historiaClinica.medico ? `<div class="detail-item"><div class="detail-label">Médico</div><div class="detail-value">${form.historiaClinica.medico}</div></div>` : ''}
+                            ${form.historiaClinica.atendido ? `<div class="detail-item"><div class="detail-label">Estado</div><div class="detail-value">${form.historiaClinica.atendido}</div></div>` : ''}
+                            ${form.historiaClinica.fechaConsulta ? `<div class="detail-item"><div class="detail-label">Fecha Consulta</div><div class="detail-value">${new Date(form.historiaClinica.fechaConsulta).toLocaleString('es-CO')}</div></div>` : ''}
+                            ${form.historiaClinica.motivoConsulta ? `<div class="detail-item full"><div class="detail-label">Motivo</div><div class="detail-value">${form.historiaClinica.motivoConsulta}</div></div>` : ''}
                         </div>
                     </div>
 
-                    ${form.historiaClinica.talla || form.historiaClinica.peso ? `
-                        <div class="detalles-section">
-                            <div class="detalles-section-title">Datos Físicos</div>
-                            <div class="detalles-grid">
-                                ${form.historiaClinica.talla ? `
-                                    <div class="detalle-item">
-                                        <div class="detalle-label">Talla</div>
-                                        <div class="detalle-value">${form.historiaClinica.talla} cm</div>
-                                    </div>
-                                ` : ''}
-                                ${form.historiaClinica.peso ? `
-                                    <div class="detalle-item">
-                                        <div class="detalle-label">Peso</div>
-                                        <div class="detalle-value">${form.historiaClinica.peso} kg</div>
-                                    </div>
-                                ` : ''}
+                    ${form.historiaClinica.diagnostico || form.historiaClinica.mdDx1 ? `
+                        <div class="detail-section">
+                            <div class="detail-section-title">Diagnóstico</div>
+                            <div class="detail-grid">
+                                ${form.historiaClinica.diagnostico ? `<div class="detail-item full"><div class="detail-label">Principal</div><div class="detail-value">${form.historiaClinica.diagnostico}</div></div>` : ''}
+                                ${form.historiaClinica.mdDx1 ? `<div class="detail-item full"><div class="detail-label">DX1</div><div class="detail-value">${form.historiaClinica.mdDx1}</div></div>` : ''}
+                                ${form.historiaClinica.mdDx2 ? `<div class="detail-item full"><div class="detail-label">DX2</div><div class="detail-value">${form.historiaClinica.mdDx2}</div></div>` : ''}
                             </div>
                         </div>
                     ` : ''}
 
-                    ${form.historiaClinica.mdAntecedentes ? `
-                        <div class="detalles-section">
-                            <div class="detalles-section-title">Antecedentes Médicos</div>
-                            <div class="detalles-grid">
-                                <div class="detalle-item" style="grid-column: 1 / -1;">
-                                    <div class="detalle-value">${form.historiaClinica.mdAntecedentes}</div>
-                                </div>
+                    ${form.historiaClinica.mdConceptoFinal ? `
+                        <div class="detail-section">
+                            <div class="detail-section-title">Concepto Final</div>
+                            <div class="detail-grid">
+                                <div class="detail-item full"><div class="detail-value">${form.historiaClinica.mdConceptoFinal}</div></div>
                             </div>
                         </div>
                     ` : ''}
 
-                    ${form.historiaClinica.nivelRuido || form.historiaClinica.elementosProteccionAuditiva ? `
-                        <div class="detalles-section">
-                            <div class="detalles-section-title">Exposición Laboral</div>
-                            <div class="detalles-grid">
-                                ${form.historiaClinica.nivelRuido ? `
-                                    <div class="detalle-item">
-                                        <div class="detalle-label">Nivel de Ruido</div>
-                                        <div class="detalle-value">${form.historiaClinica.nivelRuido}</div>
-                                    </div>
-                                ` : ''}
-                                ${form.historiaClinica.elementosProteccionAuditiva ? `
-                                    <div class="detalle-item">
-                                        <div class="detalle-label">Elementos de Protección Auditiva</div>
-                                        <div class="detalle-value">${form.historiaClinica.elementosProteccionAuditiva}</div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${form.historiaClinica.otoscopia || form.historiaClinica.audiometria || form.historiaClinica.visiometria || form.historiaClinica.espirometria ? `
-                        <div class="detalles-section">
-                            <div class="detalles-section-title">Exámenes Realizados</div>
-                            <div class="detalles-grid">
-                                ${form.historiaClinica.otoscopia ? `
-                                    <div class="detalle-item">
-                                        <div class="detalle-label">Otoscopia</div>
-                                        <div class="detalle-value">${form.historiaClinica.otoscopia}</div>
-                                    </div>
-                                ` : ''}
-                                ${form.historiaClinica.audiometria ? `
-                                    <div class="detalle-item">
-                                        <div class="detalle-label">Audiometría</div>
-                                        <div class="detalle-value">${form.historiaClinica.audiometria}</div>
-                                    </div>
-                                ` : ''}
-                                ${form.historiaClinica.visiometria ? `
-                                    <div class="detalle-item">
-                                        <div class="detalle-label">Visiometría</div>
-                                        <div class="detalle-value">${form.historiaClinica.visiometria}</div>
-                                    </div>
-                                ` : ''}
-                                ${form.historiaClinica.espirometria ? `
-                                    <div class="detalle-item">
-                                        <div class="detalle-label">Espirometría</div>
-                                        <div class="detalle-value">${form.historiaClinica.espirometria}</div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${form.historiaClinica.diagnostico || form.historiaClinica.mdDx1 || form.historiaClinica.mdDx2 ? `
-                        <div class="detalles-section">
-                            <div class="detalles-section-title">Diagnóstico</div>
-                            <div class="detalles-grid">
-                                ${form.historiaClinica.diagnostico ? `
-                                    <div class="detalle-item" style="grid-column: 1 / -1;">
-                                        <div class="detalle-label">Diagnóstico Principal</div>
-                                        <div class="detalle-value">${form.historiaClinica.diagnostico}</div>
-                                    </div>
-                                ` : ''}
-                                ${form.historiaClinica.mdDx1 ? `
-                                    <div class="detalle-item" style="grid-column: 1 / -1;">
-                                        <div class="detalle-label">Diagnóstico 1</div>
-                                        <div class="detalle-value">${form.historiaClinica.mdDx1}</div>
-                                    </div>
-                                ` : ''}
-                                ${form.historiaClinica.mdDx2 ? `
-                                    <div class="detalle-item" style="grid-column: 1 / -1;">
-                                        <div class="detalle-label">Diagnóstico 2</div>
-                                        <div class="detalle-value">${form.historiaClinica.mdDx2}</div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${form.historiaClinica.tratamiento ? `
-                        <div class="detalles-section">
-                            <div class="detalles-section-title">Tratamiento</div>
-                            <div class="detalles-grid">
-                                <div class="detalle-item" style="grid-column: 1 / -1;">
-                                    <div class="detalle-value">${form.historiaClinica.tratamiento}</div>
-                                </div>
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${form.historiaClinica.conceptoMedico || form.historiaClinica.mdConceptoFinal ? `
-                        <div class="detalles-section">
-                            <div class="detalles-section-title">Concepto Médico</div>
-                            <div class="detalles-grid">
-                                ${form.historiaClinica.conceptoMedico ? `
-                                    <div class="detalle-item" style="grid-column: 1 / -1;">
-                                        <div class="detalle-label">Concepto Médico</div>
-                                        <div class="detalle-value">${form.historiaClinica.conceptoMedico}</div>
-                                    </div>
-                                ` : ''}
-                                ${form.historiaClinica.mdConceptoFinal ? `
-                                    <div class="detalle-item" style="grid-column: 1 / -1;">
-                                        <div class="detalle-label">Concepto Final</div>
-                                        <div class="detalle-value">${form.historiaClinica.mdConceptoFinal}</div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${form.historiaClinica.recomendaciones || form.historiaClinica.mdRecomendacionesMedicasAdicionales ? `
-                        <div class="detalles-section">
-                            <div class="detalles-section-title">Recomendaciones</div>
-                            <div class="detalles-grid">
-                                ${form.historiaClinica.recomendaciones ? `
-                                    <div class="detalle-item" style="grid-column: 1 / -1;">
-                                        <div class="detalle-label">Recomendaciones</div>
-                                        <div class="detalle-value">${form.historiaClinica.recomendaciones}</div>
-                                    </div>
-                                ` : ''}
-                                ${form.historiaClinica.mdRecomendacionesMedicasAdicionales ? `
-                                    <div class="detalle-item" style="grid-column: 1 / -1;">
-                                        <div class="detalle-label">Recomendaciones Médicas Adicionales</div>
-                                        <div class="detalle-value">${form.historiaClinica.mdRecomendacionesMedicasAdicionales}</div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    ${form.historiaClinica.mdObsParaMiDocYa || form.historiaClinica.mdObservacionesCertificado ? `
-                        <div class="detalles-section">
-                            <div class="detalles-section-title">Observaciones</div>
-                            <div class="detalles-grid">
-                                ${form.historiaClinica.mdObsParaMiDocYa ? `
-                                    <div class="detalle-item" style="grid-column: 1 / -1;">
-                                        <div class="detalle-label">Observaciones para Mi Doc Ya</div>
-                                        <div class="detalle-value">${form.historiaClinica.mdObsParaMiDocYa}</div>
-                                    </div>
-                                ` : ''}
-                                ${form.historiaClinica.mdObservacionesCertificado ? `
-                                    <div class="detalle-item" style="grid-column: 1 / -1;">
-                                        <div class="detalle-label">Observaciones del Certificado</div>
-                                        <div class="detalle-value">${form.historiaClinica.mdObservacionesCertificado}</div>
-                                    </div>
-                                ` : ''}
+                    ${form.historiaClinica.mdRecomendacionesMedicasAdicionales ? `
+                        <div class="detail-section">
+                            <div class="detail-section-title">Recomendaciones</div>
+                            <div class="detail-grid">
+                                <div class="detail-item full"><div class="detail-value">${form.historiaClinica.mdRecomendacionesMedicasAdicionales}</div></div>
                             </div>
                         </div>
                     ` : ''}
@@ -1720,174 +1631,13 @@
             `;
         }
 
-        // Variable global para almacenar todos los formularios
-        let todosLosFormularios = [];
-
-        // Función para formatear fecha
-        function formatearFecha(fecha) {
-            if (!fecha) return null;
-            const date = new Date(fecha);
-            return date.toLocaleDateString('es-CO', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+        function cerrarModalDetalles() {
+            document.getElementById('modalDetalles').classList.remove('active');
         }
 
-        // Función para renderizar las cards
-        function renderizarCards(formularios) {
-            const container = document.getElementById('formularios');
-            container.innerHTML = '';
-
-            if (formularios.length === 0) {
-                container.innerHTML = '<div class="no-results">No se encontraron resultados para tu búsqueda</div>';
-                return;
-            }
-
-            formularios.forEach((form, index) => {
-                const card = document.createElement('div');
-                card.className = 'formulario-card';
-                card.id = `card-${form.id}`;
-                card.dataset.nombre = (form.primer_nombre || '').toLowerCase();
-                card.dataset.apellido = (form.primer_apellido || '').toLowerCase();
-                card.dataset.cedula = form.numero_id || '';
-                card.dataset.telefono = form.celular || '';
-                card.dataset.empresa = (form.cod_empresa || '').toLowerCase();
-
-                const fechaConsultaFormateada = formatearFecha(form.fecha_consulta);
-                const estadoAtencion = form.estado_atencion || 'PENDIENTE';
-
-                const wixId = form.wix_id || '';
-                const hasWixId = wixId && wixId.trim() !== '';
-
-                card.innerHTML = `
-                    <div class="card-summary">
-                        <div class="card-actions">
-                            <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${wixId}"
-                               target="_blank"
-                               class="btn-action whatsapp ${!hasWixId ? 'disabled' : ''}"
-                               title="${hasWixId ? 'Enviar certificado por WhatsApp' : 'Sin Wix ID'}">
-                                📱 WhatsApp
-                            </a>
-                            <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/generar-certificado-desde-wix/${wixId}"
-                               target="_blank"
-                               class="btn-action download ${!hasWixId ? 'disabled' : ''}"
-                               title="${hasWixId ? 'Descargar certificado' : 'Sin Wix ID'}">
-                                📥 Descargar
-                            </a>
-                        </div>
-                        <div class="formulario-header">
-                            <div class="formulario-id">${form.primer_nombre || ''} ${form.primer_apellido || ''}</div>
-                        </div>
-
-                        <div class="summary-info">
-                            <div class="summary-dato">
-                                <span class="summary-dato-label">Cédula:</span>
-                                <span class="summary-dato-value">${form.numero_id || 'N/A'}</span>
-                            </div>
-                            <div class="summary-dato">
-                                <span class="summary-dato-label">Teléfono:</span>
-                                <span class="summary-dato-value">${form.celular || 'N/A'}</span>
-                            </div>
-                            <div class="summary-dato">
-                                <span class="summary-dato-label">Empresa:</span>
-                                <span class="summary-dato-value">${form.cod_empresa || 'N/A'}</span>
-                            </div>
-                        </div>
-
-                        ${fechaConsultaFormateada ? `
-                            <div class="fecha-consulta-badge ${estadoAtencion === 'ATENDIDO' ? '' : 'pendiente'}">
-                                📅 Consulta: ${fechaConsultaFormateada}
-                            </div>
-                        ` : `
-                            <div class="fecha-consulta-badge pendiente">
-                                ⏳ Sin fecha de consulta
-                            </div>
-                        `}
-
-                        <button class="btn-expand" onclick="abrirModalDetalles(${form.id})">
-                            Ver detalles completos
-                        </button>
-                    </div>
-                `;
-
-                container.appendChild(card);
-            });
-        }
-
-        // Función para filtrar formularios
-        function filtrarFormularios() {
-            const busqueda = document.getElementById('searchInput').value.toLowerCase().trim();
-
-            if (!busqueda) {
-                renderizarCards(todosLosFormularios);
-                document.getElementById('searchStats').textContent = `Total: ${todosLosFormularios.length} registros`;
-                return;
-            }
-
-            const resultados = todosLosFormularios.filter(form => {
-                const nombre = (form.primer_nombre || '').toLowerCase();
-                const apellido = (form.primer_apellido || '').toLowerCase();
-                const cedula = (form.numero_id || '').toString();
-                const telefono = (form.celular || '').toString();
-                const empresa = (form.cod_empresa || '').toLowerCase();
-
-                return nombre.includes(busqueda) ||
-                       apellido.includes(busqueda) ||
-                       cedula.includes(busqueda) ||
-                       telefono.includes(busqueda) ||
-                       empresa.includes(busqueda) ||
-                       `${nombre} ${apellido}`.includes(busqueda);
-            });
-
-            renderizarCards(resultados);
-            document.getElementById('searchStats').textContent = `Mostrando: ${resultados.length} de ${todosLosFormularios.length} registros`;
-        }
-
-        async function cargarFormularios() {
-            try {
-                const response = await fetch('/api/formularios');
-
-                if (!response.ok) {
-                    throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
-                }
-
-                const result = await response.json();
-
-                document.getElementById('loading').style.display = 'none';
-
-                if (!result.success || result.total === 0) {
-                    document.getElementById('formularios').innerHTML = '<div class="no-data">No hay formularios guardados</div>';
-                    document.getElementById('searchStats').textContent = 'Total: 0 registros';
-                    return;
-                }
-
-                // Guardar todos los formularios
-                todosLosFormularios = result.data;
-
-                // Actualizar stats
-                document.getElementById('searchStats').textContent = `Total: ${todosLosFormularios.length} registros`;
-
-                // Renderizar las cards
-                renderizarCards(todosLosFormularios);
-
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('loading').style.display = 'none';
-                const errorDiv = document.getElementById('error');
-                errorDiv.textContent = 'Error al cargar formularios: ' + error.message;
-                errorDiv.style.display = 'block';
-            }
-        }
-
-        let formularioActual = null;
-
-        // Función para editar un formulario
+        // ========== MODAL: EDITAR ==========
         async function editarFormulario(id) {
             try {
-                // Obtener los datos del formulario
                 const response = await fetch(`/api/formularios/${id}`);
                 const result = await response.json();
 
@@ -1898,7 +1648,7 @@
 
                 formularioActual = result.data;
 
-                // Llenar el formulario del modal con los datos
+                // Fill form
                 document.getElementById('edit-id').value = formularioActual.id || '';
                 document.getElementById('edit-wix_id').value = formularioActual.wix_id || '';
                 document.getElementById('edit-genero').value = formularioActual.genero || '';
@@ -1920,7 +1670,7 @@
                 document.getElementById('edit-peso').value = formularioActual.peso || '';
                 document.getElementById('edit-ejercicio').value = formularioActual.ejercicio || '';
 
-                // Sección Historia Clínica
+                // Historia Clínica
                 const seccionHC = document.getElementById('seccionHistoriaClinica');
                 if (formularioActual.historiaClinica) {
                     const hc = formularioActual.historiaClinica;
@@ -1948,168 +1698,138 @@
                     seccionHC.style.display = 'none';
                 }
 
-                // Abrir el modal
                 document.getElementById('modalEdicion').classList.add('active');
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error al cargar el formulario: ' + error.message);
+                alert('Error al cargar el formulario');
             }
         }
 
-        // Función para cerrar el modal
-        function cerrarModal() {
+        function cerrarModalEdicion() {
             document.getElementById('modalEdicion').classList.remove('active');
             formularioActual = null;
         }
 
-        // Cerrar modal al hacer clic fuera de él
-        document.getElementById('modalEdicion').addEventListener('click', function(e) {
-            if (e.target === this) {
-                cerrarModal();
-            }
-        });
-
-        // Función para guardar cambios
         async function guardarCambios(event) {
             event.preventDefault();
 
             const btnGuardar = document.getElementById('btnGuardar');
             btnGuardar.disabled = true;
-            btnGuardar.textContent = '💾 Guardando...';
+            btnGuardar.textContent = 'Guardando...';
 
             try {
                 const formData = new FormData(event.target);
                 const allData = Object.fromEntries(formData.entries());
 
-                // Separar datos del formulario y de historia clínica
                 const formulariosData = {};
                 const historiaClinicaData = {};
 
                 for (const [key, value] of Object.entries(allData)) {
                     if (key.startsWith('hc_')) {
-                        // Campo de Historia Clínica
                         const campo = key.replace('hc_', '');
-                        if (value !== '') {
-                            historiaClinicaData[campo] = value;
-                        }
+                        if (value !== '') historiaClinicaData[campo] = value;
                     } else {
-                        // Campo de formularios
                         formulariosData[key] = value;
                     }
                 }
 
-                // 1. Guardar datos del formulario
                 const response = await fetch(`/api/formularios/${formulariosData.id}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formulariosData)
                 });
 
                 const result = await response.json();
 
                 if (!result.success) {
-                    alert('❌ Error al actualizar formulario: ' + (result.error || 'Error desconocido'));
+                    alert('Error al actualizar: ' + (result.error || 'Error desconocido'));
                     return;
                 }
 
-                // 2. Guardar datos de Historia Clínica si hay un ID
                 const hcId = historiaClinicaData.id;
-                delete historiaClinicaData.id; // Remover el ID del objeto de datos
+                delete historiaClinicaData.id;
 
                 if (hcId && Object.keys(historiaClinicaData).length > 0) {
-                    const hcResponse = await fetch(`/api/historia-clinica/${hcId}`, {
+                    await fetch(`/api/historia-clinica/${hcId}`, {
                         method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(historiaClinicaData)
                     });
-
-                    const hcResult = await hcResponse.json();
-
-                    if (!hcResult.success) {
-                        alert('⚠️ Formulario guardado pero hubo error en Historia Clínica: ' + (hcResult.error || 'Error desconocido'));
-                        cerrarModal();
-                        cargarFormularios();
-                        // Limpiar cache para forzar recarga
-                        delete detallesCache[formulariosData.id];
-                        return;
-                    }
                 }
 
-                alert('✅ Formulario actualizado exitosamente');
-                cerrarModal();
-                // Limpiar cache para forzar recarga de datos actualizados
+                alert('✓ Formulario actualizado');
+                cerrarModalEdicion();
                 delete detallesCache[formulariosData.id];
-                // Recargar los formularios
                 cargarFormularios();
 
             } catch (error) {
                 console.error('Error:', error);
-                alert('❌ Error al guardar: ' + error.message);
+                alert('Error al guardar: ' + error.message);
             } finally {
                 btnGuardar.disabled = false;
-                btnGuardar.textContent = '💾 Guardar Cambios';
+                btnGuardar.textContent = 'Guardar Cambios';
             }
         }
 
-        // Función para eliminar un formulario
+        // ========== DELETE ==========
         async function eliminarFormulario(id, numeroId, primerNombre, primerApellido) {
-            const nombreCompleto = `${primerNombre || ''} ${primerApellido || ''}`.trim() || 'Sin nombre';
+            const nombre = `${primerNombre || ''} ${primerApellido || ''}`.trim() || 'Sin nombre';
 
-            const confirmacion = confirm(
-                `¿Estás seguro de que deseas eliminar el registro de "${nombreCompleto}" (Cédula: ${numeroId || 'N/A'})?\n\n` +
-                `Esta acción eliminará:\n` +
-                `• El formulario de PostgreSQL\n` +
-                `• La historia clínica asociada (si existe)\n\n` +
-                `Esta acción NO se puede deshacer.`
-            );
-
-            if (!confirmacion) {
-                return;
-            }
-
-            // Segunda confirmación para mayor seguridad
-            const confirmacion2 = confirm(
-                `⚠️ ÚLTIMA CONFIRMACIÓN ⚠️\n\n` +
-                `¿Realmente deseas eliminar PERMANENTEMENTE el registro de "${nombreCompleto}"?`
-            );
-
-            if (!confirmacion2) {
-                return;
-            }
+            if (!confirm(`¿Eliminar el registro de "${nombre}"?\n\nEsta acción no se puede deshacer.`)) return;
+            if (!confirm(`⚠️ ¿Confirmar eliminación de "${nombre}"?`)) return;
 
             try {
                 const response = await fetch(`/api/formularios/${id}`, {
                     method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ numeroId: numeroId })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ numeroId })
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    alert(`✅ Registro eliminado exitosamente.\n\n${result.message}`);
+                    alert('✓ Registro eliminado');
                     cerrarModalDetalles();
-                    // Limpiar cache
                     delete detallesCache[id];
-                    // Recargar los formularios
                     cargarFormularios();
                 } else {
-                    alert('❌ Error al eliminar: ' + (result.error || 'Error desconocido'));
+                    alert('Error: ' + (result.error || 'Error desconocido'));
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error al eliminar: ' + error.message);
+                alert('Error: ' + error.message);
             }
         }
 
-        // Cargar formularios al iniciar
-        cargarFormularios();
+        // ========== EVENT LISTENERS ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load data
+            cargarFormularios();
+
+            // Search
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                busquedaActual = e.target.value.trim();
+                actualizarVista();
+            });
+
+            // Tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    filtroActual = this.dataset.filter;
+                    actualizarVista();
+                });
+            });
+
+            // Close modals on overlay click
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('active');
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>
