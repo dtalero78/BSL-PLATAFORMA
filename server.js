@@ -1861,7 +1861,7 @@ app.get('/api/medicos', async (req, res) => {
         const result = await pool.query(`
             SELECT id, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido,
                    numero_licencia, tipo_licencia, fecha_vencimiento_licencia, especialidad,
-                   activo, created_at
+                   firma, activo, created_at
             FROM medicos
             WHERE activo = true
             ORDER BY primer_apellido, primer_nombre
