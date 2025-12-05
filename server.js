@@ -2700,6 +2700,118 @@ app.get('/api/horarios-disponibles', async (req, res) => {
     }
 });
 
+// ==================== CRUD EXAMENES ====================
+
+// GET - Listar todos los exámenes
+app.get('/api/examenes', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT id, nombre, activo, created_at
+            FROM examenes
+            ORDER BY nombre ASC
+        `);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error al obtener exámenes:', error);
+        res.status(500).json({ error: 'Error al obtener exámenes' });
+    }
+});
+
+// GET - Obtener un examen por ID
+app.get('/api/examenes/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query(`
+            SELECT id, nombre, activo, created_at
+            FROM examenes
+            WHERE id = $1
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Examen no encontrado' });
+        }
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error al obtener examen:', error);
+        res.status(500).json({ error: 'Error al obtener examen' });
+    }
+});
+
+// POST - Crear nuevo examen
+app.post('/api/examenes', async (req, res) => {
+    try {
+        const { nombre } = req.body;
+
+        if (!nombre || nombre.trim() === '') {
+            return res.status(400).json({ error: 'El nombre del examen es requerido' });
+        }
+
+        const result = await pool.query(`
+            INSERT INTO examenes (nombre)
+            VALUES ($1)
+            RETURNING id, nombre, activo, created_at
+        `, [nombre.trim()]);
+
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        if (error.code === '23505') { // Unique violation
+            return res.status(400).json({ error: 'Ya existe un examen con ese nombre' });
+        }
+        console.error('Error al crear examen:', error);
+        res.status(500).json({ error: 'Error al crear examen' });
+    }
+});
+
+// PUT - Actualizar examen
+app.put('/api/examenes/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nombre, activo } = req.body;
+
+        if (!nombre || nombre.trim() === '') {
+            return res.status(400).json({ error: 'El nombre del examen es requerido' });
+        }
+
+        const result = await pool.query(`
+            UPDATE examenes
+            SET nombre = $1, activo = $2
+            WHERE id = $3
+            RETURNING id, nombre, activo, created_at
+        `, [nombre.trim(), activo !== false, id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Examen no encontrado' });
+        }
+        res.json(result.rows[0]);
+    } catch (error) {
+        if (error.code === '23505') {
+            return res.status(400).json({ error: 'Ya existe un examen con ese nombre' });
+        }
+        console.error('Error al actualizar examen:', error);
+        res.status(500).json({ error: 'Error al actualizar examen' });
+    }
+});
+
+// DELETE - Eliminar examen
+app.delete('/api/examenes/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query(`
+            DELETE FROM examenes
+            WHERE id = $1
+            RETURNING id
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Examen no encontrado' });
+        }
+        res.json({ message: 'Examen eliminado correctamente' });
+    } catch (error) {
+        console.error('Error al eliminar examen:', error);
+        res.status(500).json({ error: 'Error al eliminar examen' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
     console.log(`📊 Base de datos: PostgreSQL en Digital Ocean`);

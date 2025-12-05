@@ -247,6 +247,78 @@
             cursor: pointer;
         }
 
+        /* Multi-select de exámenes */
+        .examenes-container {
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            background: white;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .examen-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            border-bottom: 1px solid #F3F4F6;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .examen-checkbox:last-child {
+            border-bottom: none;
+        }
+
+        .examen-checkbox:hover {
+            background: #F9FAFB;
+        }
+
+        .examen-checkbox input {
+            margin-right: 10px;
+            width: 16px;
+            height: 16px;
+            accent-color: #0099B2;
+        }
+
+        .examen-checkbox label {
+            font-size: 14px;
+            color: #1F2937;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .examenes-selected {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .examen-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #E0F2FE;
+            color: #0369A1;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 12px;
+        }
+
+        .examen-tag button {
+            background: none;
+            border: none;
+            color: #0369A1;
+            cursor: pointer;
+            padding: 0;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .examen-tag button:hover {
+            color: #0C4A6E;
+        }
+
         /* Buttons */
         .form-actions {
             display: flex;
@@ -547,7 +619,11 @@
                             </div>
                             <div class="form-group full-width">
                                 <label class="form-label">Exámenes</label>
-                                <input type="text" class="form-input" name="examenes" placeholder="Ej: Audiometría, Visiometría, Espirometría">
+                                <input type="hidden" name="examenes" id="inputExamenes">
+                                <div class="examenes-container" id="examenesContainer">
+                                    <div style="padding: 14px; color: #9CA3AF; font-size: 14px;">Cargando exámenes...</div>
+                                </div>
+                                <div class="examenes-selected" id="examenesSelected"></div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Fecha de Atención</label>
@@ -600,14 +676,86 @@
 
         let empresasData = [];
         let medicosData = [];
+        let examenesData = [];
+        let examenesSeleccionados = [];
 
         // Cargar datos al iniciar
         document.addEventListener('DOMContentLoaded', () => {
             feather.replace();
             cargarMedicos();
             cargarEmpresas();
+            cargarExamenes();
             generarOpcionesHoraDefault();
         });
+
+        async function cargarExamenes() {
+            try {
+                const response = await fetch('/api/examenes');
+                const data = await response.json();
+                examenesData = data.filter(e => e.activo !== false);
+                renderExamenes();
+            } catch (error) {
+                console.error('Error al cargar exámenes:', error);
+                document.getElementById('examenesContainer').innerHTML =
+                    '<div style="padding: 14px; color: #EF4444; font-size: 14px;">Error al cargar exámenes</div>';
+            }
+        }
+
+        function renderExamenes() {
+            const container = document.getElementById('examenesContainer');
+
+            if (examenesData.length === 0) {
+                container.innerHTML = '<div style="padding: 14px; color: #9CA3AF; font-size: 14px;">No hay exámenes disponibles</div>';
+                return;
+            }
+
+            container.innerHTML = examenesData.map(examen => `
+                <div class="examen-checkbox" onclick="toggleExamen(${examen.id}, '${examen.nombre.replace(/'/g, "\\'")}')">
+                    <input type="checkbox" id="examen-${examen.id}" ${examenesSeleccionados.includes(examen.nombre) ? 'checked' : ''}>
+                    <label for="examen-${examen.id}">${examen.nombre}</label>
+                </div>
+            `).join('');
+        }
+
+        function toggleExamen(id, nombre) {
+            const index = examenesSeleccionados.indexOf(nombre);
+            if (index === -1) {
+                examenesSeleccionados.push(nombre);
+            } else {
+                examenesSeleccionados.splice(index, 1);
+            }
+            actualizarExamenesUI();
+        }
+
+        function quitarExamen(nombre) {
+            const index = examenesSeleccionados.indexOf(nombre);
+            if (index !== -1) {
+                examenesSeleccionados.splice(index, 1);
+            }
+            actualizarExamenesUI();
+        }
+
+        function actualizarExamenesUI() {
+            // Actualizar checkboxes
+            examenesData.forEach(examen => {
+                const checkbox = document.getElementById(`examen-${examen.id}`);
+                if (checkbox) {
+                    checkbox.checked = examenesSeleccionados.includes(examen.nombre);
+                }
+            });
+
+            // Actualizar tags seleccionados
+            const selectedContainer = document.getElementById('examenesSelected');
+            selectedContainer.innerHTML = examenesSeleccionados.map(nombre => `
+                <span class="examen-tag">
+                    ${nombre}
+                    <button type="button" onclick="quitarExamen('${nombre.replace(/'/g, "\\'")}')">&times;</button>
+                </span>
+            `).join('');
+
+            // Actualizar input hidden
+            document.getElementById('inputExamenes').value = examenesSeleccionados.join(', ');
+        }
 
         function generarOpcionesHoraDefault() {
             const select = document.getElementById('selectHora');
@@ -791,6 +939,8 @@
 
         function limpiarFormulario() {
             form.reset();
+            examenesSeleccionados = [];
+            actualizarExamenesUI();
             successMessage.classList.remove('show');
             errorMessage.classList.remove('show');
         }
