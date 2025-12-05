@@ -2314,20 +2314,21 @@ app.get('/api/calendario/mes-detalle', async (req, res) => {
 
         // Calcular primer y último día del mes
         const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-        const endDate = new Date(year, month, 0).getDate();
-        const endDateStr = `${year}-${String(month).padStart(2, '0')}-${endDate}`;
+        const lastDay = new Date(year, month, 0).getDate();
+        const endDateStr = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
 
+        // Buscar en HistoriaClinica (donde se guardan las órdenes)
         const query = `
             SELECT
-                fecha_atencion,
-                COALESCE(medico, 'Sin asignar') as medico,
+                "fechaAtencion" as fecha_atencion,
+                COALESCE("medico", 'Sin asignar') as medico,
                 COUNT(*) as total
-            FROM formularios
-            WHERE fecha_atencion IS NOT NULL
-              AND fecha_atencion >= $1
-              AND fecha_atencion <= $2
-            GROUP BY fecha_atencion, medico
-            ORDER BY fecha_atencion, total DESC
+            FROM "HistoriaClinica"
+            WHERE "fechaAtencion" IS NOT NULL
+              AND "fechaAtencion" >= $1::timestamp
+              AND "fechaAtencion" < ($2::timestamp + interval '1 day')
+            GROUP BY "fechaAtencion", "medico"
+            ORDER BY "fechaAtencion", total DESC
         `;
 
         const result = await pool.query(query, [startDate, endDateStr]);
@@ -2379,28 +2380,30 @@ app.get('/api/calendario/dia', async (req, res) => {
             });
         }
 
+        // Buscar en HistoriaClinica (donde se guardan las órdenes)
         let query = `
             SELECT
-                id,
-                numero_id as cedula,
-                CONCAT(COALESCE(primer_nombre, ''), ' ', COALESCE(primer_apellido, '')) as nombre,
-                atendido as "tipoExamen",
-                medico,
-                fecha_atencion,
-                hora_atencion as hora,
-                empresa,
-                atendido
-            FROM formularios
-            WHERE fecha_atencion = $1
+                "_id" as id,
+                "numeroId" as cedula,
+                CONCAT(COALESCE("primerNombre", ''), ' ', COALESCE("primerApellido", '')) as nombre,
+                "tipoExamen",
+                "medico",
+                "fechaAtencion" as fecha_atencion,
+                NULL as hora,
+                "empresa",
+                "atendido"
+            FROM "HistoriaClinica"
+            WHERE "fechaAtencion" >= $1::timestamp
+              AND "fechaAtencion" < ($1::timestamp + interval '1 day')
         `;
         const params = [fecha];
 
         if (medico) {
-            query += ` AND medico = $2`;
+            query += ` AND "medico" = $2`;
             params.push(medico);
         }
 
-        query += ` ORDER BY hora_atencion ASC NULLS LAST, id ASC`;
+        query += ` ORDER BY "fechaAtencion" ASC, "_createdDate" ASC`;
 
         const result = await pool.query(query, params);
 
