@@ -6,7 +6,7 @@ import { generarPdfDesdeApi2Pdf } from 'backend/api2pdf.jsw';
 import { sendPdf } from 'backend/WHATSAPP';
 
 // URL del endpoint en Digital Ocean para actualizar PostgreSQL
-const POSTGRES_API_URL = "https://bsl-formulario-f5qx3.ondigitalocean.app/api/marcar-atendido";
+const POSTGRES_API_URL = "https://bsl-plataforma.com/api/marcar-atendido";
 
 // Función para sincronizar estado ATENDIDO con PostgreSQL
 async function sincronizarAtendidoPostgres(wixId, datosAdicionales = {}) {

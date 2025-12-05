@@ -445,7 +445,7 @@ async function updateDatabase() {
                     medico: medico
                 };
 
-                const pgResponse = await fetch("https://bsl-formulario-f5qx3.ondigitalocean.app/api/marcar-atendido", {
+                const pgResponse = await fetch("https://bsl-plataforma.com/api/marcar-atendido", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(postgresData)
@@ -519,7 +519,7 @@ async function updateDatabase() {
 
             console.log("REDIRECCIONAND A DIGITAL")
                     //wixLocation.to("https://www.bsl.com.co/historia-clinica2/" + newItem._id);
-                    wixLocation.to("https://bsl-formulario-f5qx3.ondigitalocean.app/?_id=" + newItem._id);
+                    wixLocation.to("https://bsl-plataforma.com/?_id=" + newItem._id);
 
         })
         .catch((err) => {
