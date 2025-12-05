@@ -127,6 +127,45 @@
         .header-actions {
             display: flex;
             gap: 12px;
+            align-items: center;
+        }
+
+        /* Global Search */
+        .global-search {
+            position: relative;
+            width: 320px;
+        }
+
+        .global-search input {
+            width: 100%;
+            padding: 10px 16px 10px 42px;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+            transition: all 0.2s ease;
+        }
+
+        .global-search input:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .global-search input::placeholder {
+            color: #94A3B8;
+        }
+
+        .global-search svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94A3B8;
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
         }
 
         .btn {
@@ -376,77 +415,84 @@
 
         .event-badge {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 4px 8px;
+            flex-direction: column;
+            padding: 6px 10px;
             border-radius: 6px;
             font-size: 11px;
-            background: #EFF6FF;
-            border-left: 3px solid #2563EB;
+            background: white;
+            border-left: 4px solid #2563EB;
             cursor: pointer;
             transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
         .event-badge:hover {
             transform: scale(1.02);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
         }
 
         .event-badge.atendido {
-            background: #DCFCE7;
             border-left-color: #22C55E;
         }
 
         .event-badge.pendiente {
-            background: #FEF9C3;
             border-left-color: #EAB308;
         }
 
         .event-badge.vencido {
-            background: #FEE2E2;
             border-left-color: #EF4444;
         }
 
+        .event-badge .event-time {
+            font-size: 11px;
+            font-weight: 600;
+            color: #2563EB;
+            margin-bottom: 2px;
+        }
+
+        .event-badge.atendido .event-time {
+            color: #22C55E;
+        }
+
+        .event-badge.pendiente .event-time {
+            color: #EAB308;
+        }
+
+        .event-badge.vencido .event-time {
+            color: #EF4444;
+        }
+
         .event-badge .doctor-name {
-            color: #1E40AF;
+            color: #374151;
             font-weight: 500;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 70px;
+            max-width: 100%;
+            font-size: 11px;
         }
 
-        .event-badge.atendido .doctor-name {
-            color: #166534;
+        .event-badge .event-stats {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 3px;
+            font-size: 10px;
+            color: #6B7280;
         }
 
-        .event-badge.pendiente .doctor-name {
-            color: #854D0E;
-        }
-
-        .event-badge.vencido .doctor-name {
-            color: #991B1B;
+        .event-badge .event-stats i {
+            width: 12px;
+            height: 12px;
         }
 
         .event-badge .count {
-            background: #2563EB;
-            color: white;
-            padding: 1px 6px;
-            border-radius: 10px;
+            background: #F3F4F6;
+            color: #374151;
+            padding: 2px 6px;
+            border-radius: 4px;
             font-size: 10px;
             font-weight: 600;
-        }
-
-        .event-badge.atendido .count {
-            background: #22C55E;
-        }
-
-        .event-badge.pendiente .count {
-            background: #EAB308;
-        }
-
-        .event-badge.vencido .count {
-            background: #EF4444;
         }
 
         .more-events {
@@ -837,6 +883,10 @@
                         <p>Gestión de agenda médica</p>
                     </div>
                     <div class="header-actions">
+                        <div class="global-search">
+                            <i data-feather="search"></i>
+                            <input type="text" id="globalSearchInput" placeholder="Buscar por nombre, cédula o empresa..." onkeypress="buscarGlobal(event)">
+                        </div>
                         <button class="btn" onclick="irAHoy()">
                             <i data-feather="circle"></i> Hoy
                         </button>
@@ -962,6 +1012,16 @@
     </div>
 
     <script>
+        // Función de búsqueda global
+        function buscarGlobal(event) {
+            if (event.key === 'Enter') {
+                const query = event.target.value.trim();
+                if (query) {
+                    window.location.href = `/ordenes.html?buscar=${encodeURIComponent(query)}`;
+                }
+            }
+        }
+
         let currentDate = new Date();
         let selectedDate = null;
         let citasDelMes = {};
@@ -1114,7 +1174,6 @@
                 let html = '';
 
                 doctorEntries.slice(0, maxShow).forEach(([medico, stats]) => {
-                    const nombreCorto = medico.split(' ')[0];
                     const total = (stats.atendidos || 0) + (stats.pendientes || 0) + (stats.vencidos || 0);
 
                     // Determinar clase según estado predominante
@@ -1128,10 +1187,19 @@
                     // Escapar el nombre del médico para usarlo en onclick
                     const medicoEscapado = medico.replace(/'/g, "\\'");
 
+                    // Mostrar estadísticas detalladas
+                    const atendidos = stats.atendidos || 0;
+                    const pendientes = (stats.pendientes || 0) + (stats.vencidos || 0);
+
                     html += `
                         <div class="event-badge ${estadoClass}" onclick="event.stopPropagation(); abrirVistaAgendaMedico('${fecha}', '${medicoEscapado}')">
-                            <span class="doctor-name">${nombreCorto}</span>
-                            <span class="count">${total}</span>
+                            <span class="event-time">SESSION</span>
+                            <span class="doctor-name">${medico}</span>
+                            <div class="event-stats">
+                                <i data-feather="users"></i>
+                                <span>${atendidos}/${total}</span>
+                                <span class="count">✓ ${atendidos}</span>
+                            </div>
                         </div>
                     `;
                 });
@@ -1142,6 +1210,9 @@
 
                 eventsContainer.innerHTML = html;
             });
+
+            // Renderizar íconos de feather
+            feather.replace();
         }
 
         function cambiarMes(delta) {

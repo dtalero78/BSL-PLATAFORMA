@@ -2863,6 +2863,14 @@
             // Initialize Feather Icons
             feather.replace();
 
+            // Check for search query in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const buscarParam = urlParams.get('buscar');
+            if (buscarParam) {
+                busquedaActual = buscarParam;
+                document.getElementById('searchInput').value = buscarParam;
+            }
+
             // Load data
             cargarFormularios();
 

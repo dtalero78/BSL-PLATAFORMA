@@ -377,6 +377,51 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Global Search */
+        .global-search {
+            position: relative;
+            width: 320px;
+        }
+
+        .global-search i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            color: #9CA3AF;
+            pointer-events: none;
+        }
+
+        .global-search input {
+            width: 100%;
+            padding: 10px 16px 10px 42px;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #1F2937;
+            background: #F8FAFC;
+            transition: all 0.2s ease;
+        }
+
+        .global-search input:focus {
+            outline: none;
+            border-color: #0099B2;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 153, 178, 0.1);
+        }
+
+        .global-search input::placeholder {
+            color: #9CA3AF;
+        }
+
+        .page-header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -449,7 +494,13 @@
         <!-- Main Content -->
         <main class="main-content">
             <div class="page-header">
-                <h1 class="page-title">Gestión de Empresas</h1>
+                <div class="page-header-left">
+                    <h1 class="page-title">Gestión de Empresas</h1>
+                    <div class="global-search">
+                        <i data-feather="search"></i>
+                        <input type="text" placeholder="Buscar por nombre, cédula o empresa..." onkeypress="buscarGlobal(event)">
+                    </div>
+                </div>
                 <button class="btn btn-primary" onclick="abrirModalNuevo()">
                     <i data-feather="plus"></i> Nueva Empresa
                 </button>
@@ -525,6 +576,16 @@
     <script>
         let empresas = [];
         let empresaEditando = null;
+
+        // Buscar órdenes globalmente
+        function buscarGlobal(event) {
+            if (event.key === 'Enter') {
+                const query = event.target.value.trim();
+                if (query) {
+                    window.location.href = `/ordenes.html?buscar=${encodeURIComponent(query)}`;
+                }
+            }
+        }
 
         // Cargar empresas al iniciar
         document.addEventListener('DOMContentLoaded', () => {
