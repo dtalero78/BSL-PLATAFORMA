@@ -1120,6 +1120,114 @@ app.post('/api/ordenes', async (req, res) => {
     }
 });
 
+// GET /api/ordenes/:id - Obtener una orden específica
+app.get('/api/ordenes/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const query = `
+            SELECT * FROM "HistoriaClinica"
+            WHERE "_id" = $1
+        `;
+
+        const result = await pool.query(query, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Orden no encontrada'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('❌ Error al obtener orden:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener la orden',
+            error: error.message
+        });
+    }
+});
+
+// PUT /api/ordenes/:id - Actualizar una orden
+app.put('/api/ordenes/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            primerNombre,
+            primerApellido,
+            empresa,
+            tipoExamen,
+            medico,
+            atendido,
+            fechaAtencion,
+            horaAtencion
+        } = req.body;
+
+        console.log('');
+        console.log('═══════════════════════════════════════════════════════════');
+        console.log('📝 ACTUALIZANDO ORDEN:', id);
+        console.log('═══════════════════════════════════════════════════════════');
+        console.log('📦 Datos recibidos:', JSON.stringify(req.body, null, 2));
+
+        const updateQuery = `
+            UPDATE "HistoriaClinica"
+            SET
+                "primerNombre" = COALESCE($2, "primerNombre"),
+                "primerApellido" = COALESCE($3, "primerApellido"),
+                "empresa" = COALESCE($4, "empresa"),
+                "tipoExamen" = COALESCE($5, "tipoExamen"),
+                "medico" = COALESCE($6, "medico"),
+                "atendido" = COALESCE($7, "atendido"),
+                "fechaAtencion" = $8,
+                "horaAtencion" = $9,
+                "_updatedDate" = NOW()
+            WHERE "_id" = $1
+            RETURNING *
+        `;
+
+        const values = [
+            id,
+            primerNombre || null,
+            primerApellido || null,
+            empresa || null,
+            tipoExamen || null,
+            medico || null,
+            atendido || null,
+            fechaAtencion ? new Date(fechaAtencion) : null,
+            horaAtencion || null
+        ];
+
+        const result = await pool.query(updateQuery, values);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Orden no encontrada'
+            });
+        }
+
+        console.log('✅ Orden actualizada exitosamente');
+
+        res.json({
+            success: true,
+            message: 'Orden actualizada exitosamente',
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('❌ Error al actualizar orden:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al actualizar la orden',
+            error: error.message
+        });
+    }
+});
+
 // Endpoint para marcar como atendido desde Wix (upsert en HistoriaClinica)
 app.post('/api/marcar-atendido', async (req, res) => {
     try {

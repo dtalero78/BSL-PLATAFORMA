@@ -668,8 +668,7 @@
         .appointment-card {
             background: white;
             border: 1px solid #E2E8F0;
-            border-left: 4px solid #2563EB;
-            border-radius: 10px;
+            border-radius: 0;
             padding: 14px 18px;
             min-width: 280px;
             max-width: 350px;
@@ -677,18 +676,18 @@
         }
 
         .appointment-card.atendido {
-            border-left-color: #22C55E;
             background: #F0FDF4;
+            border-color: #BBF7D0;
         }
 
         .appointment-card.pendiente {
-            border-left-color: #EAB308;
             background: #FEFCE8;
+            border-color: #FEF08A;
         }
 
         .appointment-card.vencido {
-            border-left-color: #EF4444;
             background: #FEF2F2;
+            border-color: #FECACA;
         }
 
         .appointment-card:hover {
@@ -784,6 +783,142 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        /* Modal de Edición */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1E293B;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #64748B;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: #1E293B;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #E2E8F0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-input, .form-select {
+            padding: 10px 12px;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn-modal {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s ease;
+        }
+
+        .btn-modal.primary {
+            background: #2563EB;
+            color: white;
+        }
+
+        .btn-modal.primary:hover {
+            background: #1D4ED8;
+        }
+
+        .btn-modal.secondary {
+            background: #F3F4F6;
+            color: #374151;
+        }
+
+        .btn-modal.secondary:hover {
+            background: #E5E7EB;
+        }
+
+        .appointment-card {
+            cursor: pointer;
         }
 
         /* Responsive */
@@ -1009,6 +1144,79 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Modal Editar Orden -->
+    <div id="modalEditarOrden" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Editar Orden</h2>
+                <button class="modal-close" onclick="cerrarModalEditar()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarOrden">
+                    <input type="hidden" id="edit-id">
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Primer Nombre</label>
+                            <input type="text" class="form-input" id="edit-primerNombre">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Primer Apellido</label>
+                            <input type="text" class="form-input" id="edit-primerApellido">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cédula</label>
+                            <input type="text" class="form-input" id="edit-cedula" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Empresa</label>
+                            <input type="text" class="form-input" id="edit-empresa">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tipo de Examen</label>
+                            <select class="form-select" id="edit-tipoExamen">
+                                <option value="">Seleccionar...</option>
+                                <option value="INGRESO">Ingreso</option>
+                                <option value="PERIODICO">Periódico</option>
+                                <option value="RETIRO">Retiro</option>
+                                <option value="REUBICACION">Reubicación</option>
+                                <option value="POST-INCAPACIDAD">Post-incapacidad</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Médico</label>
+                            <select class="form-select" id="edit-medico">
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Fecha de Atención</label>
+                            <input type="date" class="form-input" id="edit-fechaAtencion">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Hora de Atención</label>
+                            <select class="form-select" id="edit-horaAtencion">
+                                <option value="">Sin hora</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" id="edit-atendido">
+                                <option value="PENDIENTE">Pendiente</option>
+                                <option value="ATENDIDO">Atendido</option>
+                                <option value="EN PROCESO">En Proceso</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal secondary" onclick="cerrarModalEditar()">Cancelar</button>
+                <button type="button" class="btn-modal primary" onclick="guardarOrden()">Guardar</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1369,7 +1577,7 @@
                             <div class="timeline-hour-content">
                                 ${citasHora.length > 0 ?
                                     citasHora.map(cita => `
-                                        <div class="appointment-card ${getEstadoClase(cita, selectedDate)}">
+                                        <div class="appointment-card ${getEstadoClase(cita, selectedDate)}" onclick="abrirModalEditar('${cita.id}')">
                                             <div class="patient-name">${cita.nombre}</div>
                                             <div class="patient-info">CC: ${cita.cedula} ${cita.empresa ? `• ${cita.empresa}` : ''}</div>
                                             <div class="appointment-meta">
@@ -1393,7 +1601,7 @@
                         <div class="timeline-hour-label">Sin hora</div>
                         <div class="timeline-hour-content">
                             ${sinHora.map(cita => `
-                                <div class="appointment-card ${getEstadoClase(cita, selectedDate)}">
+                                <div class="appointment-card ${getEstadoClase(cita, selectedDate)}" onclick="abrirModalEditar('${cita.id}')">
                                     <div class="patient-name">${cita.nombre}</div>
                                     <div class="patient-info">CC: ${cita.cedula} ${cita.empresa ? `• ${cita.empresa}` : ''}</div>
                                     <div class="appointment-meta">
@@ -1410,6 +1618,132 @@
             timeline.innerHTML = html;
             feather.replace();
         }
+
+        // ========== MODAL EDITAR ORDEN ==========
+
+        function generarOpcionesHora() {
+            const select = document.getElementById('edit-horaAtencion');
+            select.innerHTML = '<option value="">Sin hora</option>';
+            for (let hora = 6; hora <= 23; hora++) {
+                for (let minuto = 0; minuto < 60; minuto += 10) {
+                    const horaStr = String(hora).padStart(2, '0');
+                    const minutoStr = String(minuto).padStart(2, '0');
+                    const valor = `${horaStr}:${minutoStr}`;
+                    const hora12 = hora > 12 ? hora - 12 : (hora === 0 ? 12 : hora);
+                    const ampm = hora >= 12 ? 'PM' : 'AM';
+                    const texto = `${hora12}:${minutoStr} ${ampm}`;
+                    const option = document.createElement('option');
+                    option.value = valor;
+                    option.textContent = texto;
+                    select.appendChild(option);
+                }
+            }
+        }
+
+        function poblarSelectMedicos() {
+            const select = document.getElementById('edit-medico');
+            select.innerHTML = '<option value="">Seleccionar...</option>';
+            medicos.forEach(medico => {
+                const nombreCompleto = `${medico.primer_nombre} ${medico.primer_apellido}`;
+                const option = document.createElement('option');
+                option.value = nombreCompleto;
+                option.textContent = nombreCompleto;
+                select.appendChild(option);
+            });
+        }
+
+        async function abrirModalEditar(id) {
+            // Generar opciones si no existen
+            if (document.getElementById('edit-horaAtencion').options.length <= 1) {
+                generarOpcionesHora();
+            }
+            poblarSelectMedicos();
+
+            try {
+                const response = await fetch(`/api/ordenes/${id}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const orden = result.data;
+                    document.getElementById('edit-id').value = orden._id;
+                    document.getElementById('edit-primerNombre').value = orden.primerNombre || '';
+                    document.getElementById('edit-primerApellido').value = orden.primerApellido || '';
+                    document.getElementById('edit-cedula').value = orden.numeroId || '';
+                    document.getElementById('edit-empresa').value = orden.empresa || '';
+                    document.getElementById('edit-tipoExamen').value = orden.tipoExamen || '';
+                    document.getElementById('edit-medico').value = orden.medico || '';
+                    document.getElementById('edit-atendido').value = orden.atendido || 'PENDIENTE';
+
+                    // Fecha
+                    if (orden.fechaAtencion) {
+                        const fecha = new Date(orden.fechaAtencion);
+                        document.getElementById('edit-fechaAtencion').value = fecha.toISOString().split('T')[0];
+                    } else {
+                        document.getElementById('edit-fechaAtencion').value = '';
+                    }
+
+                    // Hora
+                    document.getElementById('edit-horaAtencion').value = orden.horaAtencion || '';
+
+                    document.getElementById('modalEditarOrden').classList.add('active');
+                } else {
+                    alert('Error al cargar la orden');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar la orden');
+            }
+        }
+
+        function cerrarModalEditar() {
+            document.getElementById('modalEditarOrden').classList.remove('active');
+        }
+
+        async function guardarOrden() {
+            const id = document.getElementById('edit-id').value;
+            const datos = {
+                primerNombre: document.getElementById('edit-primerNombre').value,
+                primerApellido: document.getElementById('edit-primerApellido').value,
+                empresa: document.getElementById('edit-empresa').value,
+                tipoExamen: document.getElementById('edit-tipoExamen').value,
+                medico: document.getElementById('edit-medico').value,
+                atendido: document.getElementById('edit-atendido').value,
+                fechaAtencion: document.getElementById('edit-fechaAtencion').value,
+                horaAtencion: document.getElementById('edit-horaAtencion').value
+            };
+
+            try {
+                const response = await fetch(`/api/ordenes/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    cerrarModalEditar();
+                    // Recargar la vista del día
+                    if (selectedDate) {
+                        cargarCitasDia(selectedDate, medicoFiltrado);
+                    }
+                    // Recargar calendario mensual también
+                    cargarCitasMes();
+                } else {
+                    alert('Error al guardar: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al guardar los cambios');
+            }
+        }
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('modalEditarOrden').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                cerrarModalEditar();
+            }
+        });
     </script>
 </body>
 </html>
