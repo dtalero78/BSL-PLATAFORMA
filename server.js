@@ -2300,7 +2300,7 @@ app.get('/api/calendario/mes', async (req, res) => {
     }
 });
 
-// GET /api/calendario/mes-detalle - Obtener citas agrupadas por médico para cada día del mes
+// GET /api/calendario/mes-detalle - Obtener citas agrupadas por médico y estado para cada día del mes
 app.get('/api/calendario/mes-detalle', async (req, res) => {
     try {
         const { year, month } = req.query;
@@ -2317,24 +2317,32 @@ app.get('/api/calendario/mes-detalle', async (req, res) => {
         const lastDay = new Date(year, month, 0).getDate();
         const endDateStr = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
 
-        // Buscar en HistoriaClinica (donde se guardan las órdenes)
+        // Buscar en HistoriaClinica (donde se guardan las órdenes) - incluir atendido
         const query = `
             SELECT
                 "fechaAtencion" as fecha_atencion,
                 COALESCE("medico", 'Sin asignar') as medico,
+                COALESCE("atendido", 'PENDIENTE') as estado,
                 COUNT(*) as total
             FROM "HistoriaClinica"
             WHERE "fechaAtencion" IS NOT NULL
               AND "fechaAtencion" >= $1::timestamp
               AND "fechaAtencion" < ($2::timestamp + interval '1 day')
-            GROUP BY "fechaAtencion", "medico"
+            GROUP BY "fechaAtencion", "medico", "atendido"
             ORDER BY "fechaAtencion", total DESC
         `;
 
         const result = await pool.query(query, [startDate, endDateStr]);
 
-        // Convertir a objeto {fecha: {medico: count, ...}}
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+
+        // Convertir a objeto {fecha: {medico: {atendidos, pendientes, vencidos}, ...}}
         const citasPorDia = {};
+        let totalAtendidos = 0;
+        let totalPendientes = 0;
+        let totalVencidos = 0;
+
         result.rows.forEach(row => {
             if (row.fecha_atencion) {
                 // Normalizar formato de fecha
@@ -2348,13 +2356,37 @@ app.get('/api/calendario/mes-detalle', async (req, res) => {
                 if (!citasPorDia[fecha]) {
                     citasPorDia[fecha] = {};
                 }
-                citasPorDia[fecha][row.medico] = parseInt(row.total);
+                if (!citasPorDia[fecha][row.medico]) {
+                    citasPorDia[fecha][row.medico] = { atendidos: 0, pendientes: 0, vencidos: 0 };
+                }
+
+                const count = parseInt(row.total);
+                const fechaCita = new Date(fecha);
+                fechaCita.setHours(0, 0, 0, 0);
+
+                if (row.estado === 'ATENDIDO') {
+                    citasPorDia[fecha][row.medico].atendidos += count;
+                    totalAtendidos += count;
+                } else if (fechaCita < hoy) {
+                    // Pendiente pero fecha ya pasó = vencido
+                    citasPorDia[fecha][row.medico].vencidos += count;
+                    totalVencidos += count;
+                } else {
+                    citasPorDia[fecha][row.medico].pendientes += count;
+                    totalPendientes += count;
+                }
             }
         });
 
         res.json({
             success: true,
             data: citasPorDia,
+            estadisticas: {
+                atendidos: totalAtendidos,
+                pendientes: totalPendientes,
+                vencidos: totalVencidos,
+                total: totalAtendidos + totalPendientes + totalVencidos
+            },
             year: parseInt(year),
             month: parseInt(month)
         });

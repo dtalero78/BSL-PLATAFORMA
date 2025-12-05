@@ -385,6 +385,21 @@
             border-left: 3px solid #2563EB;
         }
 
+        .event-badge.atendido {
+            background: #DCFCE7;
+            border-left-color: #22C55E;
+        }
+
+        .event-badge.pendiente {
+            background: #FEF9C3;
+            border-left-color: #EAB308;
+        }
+
+        .event-badge.vencido {
+            background: #FEE2E2;
+            border-left-color: #EF4444;
+        }
+
         .event-badge .doctor-name {
             color: #1E40AF;
             font-weight: 500;
@@ -394,6 +409,18 @@
             max-width: 70px;
         }
 
+        .event-badge.atendido .doctor-name {
+            color: #166534;
+        }
+
+        .event-badge.pendiente .doctor-name {
+            color: #854D0E;
+        }
+
+        .event-badge.vencido .doctor-name {
+            color: #991B1B;
+        }
+
         .event-badge .count {
             background: #2563EB;
             color: white;
@@ -401,6 +428,18 @@
             border-radius: 10px;
             font-size: 10px;
             font-weight: 600;
+        }
+
+        .event-badge.atendido .count {
+            background: #22C55E;
+        }
+
+        .event-badge.pendiente .count {
+            background: #EAB308;
+        }
+
+        .event-badge.vencido .count {
+            background: #EF4444;
         }
 
         .more-events {
@@ -554,6 +593,21 @@
             min-width: 280px;
             max-width: 350px;
             transition: all 0.2s;
+        }
+
+        .appointment-card.atendido {
+            border-left-color: #22C55E;
+            background: #F0FDF4;
+        }
+
+        .appointment-card.pendiente {
+            border-left-color: #EAB308;
+            background: #FEFCE8;
+        }
+
+        .appointment-card.vencido {
+            border-left-color: #EF4444;
+            background: #FEF2F2;
         }
 
         .appointment-card:hover {
@@ -908,6 +962,7 @@
 
                 if (result.success) {
                     citasDelMes = result.data;
+                    estadisticasMes = result.estadisticas || { atendidos: 0, pendientes: 0, vencidos: 0, total: 0 };
                     actualizarCeldasCalendario();
                     actualizarEstadisticas();
                 }
@@ -916,16 +971,12 @@
             }
         }
 
+        let estadisticasMes = { atendidos: 0, pendientes: 0, vencidos: 0, total: 0 };
+
         function actualizarEstadisticas() {
-            let totalCitas = 0;
-            Object.values(citasDelMes).forEach(doctores => {
-                Object.values(doctores).forEach(count => {
-                    totalCitas += count;
-                });
-            });
-            document.getElementById('statCitasMes').textContent = totalCitas;
-            document.getElementById('statPendientes').textContent = totalCitas;
-            document.getElementById('statAtendidos').textContent = '0';
+            document.getElementById('statCitasMes').textContent = estadisticasMes.total;
+            document.getElementById('statAtendidos').textContent = estadisticasMes.atendidos;
+            document.getElementById('statPendientes').textContent = estadisticasMes.pendientes + estadisticasMes.vencidos;
         }
 
         function renderCalendario() {
@@ -998,6 +1049,9 @@
         }
 
         function actualizarCeldasCalendario() {
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+
             Object.entries(citasDelMes).forEach(([fecha, doctores]) => {
                 const eventsContainer = document.getElementById(`events-${fecha}`);
                 const totalEl = document.getElementById(`total-${fecha}`);
@@ -1006,8 +1060,11 @@
                 const doctorEntries = Object.entries(doctores);
                 if (doctorEntries.length === 0) return;
 
+                // Calcular total sumando atendidos + pendientes + vencidos
                 let totalCitas = 0;
-                doctorEntries.forEach(([_, count]) => totalCitas += count);
+                doctorEntries.forEach(([_, stats]) => {
+                    totalCitas += (stats.atendidos || 0) + (stats.pendientes || 0) + (stats.vencidos || 0);
+                });
 
                 if (totalEl) {
                     totalEl.textContent = totalCitas;
@@ -1017,12 +1074,22 @@
                 const maxShow = 2;
                 let html = '';
 
-                doctorEntries.slice(0, maxShow).forEach(([medico, count]) => {
+                doctorEntries.slice(0, maxShow).forEach(([medico, stats]) => {
                     const nombreCorto = medico.split(' ')[0];
+                    const total = (stats.atendidos || 0) + (stats.pendientes || 0) + (stats.vencidos || 0);
+
+                    // Determinar clase según estado predominante
+                    let estadoClass = 'pendiente';
+                    if (stats.vencidos > 0 && stats.vencidos >= stats.pendientes) {
+                        estadoClass = 'vencido';
+                    } else if (stats.atendidos > 0 && stats.atendidos >= stats.pendientes && stats.atendidos >= stats.vencidos) {
+                        estadoClass = 'atendido';
+                    }
+
                     html += `
-                        <div class="event-badge">
+                        <div class="event-badge ${estadoClass}">
                             <span class="doctor-name">${nombreCorto}</span>
-                            <span class="count">${count}</span>
+                            <span class="count">${total}</span>
                         </div>
                     `;
                 });
@@ -1116,6 +1183,20 @@
             feather.replace();
         }
 
+        function getEstadoClase(cita, fechaSeleccionada) {
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const fechaCita = new Date(fechaSeleccionada);
+            fechaCita.setHours(0, 0, 0, 0);
+
+            if (cita.atendido === 'ATENDIDO') {
+                return 'atendido';
+            } else if (fechaCita < hoy) {
+                return 'vencido';
+            }
+            return 'pendiente';
+        }
+
         function renderTimeline(citas) {
             const timeline = document.getElementById('timeline');
 
@@ -1149,7 +1230,7 @@
                         <div class="timeline-hour-content">
                             ${citasHora.length > 0 ?
                                 citasHora.map(cita => `
-                                    <div class="appointment-card">
+                                    <div class="appointment-card ${getEstadoClase(cita, selectedDate)}">
                                         <div class="patient-name">${cita.nombre}</div>
                                         <div class="patient-info">CC: ${cita.cedula} ${cita.empresa ? `• ${cita.empresa}` : ''}</div>
                                         <div class="appointment-meta">
@@ -1172,7 +1253,7 @@
                         <div class="timeline-hour-label">Sin hora</div>
                         <div class="timeline-hour-content">
                             ${sinHora.map(cita => `
-                                <div class="appointment-card">
+                                <div class="appointment-card ${getEstadoClase(cita, selectedDate)}">
                                     <div class="patient-name">${cita.nombre}</div>
                                     <div class="patient-info">CC: ${cita.cedula} ${cita.empresa ? `• ${cita.empresa}` : ''}</div>
                                     <div class="appointment-meta">
