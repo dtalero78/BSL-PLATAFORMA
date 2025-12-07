@@ -1120,6 +1120,86 @@ app.post('/api/ordenes', async (req, res) => {
     }
 });
 
+// GET /api/ordenes - Listar órdenes con filtros opcionales
+app.get('/api/ordenes', async (req, res) => {
+    try {
+        const { codEmpresa, buscar, limit = 100, offset = 0 } = req.query;
+
+        let query = `
+            SELECT "_id", "numeroId", "primerNombre", "segundoNombre", "primerApellido", "segundoApellido",
+                   "codEmpresa", "empresa", "cargo", "tipoExamen", "medico", "atendido",
+                   "fechaAtencion", "horaAtencion", "examenes", "ciudad",
+                   "_createdDate", "_updatedDate", "fechaConsulta"
+            FROM "HistoriaClinica"
+            WHERE 1=1
+        `;
+        const params = [];
+        let paramIndex = 1;
+
+        if (codEmpresa) {
+            query += ` AND "codEmpresa" = $${paramIndex}`;
+            params.push(codEmpresa);
+            paramIndex++;
+        }
+
+        if (buscar) {
+            query += ` AND (
+                "numeroId" ILIKE $${paramIndex} OR
+                "primerNombre" ILIKE $${paramIndex} OR
+                "primerApellido" ILIKE $${paramIndex} OR
+                "empresa" ILIKE $${paramIndex}
+            )`;
+            params.push(`%${buscar}%`);
+            paramIndex++;
+        }
+
+        query += ` ORDER BY "fechaAtencion" DESC NULLS LAST, "_createdDate" DESC`;
+        query += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+        params.push(parseInt(limit), parseInt(offset));
+
+        const result = await pool.query(query, params);
+
+        // Obtener el total para paginación
+        let countQuery = `SELECT COUNT(*) FROM "HistoriaClinica" WHERE 1=1`;
+        const countParams = [];
+        let countParamIndex = 1;
+
+        if (codEmpresa) {
+            countQuery += ` AND "codEmpresa" = $${countParamIndex}`;
+            countParams.push(codEmpresa);
+            countParamIndex++;
+        }
+
+        if (buscar) {
+            countQuery += ` AND (
+                "numeroId" ILIKE $${countParamIndex} OR
+                "primerNombre" ILIKE $${countParamIndex} OR
+                "primerApellido" ILIKE $${countParamIndex} OR
+                "empresa" ILIKE $${countParamIndex}
+            )`;
+            countParams.push(`%${buscar}%`);
+        }
+
+        const countResult = await pool.query(countQuery, countParams);
+        const total = parseInt(countResult.rows[0].count);
+
+        res.json({
+            success: true,
+            data: result.rows,
+            total,
+            limit: parseInt(limit),
+            offset: parseInt(offset)
+        });
+    } catch (error) {
+        console.error('❌ Error al listar órdenes:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al listar órdenes',
+            error: error.message
+        });
+    }
+});
+
 // GET /api/ordenes/:id - Obtener una orden específica
 app.get('/api/ordenes/:id', async (req, res) => {
     try {
