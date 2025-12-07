@@ -1305,24 +1305,15 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Médico</label>
-                        <select class="form-select" id="modalMedico" onchange="actualizarHorariosModal()">
-                            <option value="">Seleccionar médico...</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Fecha de Atención</label>
-                        <input type="date" class="form-input" id="modalFechaAtencion" onchange="actualizarMedicosModal()">
+                        <label class="form-label">Fecha de Atención <span class="required">*</span></label>
+                        <input type="date" class="form-input" id="modalFechaAtencion" onchange="cargarTurnosDisponibles()">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Hora de Atención</label>
+                        <label class="form-label">Hora de Atención <span class="required">*</span></label>
                         <select class="form-select" id="modalHoraAtencion">
-                            <option value="">Seleccionar hora...</option>
+                            <option value="">Primero seleccione fecha...</option>
                         </select>
-                        <div class="info-tiempo" id="modalInfoTiempo" style="display: none;"></div>
+                        <div class="info-tiempo" id="modalInfoTiempo">El sistema asignará automáticamente un médico disponible</div>
                     </div>
                 </div>
 
@@ -1642,7 +1633,6 @@
         // ========== MODAL NUEVA ORDEN ==========
 
         let modalidadActual = 'presencial';
-        let medicosData = [];
         let examenesDataModal = [];
         let examenesSeleccionadosModal = [];
 
@@ -1651,9 +1641,7 @@
             document.getElementById('modalEmpresa').value = codEmpresa;
             modalidadActual = 'presencial';
             actualizarTabsModalidad();
-            cargarMedicosModal();
             cargarExamenesModal();
-            generarHorasDefault();
             limpiarFormularioModal();
         }
 
@@ -1672,9 +1660,8 @@
             document.getElementById('modalCargo').value = '';
             document.getElementById('modalCiudad').value = '';
             document.getElementById('modalTipoExamen').value = '';
-            document.getElementById('modalMedico').value = '';
             document.getElementById('modalFechaAtencion').value = '';
-            document.getElementById('modalHoraAtencion').value = '';
+            document.getElementById('modalHoraAtencion').innerHTML = '<option value="">Primero seleccione fecha...</option>';
             examenesSeleccionadosModal = [];
             actualizarExamenesUIModal();
         }
@@ -1682,7 +1669,10 @@
         function cambiarModalidadOrden(modalidad) {
             modalidadActual = modalidad;
             actualizarTabsModalidad();
-            actualizarMedicosModal();
+            // Recargar turnos si ya hay fecha seleccionada
+            if (document.getElementById('modalFechaAtencion').value) {
+                cargarTurnosDisponibles();
+            }
         }
 
         function actualizarTabsModalidad() {
@@ -1691,159 +1681,48 @@
             });
         }
 
-        async function cargarMedicosModal() {
-            try {
-                const response = await fetch('/api/medicos');
-                const result = await response.json();
-
-                if (result.success && result.data.length > 0) {
-                    // Excluir NUBIA de la lista
-                    medicosData = result.data.filter(m => {
-                        const nombre = `${m.primer_nombre} ${m.primer_apellido}`.toUpperCase();
-                        return !nombre.includes('NUBIA');
-                    });
-                    actualizarMedicosModal();
-                }
-            } catch (error) {
-                console.error('Error al cargar médicos:', error);
-            }
-        }
-
-        async function actualizarMedicosModal() {
-            const fecha = document.getElementById('modalFechaAtencion').value;
-            const select = document.getElementById('modalMedico');
-
-            select.innerHTML = '<option value="">Cargando médicos...</option>';
-
-            try {
-                // Intentar obtener médicos que tienen disponibilidad para esta modalidad
-                let url = `/api/medicos-por-modalidad?modalidad=${modalidadActual}`;
-                if (fecha) {
-                    url += `&fecha=${fecha}`;
-                }
-
-                const response = await fetch(url);
-                const result = await response.json();
-
-                select.innerHTML = '<option value="">Seleccionar médico...</option>';
-
-                if (result.success && result.data.length > 0) {
-                    // Filtrar para excluir NUBIA
-                    const medicosFiltrados = result.data.filter(m => {
-                        const nombre = `${m.primer_nombre} ${m.primer_apellido}`.toUpperCase();
-                        return !nombre.includes('NUBIA');
-                    });
-
-                    medicosFiltrados.forEach(medico => {
-                        const nombreCompleto = `${medico.primer_nombre} ${medico.primer_apellido}`;
-                        const option = document.createElement('option');
-                        option.value = nombreCompleto;
-                        option.textContent = nombreCompleto;
-                        select.appendChild(option);
-                    });
-                } else {
-                    // Si no hay médicos con disponibilidad configurada, mostrar todos (excepto NUBIA)
-                    medicosData.forEach(medico => {
-                        const nombreCompleto = `${medico.primer_nombre} ${medico.primer_apellido}`;
-                        const option = document.createElement('option');
-                        option.value = nombreCompleto;
-                        option.textContent = nombreCompleto;
-                        select.appendChild(option);
-                    });
-                }
-
-                // Actualizar horarios
-                actualizarHorariosModal();
-
-            } catch (error) {
-                console.error('Error al filtrar médicos:', error);
-                // En caso de error, mostrar todos los médicos (excepto NUBIA)
-                select.innerHTML = '<option value="">Seleccionar médico...</option>';
-                medicosData.forEach(medico => {
-                    const nombreCompleto = `${medico.primer_nombre} ${medico.primer_apellido}`;
-                    const option = document.createElement('option');
-                    option.value = nombreCompleto;
-                    option.textContent = nombreCompleto;
-                    select.appendChild(option);
-                });
-            }
-        }
-
-        async function actualizarHorariosModal() {
-            const medico = document.getElementById('modalMedico').value;
+        async function cargarTurnosDisponibles() {
             const fecha = document.getElementById('modalFechaAtencion').value;
             const select = document.getElementById('modalHoraAtencion');
-            const infoTiempo = document.getElementById('modalInfoTiempo');
 
-            // Si no hay médico o fecha, mostrar horarios por defecto
-            if (!medico || !fecha) {
-                generarHorasDefault();
+            if (!fecha) {
+                select.innerHTML = '<option value="">Primero seleccione fecha...</option>';
                 return;
             }
 
-            select.innerHTML = '<option value="">Cargando horarios...</option>';
+            select.innerHTML = '<option value="">Cargando turnos disponibles...</option>';
 
             try {
-                const response = await fetch(`/api/horarios-disponibles?fecha=${fecha}&medico=${encodeURIComponent(medico)}&modalidad=${modalidadActual}`);
+                const response = await fetch(`/api/turnos-disponibles?fecha=${fecha}&modalidad=${modalidadActual}`);
                 const result = await response.json();
 
-                if (result.success && result.horarios && result.horarios.length > 0) {
+                if (result.success && result.turnos && result.turnos.length > 0) {
                     select.innerHTML = '<option value="">Seleccionar hora...</option>';
 
-                    result.horarios.forEach(h => {
-                        const [hora, minuto] = h.hora.split(':').map(Number);
+                    result.turnos.forEach(turno => {
+                        const [hora, minuto] = turno.hora.split(':').map(Number);
                         const hora12 = hora > 12 ? hora - 12 : (hora === 0 ? 12 : hora);
                         const ampm = hora >= 12 ? 'PM' : 'AM';
                         const texto = `${hora12}:${minuto.toString().padStart(2, '0')} ${ampm}`;
 
                         const option = document.createElement('option');
-                        option.value = h.hora;
+                        option.value = turno.hora;
 
-                        if (h.disponible) {
+                        if (turno.disponible) {
                             option.textContent = texto;
                         } else {
-                            option.textContent = `${texto} (ocupado)`;
+                            option.textContent = `${texto} (no disponible)`;
                             option.disabled = true;
                             option.style.color = '#9CA3AF';
                         }
                         select.appendChild(option);
                     });
-
-                    // Mostrar info del tiempo de consulta
-                    infoTiempo.textContent = `Duración consulta: ${result.tiempoConsulta} min`;
-                    infoTiempo.style.display = 'block';
                 } else {
-                    generarHorasDefault();
+                    select.innerHTML = '<option value="">No hay turnos disponibles para este día</option>';
                 }
             } catch (error) {
-                console.error('Error al cargar horarios:', error);
-                generarHorasDefault();
-            }
-        }
-
-        function generarHorasDefault() {
-            const select = document.getElementById('modalHoraAtencion');
-            const infoTiempo = document.getElementById('modalInfoTiempo');
-            infoTiempo.style.display = 'none';
-
-            select.innerHTML = '<option value="">Seleccionar hora...</option>';
-            // Por defecto, intervalos de 10 minutos de 6am a 11pm
-            for (let hora = 6; hora <= 23; hora++) {
-                for (let minuto = 0; minuto < 60; minuto += 10) {
-                    const horaStr = String(hora).padStart(2, '0');
-                    const minutoStr = String(minuto).padStart(2, '0');
-                    const valor = `${horaStr}:${minutoStr}`;
-
-                    // Formato 12 horas para mostrar
-                    const hora12 = hora > 12 ? hora - 12 : (hora === 0 ? 12 : hora);
-                    const ampm = hora >= 12 ? 'PM' : 'AM';
-                    const texto = `${hora12}:${minutoStr} ${ampm}`;
-
-                    const option = document.createElement('option');
-                    option.value = valor;
-                    option.textContent = texto;
-                    select.appendChild(option);
-                }
+                console.error('Error al cargar turnos:', error);
+                select.innerHTML = '<option value="">Error al cargar turnos</option>';
             }
         }
 
@@ -1934,9 +1813,16 @@
             const cargo = document.getElementById('modalCargo').value.trim();
             const ciudad = document.getElementById('modalCiudad').value.trim();
             const tipoExamen = document.getElementById('modalTipoExamen').value;
+            const fechaAtencion = document.getElementById('modalFechaAtencion').value;
+            const horaAtencion = document.getElementById('modalHoraAtencion').value;
 
             if (!numeroId || !celular || !primerNombre || !primerApellido || !cargo || !ciudad || !tipoExamen) {
                 mostrarAlertaModal('Por favor complete todos los campos obligatorios');
+                return;
+            }
+
+            if (!fechaAtencion || !horaAtencion) {
+                mostrarAlertaModal('Debe seleccionar fecha y hora de atención');
                 return;
             }
 
@@ -1956,11 +1842,13 @@
                 cargo: cargo,
                 ciudad: ciudad,
                 tipoExamen: tipoExamen,
-                medico: document.getElementById('modalMedico').value || null,
-                fechaAtencion: document.getElementById('modalFechaAtencion').value || null,
-                horaAtencion: document.getElementById('modalHoraAtencion').value || null,
+                fechaAtencion: fechaAtencion,
+                horaAtencion: horaAtencion,
                 examenes: examenesSeleccionadosModal.join(', '),
-                atendido: 'PENDIENTE'
+                atendido: 'PENDIENTE',
+                // Asignación automática de médico
+                asignarMedicoAuto: true,
+                modalidad: modalidadActual
             };
 
             try {

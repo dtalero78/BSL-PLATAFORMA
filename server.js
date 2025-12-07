@@ -994,7 +994,7 @@ app.delete('/api/formularios/:id', async (req, res) => {
 // Endpoint para crear nueva orden (guarda en PostgreSQL y Wix HistoriaClinica)
 app.post('/api/ordenes', async (req, res) => {
     try {
-        const {
+        let {
             codEmpresa,
             numeroId,
             primerNombre,
@@ -1010,7 +1010,9 @@ app.post('/api/ordenes', async (req, res) => {
             horaAtencion,
             atendido,
             examenes,
-            empresa
+            empresa,
+            asignarMedicoAuto,
+            modalidad
         } = req.body;
 
         console.log('');
@@ -1025,6 +1027,75 @@ app.post('/api/ordenes', async (req, res) => {
                 success: false,
                 message: 'Faltan campos requeridos: numeroId, primerNombre, primerApellido, codEmpresa, celular'
             });
+        }
+
+        // Si se solicita asignación automática de médico
+        if (asignarMedicoAuto && fechaAtencion && horaAtencion) {
+            console.log('🤖 Asignación automática de médico solicitada...');
+            console.log('   Fecha:', fechaAtencion, '| Hora:', horaAtencion, '| Modalidad:', modalidad || 'presencial');
+
+            const fechaObj = new Date(fechaAtencion + 'T12:00:00');
+            const diaSemana = fechaObj.getDay();
+            const modalidadBuscar = modalidad || 'presencial';
+
+            // Buscar médicos disponibles para esa hora, fecha y modalidad (excepto NUBIA)
+            const medicosResult = await pool.query(`
+                SELECT m.id, m.primer_nombre, m.primer_apellido,
+                       COALESCE(m.tiempo_consulta, 10) as tiempo_consulta,
+                       TO_CHAR(md.hora_inicio, 'HH24:MI') as hora_inicio,
+                       TO_CHAR(md.hora_fin, 'HH24:MI') as hora_fin
+                FROM medicos m
+                INNER JOIN medicos_disponibilidad md ON m.id = md.medico_id
+                WHERE m.activo = true
+                  AND md.activo = true
+                  AND md.modalidad = $1
+                  AND md.dia_semana = $2
+                  AND UPPER(CONCAT(m.primer_nombre, ' ', m.primer_apellido)) NOT LIKE '%NUBIA%'
+                ORDER BY m.primer_nombre
+            `, [modalidadBuscar, diaSemana]);
+
+            // Filtrar médicos que realmente están disponibles en esa hora
+            const medicosDisponibles = [];
+            for (const med of medicosResult.rows) {
+                const medicoNombre = `${med.primer_nombre} ${med.primer_apellido}`;
+                const [horaInicioH, horaInicioM] = med.hora_inicio.split(':').map(Number);
+                const [horaFinH, horaFinM] = med.hora_fin.split(':').map(Number);
+                const [horaSelH, horaSelM] = horaAtencion.split(':').map(Number);
+
+                // Verificar que la hora está dentro del rango del médico
+                const horaSelMinutos = horaSelH * 60 + horaSelM;
+                const horaInicioMinutos = horaInicioH * 60 + horaInicioM;
+                const horaFinMinutos = horaFinH * 60 + horaFinM;
+
+                if (horaSelMinutos < horaInicioMinutos || horaSelMinutos >= horaFinMinutos) {
+                    continue; // Fuera del horario del médico
+                }
+
+                // Verificar que no tenga cita a esa hora
+                const citaExistente = await pool.query(`
+                    SELECT COUNT(*) as total
+                    FROM "HistoriaClinica"
+                    WHERE "fechaAtencion" >= $1::timestamp
+                      AND "fechaAtencion" < ($1::timestamp + interval '1 day')
+                      AND "medico" = $2
+                      AND "horaAtencion" = $3
+                `, [fechaAtencion, medicoNombre, horaAtencion]);
+
+                if (parseInt(citaExistente.rows[0].total) === 0) {
+                    medicosDisponibles.push(medicoNombre);
+                }
+            }
+
+            if (medicosDisponibles.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'No hay médicos disponibles para el horario seleccionado'
+                });
+            }
+
+            // Asignar el primer médico disponible (o se podría aleatorizar)
+            medico = medicosDisponibles[0];
+            console.log('✅ Médico asignado automáticamente:', medico);
         }
 
         // Generar un _id único para Wix (formato UUID-like)
@@ -2986,6 +3057,121 @@ app.get('/api/horarios-disponibles', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al obtener horarios disponibles',
+            error: error.message
+        });
+    }
+});
+
+// GET /api/turnos-disponibles - Obtener todos los turnos disponibles para una fecha y modalidad (sin mostrar médicos)
+// Este endpoint consolida la disponibilidad de todos los médicos excepto NUBIA
+app.get('/api/turnos-disponibles', async (req, res) => {
+    try {
+        const { fecha, modalidad = 'presencial' } = req.query;
+
+        if (!fecha) {
+            return res.status(400).json({
+                success: false,
+                message: 'Se requiere fecha (YYYY-MM-DD)'
+            });
+        }
+
+        // Obtener día de la semana (0=Domingo, 1=Lunes, etc.)
+        const fechaObj = new Date(fecha + 'T12:00:00');
+        const diaSemana = fechaObj.getDay();
+
+        // Obtener todos los médicos activos con disponibilidad para esta modalidad y día (excepto NUBIA)
+        const medicosResult = await pool.query(`
+            SELECT m.id, m.primer_nombre, m.primer_apellido,
+                   COALESCE(m.tiempo_consulta, 10) as tiempo_consulta,
+                   TO_CHAR(md.hora_inicio, 'HH24:MI') as hora_inicio,
+                   TO_CHAR(md.hora_fin, 'HH24:MI') as hora_fin
+            FROM medicos m
+            INNER JOIN medicos_disponibilidad md ON m.id = md.medico_id
+            WHERE m.activo = true
+              AND md.activo = true
+              AND md.modalidad = $1
+              AND md.dia_semana = $2
+              AND UPPER(CONCAT(m.primer_nombre, ' ', m.primer_apellido)) NOT LIKE '%NUBIA%'
+            ORDER BY m.primer_nombre
+        `, [modalidad, diaSemana]);
+
+        if (medicosResult.rows.length === 0) {
+            return res.json({
+                success: true,
+                fecha,
+                modalidad,
+                turnos: [],
+                mensaje: 'No hay médicos disponibles para esta modalidad en este día'
+            });
+        }
+
+        // Para cada médico, generar sus horarios y verificar disponibilidad
+        const turnosPorHora = {}; // { "08:00": [{ medicoId, nombre, disponible }], ... }
+
+        for (const medico of medicosResult.rows) {
+            const medicoNombre = `${medico.primer_nombre} ${medico.primer_apellido}`;
+            const tiempoConsulta = medico.tiempo_consulta;
+            const [horaInicioH] = medico.hora_inicio.split(':').map(Number);
+            const [horaFinH] = medico.hora_fin.split(':').map(Number);
+
+            // Obtener citas existentes del médico para esa fecha
+            const citasResult = await pool.query(`
+                SELECT "horaAtencion" as hora
+                FROM "HistoriaClinica"
+                WHERE "fechaAtencion" >= $1::timestamp
+                  AND "fechaAtencion" < ($1::timestamp + interval '1 day')
+                  AND "medico" = $2
+                  AND "horaAtencion" IS NOT NULL
+            `, [fecha, medicoNombre]);
+
+            const horasOcupadas = citasResult.rows.map(r => r.hora ? r.hora.substring(0, 5) : null).filter(Boolean);
+
+            // Generar horarios para este médico
+            for (let hora = horaInicioH; hora < horaFinH; hora++) {
+                for (let minuto = 0; minuto < 60; minuto += tiempoConsulta) {
+                    const horaStr = `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
+                    const ocupado = horasOcupadas.includes(horaStr);
+
+                    if (!turnosPorHora[horaStr]) {
+                        turnosPorHora[horaStr] = [];
+                    }
+
+                    turnosPorHora[horaStr].push({
+                        medicoId: medico.id,
+                        medicoNombre: medicoNombre,
+                        disponible: !ocupado
+                    });
+                }
+            }
+        }
+
+        // Convertir a array de turnos consolidados (solo mostrar hora y si hay al menos un médico disponible)
+        const turnos = Object.keys(turnosPorHora)
+            .sort()
+            .map(hora => {
+                const medicosEnHora = turnosPorHora[hora];
+                const medicosDisponibles = medicosEnHora.filter(m => m.disponible);
+                return {
+                    hora,
+                    disponible: medicosDisponibles.length > 0,
+                    cantidadDisponibles: medicosDisponibles.length,
+                    // Guardamos internamente los médicos para asignar al crear la orden
+                    _medicos: medicosEnHora
+                };
+            });
+
+        res.json({
+            success: true,
+            fecha,
+            modalidad,
+            diaSemana,
+            turnos
+        });
+    } catch (error) {
+        console.error('❌ Error al obtener turnos disponibles:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener turnos disponibles',
             error: error.message
         });
     }
