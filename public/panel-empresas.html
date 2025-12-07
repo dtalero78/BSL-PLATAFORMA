@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Empresas - BSL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Figtree', sans-serif;
+            background: #F8FAFC;
+            min-height: 100vh;
+            color: #1E293B;
+        }
+
+        /* Login Screen */
+        .login-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #0099B2 0%, #00B8E6 100%);
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-logo img {
+            max-height: 60px;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 8px;
+            color: #1E293B;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: #64748B;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: #00B8E6;
+            box-shadow: 0 0 0 4px rgba(0, 184, 230, 0.1);
+        }
+
+        .login-input::placeholder {
+            text-transform: none;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px 24px;
+            background: #00B8E6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .login-btn:hover {
+            background: #0099B2;
+        }
+
+        .login-btn:disabled {
+            background: #94A3B8;
+            cursor: not-allowed;
+        }
+
+        .login-error {
+            background: #FEF2F2;
+            color: #DC2626;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .login-error.show {
+            display: block;
+        }
+
+        /* Panel Screen */
+        .panel-screen {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .panel-screen.active {
+            display: block;
+        }
+
+        /* Header */
+        .panel-header {
+            background: white;
+            border-bottom: 1px solid #E2E8F0;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .panel-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .panel-logo img {
+            height: 40px;
+        }
+
+        .empresa-badge {
+            background: #00B8E6;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .panel-header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-icon {
+            background: #F1F5F9;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon:hover {
+            background: #E2E8F0;
+        }
+
+        .btn-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: #64748B;
+        }
+
+        .btn-logout {
+            background: #FEF2F2;
+        }
+
+        .btn-logout:hover {
+            background: #FEE2E2;
+        }
+
+        .btn-logout svg {
+            stroke: #DC2626;
+        }
+
+        /* Stats Grid */
+        .stats-container {
+            padding: 24px;
+            background: white;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stat-card {
+            background: #F8FAFC;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #00B8E6;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #64748B;
+        }
+
+        /* Search Bar */
+        .search-container {
+            padding: 20px 24px;
+            background: white;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .search-bar {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 12px;
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-input-wrapper svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            stroke: #94A3B8;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #00B8E6;
+            box-shadow: 0 0 0 3px rgba(0, 184, 230, 0.1);
+        }
+
+        .btn-search {
+            padding: 12px 24px;
+            background: #00B8E6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-search:hover {
+            background: #0099B2;
+        }
+
+        .btn-clear {
+            padding: 12px 20px;
+            background: #F1F5F9;
+            color: #64748B;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: none;
+        }
+
+        .btn-clear.show {
+            display: block;
+        }
+
+        .btn-clear:hover {
+            background: #E2E8F0;
+        }
+
+        /* Content */
+        .panel-content {
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-header {
+            padding: 16px 20px;
+            background: #F8FAFC;
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1E293B;
+        }
+
+        .table-count {
+            font-size: 14px;
+            color: #64748B;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 14px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748B;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #F8FAFC;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        td {
+            padding: 16px 20px;
+            font-size: 14px;
+            color: #1E293B;
+            border-bottom: 1px solid #F1F5F9;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: #F8FAFC;
+        }
+
+        .patient-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .patient-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #E2E8F0;
+        }
+
+        .patient-photo-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #E2E8F0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .patient-photo-placeholder svg {
+            width: 20px;
+            height: 20px;
+            stroke: #94A3B8;
+        }
+
+        .patient-name {
+            font-weight: 500;
+        }
+
+        .patient-cedula {
+            font-size: 13px;
+            color: #64748B;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-atendido {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-pendiente {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-proceso {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: #00B8E6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-download:hover {
+            background: #0099B2;
+        }
+
+        .btn-download svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-download.disabled {
+            background: #E2E8F0;
+            color: #94A3B8;
+            cursor: not-allowed;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 20px;
+            border-top: 1px solid #E2E8F0;
+        }
+
+        .pagination-btn {
+            padding: 10px 16px;
+            background: #F1F5F9;
+            color: #64748B;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #E2E8F0;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            padding: 0 16px;
+            font-size: 14px;
+            color: #64748B;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            stroke: #CBD5E1;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #64748B;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            color: #94A3B8;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #E2E8F0;
+            border-top-color: #00B8E6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 14px;
+            color: #64748B;
+        }
+
+        /* Actions Bar */
+        .actions-bar {
+            padding: 16px 24px;
+            background: white;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .actions-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: white;
+            color: #1E293B;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-action:hover {
+            background: #F8FAFC;
+            border-color: #CBD5E1;
+        }
+
+        .btn-action svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-action.primary {
+            background: #00B8E6;
+            color: white;
+            border-color: #00B8E6;
+        }
+
+        .btn-action.primary:hover {
+            background: #0099B2;
+            border-color: #0099B2;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .login-card {
+                padding: 32px 24px;
+            }
+
+            .panel-header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 16px;
+            }
+
+            .panel-header-left {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .panel-header-right {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .stats-container {
+                padding: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .search-bar {
+                flex-direction: column;
+            }
+
+            .panel-content {
+                padding: 16px;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 600px;
+            }
+
+            th, td {
+                padding: 12px 14px;
+            }
+
+            .actions-content {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 14px;
+            }
+
+            .stat-value {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="/bsl-logo.png" alt="BSL">
+            </div>
+            <h1 class="login-title">Panel de Empresa</h1>
+            <p class="login-subtitle">Ingresa el código de tu empresa para continuar</p>
+
+            <div class="login-error" id="loginError">Código de empresa incorrecto</div>
+
+            <input type="text" class="login-input" id="codEmpresaInput" placeholder="Código de empresa" autocomplete="off">
+            <button class="login-btn" id="btnEntrar">Ingresar</button>
+        </div>
+    </div>
+
+    <!-- Panel Screen -->
+    <div class="panel-screen" id="panelScreen">
+        <!-- Header -->
+        <header class="panel-header">
+            <div class="panel-header-left">
+                <div class="panel-logo">
+                    <img src="/bsl-logo.png" alt="BSL">
+                </div>
+                <span class="empresa-badge" id="empresaBadge">EMPRESA</span>
+            </div>
+            <div class="panel-header-right">
+                <button class="btn-icon" onclick="actualizarDatos()" title="Actualizar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6"></path>
+                        <path d="M1 20v-6h6"></path>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                </button>
+                <a href="https://api.whatsapp.com/send?phone=573008021701&text=Hola.%20Requiero%20soporte%20con%20el%20panel%20de%20empresa" target="_blank" class="btn-icon" title="Soporte WhatsApp">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                    </svg>
+                </a>
+                <button class="btn-icon btn-logout" onclick="cerrarSesion()" title="Cerrar sesión">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats -->
+        <div class="stats-container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statProgramadosHoy">0</div>
+                    <div class="stat-label">Programados Hoy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statAtendidosHoy">0</div>
+                    <div class="stat-label">Atendidos Hoy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statTotalOrdenes">0</div>
+                    <div class="stat-label">Total Órdenes</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Bar -->
+        <div class="actions-bar">
+            <div class="actions-content">
+                <a href="/nuevaorden1.html" target="_blank" class="btn-action primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Nueva Orden
+                </a>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="search-container">
+            <div class="search-bar">
+                <div class="search-input-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" class="search-input" id="searchInput" placeholder="Buscar por cédula o nombre...">
+                </div>
+                <button class="btn-search" id="btnSearch">Buscar</button>
+                <button class="btn-clear" id="btnClear">Limpiar</button>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="panel-content">
+            <div class="table-container">
+                <div class="table-header">
+                    <span class="table-title">Órdenes Médicas</span>
+                    <span class="table-count" id="tableCount">0 registros</span>
+                </div>
+
+                <div class="loading" id="loadingState">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">Cargando órdenes...</p>
+                </div>
+
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                    <h3>No hay órdenes</h3>
+                    <p>No se encontraron órdenes para esta empresa</p>
+                </div>
+
+                <table id="ordenesTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Paciente</th>
+                            <th>Fecha Consulta</th>
+                            <th>Fecha Atención</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordenesBody">
+                    </tbody>
+                </table>
+
+                <div class="pagination" id="pagination" style="display: none;">
+                    <button class="pagination-btn" id="btnPrev">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                        Anterior
+                    </button>
+                    <span class="pagination-info" id="paginationInfo">Página 1 de 1</span>
+                    <button class="pagination-btn" id="btnNext">
+                        Siguiente
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let codEmpresa = '';
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 0;
+        const pageSize = 10;
+
+        // Elementos del DOM
+        const loginScreen = document.getElementById('loginScreen');
+        const panelScreen = document.getElementById('panelScreen');
+        const codEmpresaInput = document.getElementById('codEmpresaInput');
+        const btnEntrar = document.getElementById('btnEntrar');
+        const loginError = document.getElementById('loginError');
+        const empresaBadge = document.getElementById('empresaBadge');
+        const searchInput = document.getElementById('searchInput');
+        const btnSearch = document.getElementById('btnSearch');
+        const btnClear = document.getElementById('btnClear');
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        const ordenesTable = document.getElementById('ordenesTable');
+        const ordenesBody = document.getElementById('ordenesBody');
+        const pagination = document.getElementById('pagination');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const paginationInfo = document.getElementById('paginationInfo');
+        const tableCount = document.getElementById('tableCount');
+
+        // Verificar sesión guardada
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedEmpresa = sessionStorage.getItem('codEmpresa');
+            if (savedEmpresa) {
+                codEmpresa = savedEmpresa;
+                mostrarPanel();
+            }
+        });
+
+        // Login
+        btnEntrar.addEventListener('click', iniciarSesion);
+        codEmpresaInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') iniciarSesion();
+        });
+
+        async function iniciarSesion() {
+            const codigo = codEmpresaInput.value.trim().toUpperCase();
+
+            if (!codigo) {
+                loginError.textContent = 'Por favor ingresa un código';
+                loginError.classList.add('show');
+                return;
+            }
+
+            btnEntrar.disabled = true;
+            btnEntrar.textContent = 'Verificando...';
+            loginError.classList.remove('show');
+
+            try {
+                // Verificar que existan órdenes para esta empresa
+                const response = await fetch(`/api/ordenes?codEmpresa=${encodeURIComponent(codigo)}&limit=1`);
+                const result = await response.json();
+
+                if (result.success && result.data && result.data.length > 0) {
+                    codEmpresa = codigo;
+                    sessionStorage.setItem('codEmpresa', codEmpresa);
+                    mostrarPanel();
+                } else {
+                    loginError.textContent = 'Código de empresa incorrecto o sin órdenes';
+                    loginError.classList.add('show');
+                }
+            } catch (error) {
+                console.error('Error al verificar empresa:', error);
+                loginError.textContent = 'Error de conexión. Intenta de nuevo.';
+                loginError.classList.add('show');
+            } finally {
+                btnEntrar.disabled = false;
+                btnEntrar.textContent = 'Ingresar';
+            }
+        }
+
+        function mostrarPanel() {
+            loginScreen.style.display = 'none';
+            panelScreen.classList.add('active');
+            empresaBadge.textContent = codEmpresa;
+            actualizarDatos();
+        }
+
+        function cerrarSesion() {
+            sessionStorage.removeItem('codEmpresa');
+            codEmpresa = '';
+            allData = [];
+            filteredData = [];
+            currentPage = 0;
+            panelScreen.classList.remove('active');
+            loginScreen.style.display = 'flex';
+            codEmpresaInput.value = '';
+            loginError.classList.remove('show');
+        }
+
+        // Cargar datos
+        async function actualizarDatos() {
+            mostrarLoading();
+
+            try {
+                // Cargar órdenes
+                const response = await fetch(`/api/ordenes?codEmpresa=${encodeURIComponent(codEmpresa)}&limit=1000`);
+                const result = await response.json();
+
+                if (result.success) {
+                    allData = result.data || [];
+                    filteredData = [...allData];
+
+                    // Calcular estadísticas
+                    calcularEstadisticas();
+
+                    // Mostrar datos
+                    renderTabla();
+                } else {
+                    mostrarEmpty();
+                }
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+                mostrarEmpty();
+            }
+        }
+
+        function calcularEstadisticas() {
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const finHoy = new Date(hoy);
+            finHoy.setHours(23, 59, 59, 999);
+
+            let programadosHoy = 0;
+            let atendidosHoy = 0;
+
+            allData.forEach(orden => {
+                const fechaAtencion = orden.fechaAtencion ? new Date(orden.fechaAtencion) : null;
+                const fechaConsulta = orden.fechaConsulta ? new Date(orden.fechaConsulta) : null;
+
+                if (fechaAtencion && fechaAtencion >= hoy && fechaAtencion <= finHoy) {
+                    programadosHoy++;
+                }
+
+                if (fechaConsulta && fechaConsulta >= hoy && fechaConsulta <= finHoy) {
+                    atendidosHoy++;
+                }
+            });
+
+            document.getElementById('statProgramadosHoy').textContent = programadosHoy;
+            document.getElementById('statAtendidosHoy').textContent = atendidosHoy;
+            document.getElementById('statTotalOrdenes').textContent = allData.length;
+        }
+
+        // Búsqueda
+        btnSearch.addEventListener('click', buscar);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') buscar();
+        });
+
+        btnClear.addEventListener('click', () => {
+            searchInput.value = '';
+            filteredData = [...allData];
+            currentPage = 0;
+            btnClear.classList.remove('show');
+            renderTabla();
+        });
+
+        function buscar() {
+            const query = searchInput.value.trim().toLowerCase();
+
+            if (!query) {
+                filteredData = [...allData];
+                btnClear.classList.remove('show');
+            } else {
+                filteredData = allData.filter(orden => {
+                    const nombre = `${orden.primerNombre || ''} ${orden.primerApellido || ''}`.toLowerCase();
+                    const cedula = (orden.numeroId || '').toLowerCase();
+                    return nombre.includes(query) || cedula.includes(query);
+                });
+                btnClear.classList.add('show');
+            }
+
+            currentPage = 0;
+            renderTabla();
+        }
+
+        // Paginación
+        btnPrev.addEventListener('click', () => goToPage(currentPage - 1));
+        btnNext.addEventListener('click', () => goToPage(currentPage + 1));
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            if (page < 0) page = 0;
+            if (page >= totalPages) page = totalPages - 1;
+            currentPage = page;
+            renderTabla();
+        }
+
+        // Render
+        function mostrarLoading() {
+            loadingState.style.display = 'block';
+            emptyState.style.display = 'none';
+            ordenesTable.style.display = 'none';
+            pagination.style.display = 'none';
+        }
+
+        function mostrarEmpty() {
+            loadingState.style.display = 'none';
+            emptyState.style.display = 'block';
+            ordenesTable.style.display = 'none';
+            pagination.style.display = 'none';
+            tableCount.textContent = '0 registros';
+        }
+
+        function renderTabla() {
+            if (filteredData.length === 0) {
+                mostrarEmpty();
+                return;
+            }
+
+            loadingState.style.display = 'none';
+            emptyState.style.display = 'none';
+            ordenesTable.style.display = 'table';
+
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            const start = currentPage * pageSize;
+            const end = Math.min(start + pageSize, filteredData.length);
+            const pageData = filteredData.slice(start, end);
+
+            tableCount.textContent = `${filteredData.length} registros`;
+
+            ordenesBody.innerHTML = pageData.map(orden => {
+                const nombre = `${orden.primerNombre || ''} ${orden.segundoNombre || ''} ${orden.primerApellido || ''} ${orden.segundoApellido || ''}`.trim();
+                const cedula = orden.numeroId || '-';
+                const fechaConsulta = orden.fechaConsulta ? new Date(orden.fechaConsulta).toLocaleDateString('es-CO') : '-';
+                const fechaAtencion = orden.fechaAtencion ? new Date(orden.fechaAtencion).toLocaleDateString('es-CO') : '-';
+                const estado = orden.atendido || 'PENDIENTE';
+                const statusClass = estado === 'ATENDIDO' ? 'status-atendido' : (estado === 'EN PROCESO' ? 'status-proceso' : 'status-pendiente');
+
+                // URL del certificado
+                let downloadUrl = '';
+                if (estado === 'ATENDIDO') {
+                    downloadUrl = `https://bsl-utilidades-yp78a.ondigitalocean.app/generar-certificado-desde-wix/${orden._id}`;
+                }
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="patient-info">
+                                <div class="patient-photo-placeholder">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="patient-name">${nombre || 'Sin nombre'}</div>
+                                    <div class="patient-cedula">CC: ${cedula}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${fechaConsulta}</td>
+                        <td>${fechaAtencion}</td>
+                        <td><span class="status-badge ${statusClass}">${estado}</span></td>
+                        <td>
+                            ${estado === 'ATENDIDO' ? `
+                                <a href="${downloadUrl}" target="_blank" class="btn-download">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    Certificado
+                                </a>
+                            ` : `
+                                <span class="btn-download disabled">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    Pendiente
+                                </span>
+                            `}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Actualizar paginación
+            if (totalPages > 1) {
+                pagination.style.display = 'flex';
+                paginationInfo.textContent = `Página ${currentPage + 1} de ${totalPages}`;
+                btnPrev.disabled = currentPage <= 0;
+                btnNext.disabled = currentPage >= totalPages - 1;
+            } else {
+                pagination.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
