@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Programar Cita - BSL Bienestar & Salud Laboral</title>
+    <title>Programar Cita - BSL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/feather-icons"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -16,418 +15,373 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Figtree', sans-serif;
+            background: #FFFFFF;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            padding: 0;
+            color: #333333;
         }
 
         .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Logo */
+        .logo {
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .logo-img {
+            max-height: 60px;
+            width: auto;
+        }
+
+        /* Progress bar */
+        .progress-container {
             width: 100%;
-            max-width: 600px;
-        }
-
-        .logo-header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
-        .logo-header img {
-            max-width: 180px;
-            height: auto;
-            filter: brightness(0) invert(1);
-        }
-
-        .logo-header h1 {
-            color: white;
-            font-size: 20px;
-            font-weight: 500;
-            margin-top: 12px;
-            opacity: 0.9;
-        }
-
-        .form-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            height: 4px;
+            background: #E5E7EB;
+            border-radius: 2px;
+            margin-bottom: 20px;
             overflow: hidden;
         }
 
         .progress-bar {
-            display: flex;
-            background: #F3F4F6;
-            padding: 0;
+            height: 100%;
+            background: #00B8E6;
+            width: 0%;
+            transition: width 0.3s ease;
         }
 
-        .progress-step {
-            flex: 1;
-            padding: 16px 12px;
-            text-align: center;
-            font-size: 12px;
-            font-weight: 500;
-            color: #9CA3AF;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .progress-step.active {
-            background: #2563EB;
-            color: white;
-        }
-
-        .progress-step.completed {
-            background: #10B981;
-            color: white;
-        }
-
-        .progress-step .step-number {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #E5E7EB;
-            color: #6B7280;
-            font-size: 12px;
+        /* Question counter */
+        .question-counter {
+            font-size: 14px;
+            color: #00B8E6;
             font-weight: 600;
-            margin-right: 8px;
+            margin-bottom: 40px;
         }
 
-        .progress-step.active .step-number,
-        .progress-step.completed .step-number {
-            background: rgba(255,255,255,0.3);
-            color: white;
-        }
-
-        .form-content {
-            padding: 32px;
-        }
-
-        .step-container {
+        /* Question slides */
+        .question-slide {
             display: none;
+            animation: fadeIn 0.4s ease-in-out;
+            flex: 1;
         }
 
-        .step-container.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
+        .question-slide.active {
+            display: flex;
+            flex-direction: column;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .step-title {
-            font-size: 20px;
+        .question-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Question label */
+        .question-label {
+            font-size: 32px;
             font-weight: 600;
-            color: #111827;
-            margin-bottom: 8px;
+            color: #1F2937;
+            margin-bottom: 32px;
+            line-height: 1.3;
+            display: block;
         }
 
-        .step-description {
-            font-size: 14px;
-            color: #6B7280;
+        .required {
+            color: #EF4444;
+        }
+
+        /* Input styles */
+        .question-input {
+            width: 100%;
+            padding: 16px 0;
+            border: none;
+            border-bottom: 2px solid #E5E7EB;
+            font-size: 18px;
+            font-family: 'Figtree', sans-serif;
+            color: #1F2937;
+            background: transparent;
+            transition: border-color 0.3s ease;
+            outline: none;
+        }
+
+        .question-input:focus {
+            border-bottom-color: #00B8E6;
+        }
+
+        .question-input::placeholder {
+            color: #9CA3AF;
+        }
+
+        /* Select dropdown */
+        .question-select {
+            width: 100%;
+            padding: 16px 0;
+            border: none;
+            border-bottom: 2px solid #E5E7EB;
+            font-size: 18px;
+            font-family: 'Figtree', sans-serif;
+            color: #1F2937;
+            background: transparent;
+            transition: border-color 0.3s ease;
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0 center;
+            background-size: 24px;
+        }
+
+        .question-select:focus {
+            border-bottom-color: #00B8E6;
+        }
+
+        /* Form row */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
             margin-bottom: 24px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .form-label {
+        .form-group label {
             display: block;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
-            color: #374151;
-            margin-bottom: 6px;
-        }
-
-        .form-label .required {
-            color: #EF4444;
-        }
-
-        .form-input, .form-select {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #D1D5DB;
-            border-radius: 10px;
-            font-size: 15px;
-            font-family: inherit;
-            transition: all 0.2s ease;
-            background: white;
-        }
-
-        .form-input:focus, .form-select:focus {
-            outline: none;
-            border-color: #2563EB;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .form-input::placeholder {
-            color: #9CA3AF;
-        }
-
-        .form-input.error, .form-select.error {
-            border-color: #EF4444;
-        }
-
-        .error-message {
-            font-size: 12px;
-            color: #EF4444;
-            margin-top: 4px;
-            display: none;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
-        /* Tipo de consulta cards */
-        .tipo-consulta-cards {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .tipo-card {
-            border: 2px solid #E5E7EB;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .tipo-card:hover {
-            border-color: #2563EB;
-            background: #F8FAFF;
-        }
-
-        .tipo-card.selected {
-            border-color: #2563EB;
-            background: #EFF6FF;
-        }
-
-        .tipo-card i {
-            width: 32px;
-            height: 32px;
             color: #6B7280;
             margin-bottom: 8px;
         }
 
-        .tipo-card.selected i {
-            color: #2563EB;
+        /* Options grid */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
         }
 
-        .tipo-card .tipo-label {
-            font-size: 14px;
+        .options-2col {
+            grid-template-columns: repeat(2, 1fr);
+            max-width: 400px;
+        }
+
+        /* Option cards */
+        .option-card {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 20px;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            background: #FFFFFF;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
             font-weight: 500;
-            color: #374151;
+            color: #4B5563;
         }
 
-        .tipo-card.selected .tipo-label {
-            color: #2563EB;
+        .option-card:hover {
+            border-color: #00B8E6;
+            background: #F0F9FF;
+        }
+
+        .option-card input[type="radio"],
+        .option-card input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .option-card input[type="radio"]:checked ~ span,
+        .option-card input[type="checkbox"]:checked ~ span {
+            color: #00B8E6;
+        }
+
+        .option-card:has(input:checked) {
+            border-color: #00B8E6;
+            background: #F0F9FF;
+        }
+
+        .option-card.selected {
+            border-color: #00B8E6;
+            background: #F0F9FF;
+            color: #00B8E6;
+        }
+
+        .option-card svg {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            stroke: currentColor;
         }
 
         /* Exámenes checkboxes */
         .examenes-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 10px;
         }
 
         .examen-option {
             display: flex;
             align-items: center;
-            padding: 12px 14px;
-            border: 1px solid #E5E7EB;
-            border-radius: 10px;
+            padding: 14px 16px;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
+            font-size: 15px;
+            color: #4B5563;
         }
 
         .examen-option:hover {
-            border-color: #2563EB;
-            background: #F8FAFF;
+            border-color: #00B8E6;
+            background: #F0F9FF;
         }
 
         .examen-option.selected {
-            border-color: #2563EB;
-            background: #EFF6FF;
+            border-color: #00B8E6;
+            background: #F0F9FF;
+            color: #00B8E6;
         }
 
         .examen-option input {
-            margin-right: 10px;
+            margin-right: 12px;
             width: 18px;
             height: 18px;
-            accent-color: #2563EB;
+            accent-color: #00B8E6;
         }
 
-        .examen-option label {
-            font-size: 14px;
-            color: #374151;
-            cursor: pointer;
+        /* Navigation */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 40px;
+            gap: 16px;
         }
 
-        /* Fecha y hora */
-        .fecha-hora-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-        }
-
-        .horas-disponibles {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-top: 16px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .hora-slot {
-            padding: 10px;
-            border: 1px solid #E5E7EB;
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 24px;
+            border: none;
             border-radius: 8px;
-            text-align: center;
-            font-size: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Figtree', sans-serif;
             cursor: pointer;
             transition: all 0.2s ease;
-        }
-
-        .hora-slot:hover {
-            border-color: #2563EB;
-            background: #F8FAFF;
-        }
-
-        .hora-slot.selected {
-            background: #2563EB;
-            border-color: #2563EB;
+            background: #00B8E6;
             color: white;
         }
 
-        .hora-slot.disabled {
-            background: #F3F4F6;
-            color: #9CA3AF;
-            cursor: not-allowed;
+        .nav-btn:hover {
+            background: #0096C7;
+            transform: translateY(-1px);
         }
 
-        .no-horas {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 20px;
+        .nav-btn:active {
+            transform: translateY(0);
+        }
+
+        .nav-btn:disabled {
+            background: #9CA3AF;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .prev-btn {
+            background: transparent;
+            color: #6B7280;
+            border: 2px solid #E5E7EB;
+        }
+
+        .prev-btn:hover {
+            background: #F9FAFB;
+            border-color: #D1D5DB;
+            color: #374151;
+        }
+
+        .next-btn {
+            margin-left: auto;
+        }
+
+        .submit-btn {
+            background: #00B8E6;
+            color: white;
+            min-width: 160px;
+        }
+
+        .submit-btn:hover {
+            background: #0096C7;
+        }
+
+        /* Resumen */
+        .resumen-container {
+            background: #F9FAFB;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .resumen-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .resumen-item:last-child {
+            border-bottom: none;
+        }
+
+        .resumen-label {
             color: #6B7280;
             font-size: 14px;
         }
 
-        /* Botones */
-        .form-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 32px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 14px 24px;
-            border-radius: 10px;
-            font-size: 15px;
+        .resumen-value {
+            color: #1F2937;
+            font-size: 14px;
             font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            text-align: right;
+            max-width: 60%;
         }
 
-        .btn-secondary {
-            background: #F3F4F6;
-            color: #374151;
-        }
-
-        .btn-secondary:hover {
-            background: #E5E7EB;
-        }
-
-        .btn-primary {
-            background: #2563EB;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #1D4ED8;
-        }
-
-        .btn-primary:disabled {
-            background: #93C5FD;
-            cursor: not-allowed;
-        }
-
-        .btn-success {
-            background: #10B981;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #059669;
-        }
-
-        /* Loading */
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .loading-overlay.show {
-            display: flex;
-        }
-
-        .loading-content {
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            text-align: center;
-        }
-
-        .loading-spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid #E5E7EB;
-            border-top-color: #2563EB;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 16px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Success step */
+        /* Success */
         .success-container {
             text-align: center;
-            padding: 40px 20px;
+            padding: 40px 0;
         }
 
         .success-icon {
@@ -441,61 +395,33 @@
             margin: 0 auto 24px;
         }
 
-        .success-icon i {
+        .success-icon svg {
             width: 40px;
             height: 40px;
-            color: #10B981;
+            stroke: #10B981;
+            stroke-width: 3;
         }
 
         .success-title {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 600;
-            color: #111827;
+            color: #1F2937;
             margin-bottom: 12px;
         }
 
         .success-message {
-            font-size: 15px;
+            font-size: 16px;
             color: #6B7280;
-            margin-bottom: 24px;
-        }
-
-        .cita-details {
-            background: #F9FAFB;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: left;
-            margin-bottom: 24px;
-        }
-
-        .cita-detail {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #E5E7EB;
-        }
-
-        .cita-detail:last-child {
-            border-bottom: none;
-        }
-
-        .cita-detail-label {
-            color: #6B7280;
-            font-size: 14px;
-        }
-
-        .cita-detail-value {
-            color: #111827;
-            font-size: 14px;
-            font-weight: 500;
+            margin-bottom: 32px;
         }
 
         /* Alert */
         .alert {
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 24px;
             display: none;
+            font-size: 14px;
         }
 
         .alert.show {
@@ -508,146 +434,180 @@
             border: 1px solid #FECACA;
         }
 
-        .alert-warning {
-            background: #FEF3C7;
-            color: #92400E;
-            border: 1px solid #FDE68A;
+        /* Loading overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #E5E7EB;
+            border-top-color: #00B8E6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 16px;
+            color: #6B7280;
         }
 
         /* Responsive */
         @media (max-width: 600px) {
+            .question-label {
+                font-size: 24px;
+            }
+
             .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .options-grid {
                 grid-template-columns: 1fr;
             }
 
-            .tipo-consulta-cards {
-                grid-template-columns: 1fr;
+            .options-2col {
+                grid-template-columns: 1fr 1fr;
             }
 
             .examenes-grid {
                 grid-template-columns: 1fr;
             }
 
-            .fecha-hora-container {
-                grid-template-columns: 1fr;
+            .navigation {
+                flex-direction: column;
             }
 
-            .horas-disponibles {
-                grid-template-columns: repeat(3, 1fr);
+            .nav-btn {
+                width: 100%;
             }
 
-            .progress-step span {
-                display: none;
+            .prev-btn {
+                order: 2;
             }
 
-            .progress-step .step-number {
-                margin-right: 0;
-            }
-
-            .form-content {
-                padding: 24px 20px;
+            .next-btn {
+                order: 1;
+                margin-left: 0;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo-header">
-            <img src="/bsl-logo.png" alt="BSL - Bienestar & Salud Laboral">
-            <h1>Programa tu Cita Médica</h1>
+        <!-- Logo -->
+        <div class="logo">
+            <img src="bsl-logo.png" alt="BSL Logo" class="logo-img">
         </div>
 
-        <div class="form-card">
-            <div class="progress-bar">
-                <div class="progress-step active" data-step="1">
-                    <span class="step-number">1</span>
-                    <span>Datos Personales</span>
+        <!-- Progress bar -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <!-- Question counter -->
+        <div class="question-counter">
+            Paso <span id="currentStep">1</span> de <span id="totalSteps">5</span>
+        </div>
+
+        <div id="alertContainer" class="alert alert-error"></div>
+
+        <form id="formCita">
+            <!-- Step 1: Datos Personales -->
+            <div class="question-slide active" data-step="1">
+                <div class="question-content">
+                    <label class="question-label">¿Cuáles son tus datos personales?</label>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Primer Nombre <span class="required">*</span></label>
+                            <input type="text" class="question-input" id="primerNombre" placeholder="Ej: Juan" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Segundo Nombre</label>
+                            <input type="text" class="question-input" id="segundoNombre" placeholder="Ej: Carlos">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Primer Apellido <span class="required">*</span></label>
+                            <input type="text" class="question-input" id="primerApellido" placeholder="Ej: García" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Segundo Apellido</label>
+                            <input type="text" class="question-input" id="segundoApellido" placeholder="Ej: López">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Número de Cédula <span class="required">*</span></label>
+                            <input type="text" class="question-input" id="numeroId" placeholder="Ej: 1234567890" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Celular <span class="required">*</span></label>
+                            <input type="tel" class="question-input" id="celular" placeholder="Ej: 3001234567" required>
+                        </div>
+                    </div>
                 </div>
-                <div class="progress-step" data-step="2">
-                    <span class="step-number">2</span>
-                    <span>Cita</span>
-                </div>
-                <div class="progress-step" data-step="3">
-                    <span class="step-number">3</span>
-                    <span>Exámenes</span>
-                </div>
-                <div class="progress-step" data-step="4">
-                    <span class="step-number">4</span>
-                    <span>Confirmación</span>
+
+                <div class="navigation">
+                    <button type="button" class="nav-btn next-btn" onclick="siguientePaso()">Continuar →</button>
                 </div>
             </div>
 
-            <div class="form-content">
-                <div id="alertContainer" class="alert alert-error"></div>
+            <!-- Step 2: Tipo de Consulta -->
+            <div class="question-slide" data-step="2">
+                <div class="question-content">
+                    <label class="question-label">¿Qué tipo de consulta necesitas?</label>
 
-                <!-- Step 1: Datos Personales -->
-                <div class="step-container active" data-step="1">
-                    <h2 class="step-title">Datos Personales</h2>
-                    <p class="step-description">Ingresa tu información personal</p>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Primer Nombre <span class="required">*</span></label>
-                            <input type="text" class="form-input" id="primerNombre" placeholder="Ej: Juan" required>
+                    <div class="options-grid options-2col" style="margin-bottom: 32px;">
+                        <div class="option-card" onclick="seleccionarTipoConsulta('Telemedicina', this)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                <line x1="8" y1="21" x2="16" y2="21"></line>
+                                <line x1="12" y1="17" x2="12" y2="21"></line>
+                            </svg>
+                            <span>Telemedicina</span>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Segundo Nombre</label>
-                            <input type="text" class="form-input" id="segundoNombre" placeholder="Ej: Carlos">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Primer Apellido <span class="required">*</span></label>
-                            <input type="text" class="form-input" id="primerApellido" placeholder="Ej: García" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Segundo Apellido</label>
-                            <input type="text" class="form-input" id="segundoApellido" placeholder="Ej: López">
+                        <div class="option-card" onclick="seleccionarTipoConsulta('Presencial', this)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span>Presencial</span>
                         </div>
                     </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Número de Cédula <span class="required">*</span></label>
-                            <input type="text" class="form-input" id="numeroId" placeholder="Ej: 1234567890" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Celular <span class="required">*</span></label>
-                            <input type="tel" class="form-input" id="celular" placeholder="Ej: 3001234567" required>
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-primary" onclick="siguientePaso()">
-                            Continuar <i data-feather="arrow-right"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Step 2: Tipo de Consulta y Fecha -->
-                <div class="step-container" data-step="2">
-                    <h2 class="step-title">Programa tu Cita</h2>
-                    <p class="step-description">Selecciona el tipo de consulta y la fecha/hora</p>
+                    <input type="hidden" id="tipoConsulta" value="">
 
                     <div class="form-group">
-                        <label class="form-label">Tipo de Consulta <span class="required">*</span></label>
-                        <div class="tipo-consulta-cards">
-                            <div class="tipo-card" onclick="seleccionarTipoConsulta('Telemedicina')">
-                                <i data-feather="video"></i>
-                                <div class="tipo-label">Telemedicina</div>
-                            </div>
-                            <div class="tipo-card" onclick="seleccionarTipoConsulta('Presencial')">
-                                <i data-feather="map-pin"></i>
-                                <div class="tipo-label">Presencial</div>
-                            </div>
-                        </div>
-                        <input type="hidden" id="tipoConsulta" value="">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">A nombre de <span class="required">*</span></label>
-                        <select class="form-select" id="aNombreDe" onchange="toggleEmpresa()">
+                        <label>¿A nombre de quién es la cita? <span class="required">*</span></label>
+                        <select class="question-select" id="aNombreDe" onchange="toggleEmpresa()">
                             <option value="">Seleccionar...</option>
                             <option value="PARTICULAR">Particular</option>
                             <option value="EMPRESA">Empresa</option>
@@ -655,126 +615,129 @@
                     </div>
 
                     <div class="form-group" id="empresaContainer" style="display: none;">
-                        <label class="form-label">Empresa <span class="required">*</span></label>
-                        <select class="form-select" id="empresa">
+                        <label>Empresa <span class="required">*</span></label>
+                        <select class="question-select" id="empresa">
                             <option value="">Seleccionar empresa...</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Cargo</label>
-                        <input type="text" class="form-input" id="cargo" placeholder="Ej: Analista, Operario, etc.">
-                    </div>
-
-                    <div class="fecha-hora-container">
-                        <div class="form-group">
-                            <label class="form-label">Mes <span class="required">*</span></label>
-                            <select class="form-select" id="mes" onchange="actualizarDias()">
-                                <option value="">Seleccionar...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Día <span class="required">*</span></label>
-                            <select class="form-select" id="dia" onchange="actualizarHoras()">
-                                <option value="">Seleccionar...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Hora <span class="required">*</span></label>
-                            <select class="form-select" id="horaSelect">
-                                <option value="">Primero selecciona día</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" onclick="pasoAnterior()">
-                            <i data-feather="arrow-left"></i> Atrás
-                        </button>
-                        <button type="button" class="btn btn-primary" onclick="siguientePaso()">
-                            Continuar <i data-feather="arrow-right"></i>
-                        </button>
+                        <label>Cargo (opcional)</label>
+                        <input type="text" class="question-input" id="cargo" placeholder="Ej: Analista, Operario, etc.">
                     </div>
                 </div>
 
-                <!-- Step 3: Exámenes -->
-                <div class="step-container" data-step="3">
-                    <h2 class="step-title">Selecciona los Exámenes</h2>
-                    <p class="step-description">Elige los exámenes que necesitas realizarte</p>
+                <div class="navigation">
+                    <button type="button" class="nav-btn prev-btn" onclick="pasoAnterior()">← Atrás</button>
+                    <button type="button" class="nav-btn next-btn" onclick="siguientePaso()">Continuar →</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Fecha y Hora -->
+            <div class="question-slide" data-step="3">
+                <div class="question-content">
+                    <label class="question-label">¿Cuándo te gustaría agendar tu cita?</label>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mes <span class="required">*</span></label>
+                            <select class="question-select" id="mes" onchange="actualizarDias()">
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Día <span class="required">*</span></label>
+                            <select class="question-select" id="dia" onchange="actualizarHoras()">
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                    </div>
 
                     <div class="form-group">
-                        <div class="examenes-grid" id="examenesGrid">
-                            <!-- Se llenan dinámicamente -->
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" onclick="pasoAnterior()">
-                            <i data-feather="arrow-left"></i> Atrás
-                        </button>
-                        <button type="button" class="btn btn-primary" onclick="siguientePaso()">
-                            Continuar <i data-feather="arrow-right"></i>
-                        </button>
+                        <label>Hora <span class="required">*</span></label>
+                        <select class="question-select" id="horaSelect">
+                            <option value="">Primero selecciona un día</option>
+                        </select>
                     </div>
                 </div>
 
-                <!-- Step 4: Confirmación -->
-                <div class="step-container" data-step="4">
-                    <h2 class="step-title">Confirma tu Cita</h2>
-                    <p class="step-description">Revisa los datos antes de confirmar</p>
+                <div class="navigation">
+                    <button type="button" class="nav-btn prev-btn" onclick="pasoAnterior()">← Atrás</button>
+                    <button type="button" class="nav-btn next-btn" onclick="siguientePaso()">Continuar →</button>
+                </div>
+            </div>
 
-                    <div class="cita-details" id="resumenCita">
+            <!-- Step 4: Exámenes -->
+            <div class="question-slide" data-step="4">
+                <div class="question-content">
+                    <label class="question-label">¿Qué exámenes necesitas realizarte?</label>
+
+                    <div class="examenes-grid" id="examenesGrid">
+                        <!-- Se llenan dinámicamente -->
+                    </div>
+                </div>
+
+                <div class="navigation">
+                    <button type="button" class="nav-btn prev-btn" onclick="pasoAnterior()">← Atrás</button>
+                    <button type="button" class="nav-btn next-btn" onclick="siguientePaso()">Continuar →</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Confirmación -->
+            <div class="question-slide" data-step="5">
+                <div class="question-content">
+                    <label class="question-label">Confirma los datos de tu cita</label>
+
+                    <div class="resumen-container" id="resumenCita">
                         <!-- Se llena dinámicamente -->
                     </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" onclick="pasoAnterior()">
-                            <i data-feather="arrow-left"></i> Atrás
-                        </button>
-                        <button type="button" class="btn btn-success" id="btnConfirmar" onclick="confirmarCita()">
-                            <i data-feather="check"></i> Confirmar Cita
-                        </button>
-                    </div>
                 </div>
 
-                <!-- Step 5: Éxito -->
-                <div class="step-container" data-step="5">
+                <div class="navigation">
+                    <button type="button" class="nav-btn prev-btn" onclick="pasoAnterior()">← Atrás</button>
+                    <button type="button" class="nav-btn submit-btn" id="btnConfirmar" onclick="confirmarCita()">Confirmar Cita</button>
+                </div>
+            </div>
+
+            <!-- Step 6: Éxito -->
+            <div class="question-slide" data-step="6">
+                <div class="question-content">
                     <div class="success-container">
                         <div class="success-icon">
-                            <i data-feather="check"></i>
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
                         </div>
                         <h2 class="success-title">¡Cita Programada!</h2>
-                        <p class="success-message">Tu cita ha sido registrada exitosamente. Recibirás un recordatorio antes de tu cita.</p>
+                        <p class="success-message">Tu cita ha sido registrada exitosamente.<br>Recibirás un recordatorio antes de tu cita.</p>
 
-                        <div class="cita-details" id="citaFinal">
+                        <div class="resumen-container" id="citaFinal">
                             <!-- Se llena dinámicamente -->
                         </div>
 
-                        <a href="/" class="btn btn-primary" style="text-decoration: none;">
-                            <i data-feather="home"></i> Ir al Inicio
-                        </a>
+                        <a href="/" class="nav-btn" style="text-decoration: none; display: inline-flex;">Ir al Inicio</a>
                     </div>
                 </div>
             </div>
-        </div>
+        </form>
     </div>
 
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
-            <p>Registrando tu cita...</p>
+            <p class="loading-text">Registrando tu cita...</p>
         </div>
     </div>
 
     <script>
         // Variables globales
         let pasoActual = 1;
+        const totalPasos = 5;
         let tipoConsultaSeleccionado = '';
         let examenesSeleccionados = [];
         let empresasData = [];
         let examenesData = [];
-        let horasOcupadas = [];
 
         // Obtener parámetros de URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -782,34 +745,32 @@
 
         // Inicialización
         document.addEventListener('DOMContentLoaded', () => {
-            feather.replace();
+            actualizarProgreso();
             cargarMeses();
             cargarEmpresas();
             cargarExamenes();
 
-            // Si viene con referencia de empresa, pre-configurar
             if (refEmpresa) {
                 configurarPorReferencia(refEmpresa);
             }
         });
 
-        // Configurar según referencia de empresa
+        function actualizarProgreso() {
+            const progreso = (pasoActual / totalPasos) * 100;
+            document.getElementById('progressBar').style.width = progreso + '%';
+            document.getElementById('currentStep').textContent = pasoActual;
+        }
+
         function configurarPorReferencia(ref) {
             const empresasEspeciales = {
                 'DeStori': { codEmpresa: 'STORI', empresa: 'Stori Card', tipoExamen: 'Ingreso' },
                 'EVERTEC': { codEmpresa: 'EVERTEC', empresa: 'EVERTEC', tipoExamen: 'Ingreso' },
-                'EVERTECPERIODICO': { codEmpresa: 'EVERTEC', empresa: 'EVERTEC', tipoExamen: 'Periódico' },
-                'EVERTECEGRESO': { codEmpresa: 'EVERTEC', empresa: 'EVERTEC', tipoExamen: 'Egreso' },
                 'rippling': { codEmpresa: 'RIPPLING', empresa: 'Rippling', tipoExamen: 'Ingreso' },
-                'ripplingperiodico': { codEmpresa: 'RIPPLING', empresa: 'Rippling', tipoExamen: 'Periódico' },
-                'ripplingegreso': { codEmpresa: 'RIPPLING', empresa: 'Rippling', tipoExamen: 'Egreso' },
                 'ATR': { codEmpresa: 'ATR', empresa: 'ATR', tipoExamen: 'Ingreso' }
             };
 
             if (empresasEspeciales[ref]) {
-                // Pre-seleccionar datos
                 document.getElementById('aNombreDe').value = 'EMPRESA';
-                // Ocultar selector de empresa ya que viene predefinido
             }
         }
 
@@ -830,7 +791,6 @@
             }
         }
 
-        // Actualizar días disponibles
         function actualizarDias() {
             const mesValue = document.getElementById('mes').value;
             if (!mesValue) return;
@@ -843,7 +803,6 @@
             const primerDia = new Date(year, mes - 1, 1);
             const ultimoDia = new Date(year, mes, 0);
 
-            // Si es el mes actual, empezar desde hoy
             let diaInicio = primerDia;
             if (mes - 1 === hoy.getMonth() && year === hoy.getFullYear()) {
                 diaInicio = hoy;
@@ -863,11 +822,9 @@
                 diaActual.setDate(diaActual.getDate() + 1);
             }
 
-            // Resetear hora
-            document.getElementById('horaSelect').innerHTML = '<option value="">Primero selecciona día</option>';
+            document.getElementById('horaSelect').innerHTML = '<option value="">Primero selecciona un día</option>';
         }
 
-        // Actualizar horas disponibles
         async function actualizarHoras() {
             const fecha = document.getElementById('dia').value;
             if (!fecha) return;
@@ -876,7 +833,6 @@
             select.innerHTML = '<option value="">Cargando...</option>';
 
             try {
-                // Obtener citas ocupadas para ese día
                 const response = await fetch(`/api/calendario/dia?fecha=${fecha}`);
                 const result = await response.json();
 
@@ -900,7 +856,6 @@
             let horaInicio = 8;
             let horaFin = tipoConsulta === 'Presencial' ? 17 : 21;
 
-            // Si es hoy, empezar desde 1 hora después de la actual
             if (esHoy) {
                 horaInicio = Math.max(horaInicio, ahora.getHours() + 1);
             }
@@ -914,7 +869,6 @@
                     const minutoStr = String(minuto).padStart(2, '0');
                     const horaCompleta = `${horaStr}:${minutoStr}`;
 
-                    // Verificar si está ocupada
                     if (!horasOcupadas.includes(horaCompleta)) {
                         const hora12 = hora > 12 ? hora - 12 : (hora === 0 ? 12 : hora);
                         const ampm = hora >= 12 ? 'PM' : 'AM';
@@ -929,7 +883,6 @@
             }
         }
 
-        // Cargar empresas
         async function cargarEmpresas() {
             try {
                 const response = await fetch('/api/empresas');
@@ -945,7 +898,6 @@
             }
         }
 
-        // Cargar exámenes
         async function cargarExamenes() {
             try {
                 const response = await fetch('/api/examenes');
@@ -960,7 +912,6 @@
         function renderExamenes() {
             const grid = document.getElementById('examenesGrid');
 
-            // Exámenes más comunes primero
             const examenesComunes = ['Examen Médico Ocupacional Osteomuscular', 'Audiometría', 'Optometría'];
             const ordenados = examenesData.sort((a, b) => {
                 const aComun = examenesComunes.includes(a.nombre) ? 0 : 1;
@@ -970,93 +921,71 @@
 
             grid.innerHTML = ordenados.map(examen => `
                 <div class="examen-option ${examenesSeleccionados.includes(examen.nombre) ? 'selected' : ''}"
-                     onclick="toggleExamen('${examen.nombre.replace(/'/g, "\\'")}')">
+                     onclick="toggleExamen('${examen.nombre.replace(/'/g, "\\'")}', this)">
                     <input type="checkbox" ${examenesSeleccionados.includes(examen.nombre) ? 'checked' : ''}>
-                    <label>${examen.nombre}</label>
+                    <span>${examen.nombre}</span>
                 </div>
             `).join('');
         }
 
-        function toggleExamen(nombre) {
+        function toggleExamen(nombre, element) {
             const index = examenesSeleccionados.indexOf(nombre);
             if (index === -1) {
                 examenesSeleccionados.push(nombre);
+                element.classList.add('selected');
+                element.querySelector('input').checked = true;
             } else {
                 examenesSeleccionados.splice(index, 1);
+                element.classList.remove('selected');
+                element.querySelector('input').checked = false;
             }
-            renderExamenes();
         }
 
-        // Toggle empresa container
         function toggleEmpresa() {
             const valor = document.getElementById('aNombreDe').value;
             document.getElementById('empresaContainer').style.display = valor === 'EMPRESA' ? 'block' : 'none';
         }
 
-        // Seleccionar tipo de consulta
-        function seleccionarTipoConsulta(tipo) {
+        function seleccionarTipoConsulta(tipo, element) {
             tipoConsultaSeleccionado = tipo;
             document.getElementById('tipoConsulta').value = tipo;
 
-            document.querySelectorAll('.tipo-card').forEach(card => {
+            document.querySelectorAll('.options-2col .option-card').forEach(card => {
                 card.classList.remove('selected');
             });
-            event.currentTarget.classList.add('selected');
+            element.classList.add('selected');
 
-            // Actualizar horas si ya hay día seleccionado
             const dia = document.getElementById('dia').value;
             if (dia) {
                 actualizarHoras();
             }
-
-            feather.replace();
         }
 
-        // Navegación entre pasos
         function siguientePaso() {
             if (!validarPasoActual()) return;
 
-            const pasos = document.querySelectorAll('.progress-step');
-            const containers = document.querySelectorAll('.step-container');
-
-            // Marcar paso actual como completado
-            pasos[pasoActual - 1].classList.remove('active');
-            pasos[pasoActual - 1].classList.add('completed');
+            const slides = document.querySelectorAll('.question-slide');
+            slides.forEach(s => s.classList.remove('active'));
 
             pasoActual++;
 
-            // Si es el paso de confirmación, generar resumen
-            if (pasoActual === 4) {
+            if (pasoActual === 5) {
                 generarResumen();
             }
 
-            // Activar nuevo paso
-            if (pasoActual <= 4) {
-                pasos[pasoActual - 1].classList.add('active');
-            }
-
-            // Mostrar container correspondiente
-            containers.forEach(c => c.classList.remove('active'));
-            document.querySelector(`.step-container[data-step="${pasoActual}"]`).classList.add('active');
-
+            document.querySelector(`.question-slide[data-step="${pasoActual}"]`).classList.add('active');
+            actualizarProgreso();
             ocultarAlerta();
-            feather.replace();
         }
 
         function pasoAnterior() {
-            const pasos = document.querySelectorAll('.progress-step');
-            const containers = document.querySelectorAll('.step-container');
+            const slides = document.querySelectorAll('.question-slide');
+            slides.forEach(s => s.classList.remove('active'));
 
-            pasos[pasoActual - 1].classList.remove('active', 'completed');
             pasoActual--;
-            pasos[pasoActual - 1].classList.remove('completed');
-            pasos[pasoActual - 1].classList.add('active');
-
-            containers.forEach(c => c.classList.remove('active'));
-            document.querySelector(`.step-container[data-step="${pasoActual}"]`).classList.add('active');
-
+            document.querySelector(`.question-slide[data-step="${pasoActual}"]`).classList.add('active');
+            actualizarProgreso();
             ocultarAlerta();
-            feather.replace();
         }
 
         function validarPasoActual() {
@@ -1073,10 +1002,11 @@
                 if (document.getElementById('aNombreDe').value === 'EMPRESA' && !document.getElementById('empresa').value) {
                     camposFaltantes.push('Empresa');
                 }
+            } else if (pasoActual === 3) {
                 if (!document.getElementById('mes').value) camposFaltantes.push('Mes');
                 if (!document.getElementById('dia').value) camposFaltantes.push('Día');
                 if (!document.getElementById('horaSelect').value) camposFaltantes.push('Hora');
-            } else if (pasoActual === 3) {
+            } else if (pasoActual === 4) {
                 if (examenesSeleccionados.length === 0) camposFaltantes.push('Al menos un examen');
             }
 
@@ -1098,7 +1028,6 @@
             document.getElementById('alertContainer').classList.remove('show');
         }
 
-        // Generar resumen
         function generarResumen() {
             const fecha = document.getElementById('dia').value;
             const hora = document.getElementById('horaSelect').value;
@@ -1115,44 +1044,43 @@
             const empresaNombre = aNombreDe === 'EMPRESA' ? document.getElementById('empresa').value : 'Particular';
 
             const resumen = `
-                <div class="cita-detail">
-                    <span class="cita-detail-label">Paciente</span>
-                    <span class="cita-detail-value">${document.getElementById('primerNombre').value} ${document.getElementById('primerApellido').value}</span>
+                <div class="resumen-item">
+                    <span class="resumen-label">Paciente</span>
+                    <span class="resumen-value">${document.getElementById('primerNombre').value} ${document.getElementById('primerApellido').value}</span>
                 </div>
-                <div class="cita-detail">
-                    <span class="cita-detail-label">Cédula</span>
-                    <span class="cita-detail-value">${document.getElementById('numeroId').value}</span>
+                <div class="resumen-item">
+                    <span class="resumen-label">Cédula</span>
+                    <span class="resumen-value">${document.getElementById('numeroId').value}</span>
                 </div>
-                <div class="cita-detail">
-                    <span class="cita-detail-label">Celular</span>
-                    <span class="cita-detail-value">${document.getElementById('celular').value}</span>
+                <div class="resumen-item">
+                    <span class="resumen-label">Celular</span>
+                    <span class="resumen-value">${document.getElementById('celular').value}</span>
                 </div>
-                <div class="cita-detail">
-                    <span class="cita-detail-label">Tipo</span>
-                    <span class="cita-detail-value">${document.getElementById('tipoConsulta').value}</span>
+                <div class="resumen-item">
+                    <span class="resumen-label">Tipo</span>
+                    <span class="resumen-value">${document.getElementById('tipoConsulta').value}</span>
                 </div>
-                <div class="cita-detail">
-                    <span class="cita-detail-label">A nombre de</span>
-                    <span class="cita-detail-value">${empresaNombre}</span>
+                <div class="resumen-item">
+                    <span class="resumen-label">A nombre de</span>
+                    <span class="resumen-value">${empresaNombre}</span>
                 </div>
-                <div class="cita-detail">
-                    <span class="cita-detail-label">Fecha</span>
-                    <span class="cita-detail-value">${fechaFormateada}</span>
+                <div class="resumen-item">
+                    <span class="resumen-label">Fecha</span>
+                    <span class="resumen-value">${fechaFormateada}</span>
                 </div>
-                <div class="cita-detail">
-                    <span class="cita-detail-label">Hora</span>
-                    <span class="cita-detail-value">${hora12}</span>
+                <div class="resumen-item">
+                    <span class="resumen-label">Hora</span>
+                    <span class="resumen-value">${hora12}</span>
                 </div>
-                <div class="cita-detail">
-                    <span class="cita-detail-label">Exámenes</span>
-                    <span class="cita-detail-value">${examenesSeleccionados.join(', ')}</span>
+                <div class="resumen-item">
+                    <span class="resumen-label">Exámenes</span>
+                    <span class="resumen-value">${examenesSeleccionados.join(', ')}</span>
                 </div>
             `;
 
             document.getElementById('resumenCita').innerHTML = resumen;
         }
 
-        // Confirmar cita
         async function confirmarCita() {
             const btnConfirmar = document.getElementById('btnConfirmar');
             btnConfirmar.disabled = true;
@@ -1161,8 +1089,6 @@
 
             const fecha = document.getElementById('dia').value;
             const hora = document.getElementById('horaSelect').value;
-
-            // Crear fecha y hora combinadas
             const fechaHora = new Date(fecha + 'T' + hora + ':00');
 
             const aNombreDe = document.getElementById('aNombreDe').value;
@@ -1175,7 +1101,6 @@
                 codEmpresa = empresaEncontrada?.codigo || empresaNombre.toUpperCase();
             }
 
-            // Si viene con referencia especial
             if (refEmpresa) {
                 const empresasEspeciales = {
                     'DeStori': { codEmpresa: 'STORI', empresa: 'Stori Card' },
@@ -1218,8 +1143,7 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    // Mostrar paso de éxito
-                    mostrarExito(datos, result.data);
+                    mostrarExito(datos);
                 } else {
                     throw new Error(result.message || 'Error al registrar la cita');
                 }
@@ -1231,22 +1155,16 @@
             }
         }
 
-        function mostrarExito(datos, ordenCreada) {
+        function mostrarExito(datos) {
             document.getElementById('loadingOverlay').classList.remove('show');
 
-            // Ir al paso 5
-            const pasos = document.querySelectorAll('.progress-step');
-            const containers = document.querySelectorAll('.step-container');
+            const slides = document.querySelectorAll('.question-slide');
+            slides.forEach(s => s.classList.remove('active'));
+            document.querySelector('.question-slide[data-step="6"]').classList.add('active');
 
-            pasos.forEach(p => {
-                p.classList.remove('active');
-                p.classList.add('completed');
-            });
+            document.getElementById('progressBar').style.width = '100%';
+            document.getElementById('currentStep').textContent = '5';
 
-            containers.forEach(c => c.classList.remove('active'));
-            document.querySelector('.step-container[data-step="5"]').classList.add('active');
-
-            // Formatear fecha
             const fecha = new Date(datos.fechaAtencion);
             const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             const fechaFormateada = fecha.toLocaleDateString('es-CO', opciones);
@@ -1257,29 +1175,27 @@
                 hora + ' AM';
 
             document.getElementById('citaFinal').innerHTML = `
-                <div class="cita-detail">
-                    <span class="cita-detail-label">Paciente</span>
-                    <span class="cita-detail-value">${datos.primerNombre} ${datos.primerApellido}</span>
+                <div class="resumen-item">
+                    <span class="resumen-label">Paciente</span>
+                    <span class="resumen-value">${datos.primerNombre} ${datos.primerApellido}</span>
                 </div>
-                <div class="cita-detail">
-                    <span class="cita-detail-label">Fecha</span>
-                    <span class="cita-detail-value">${fechaFormateada}</span>
+                <div class="resumen-item">
+                    <span class="resumen-label">Fecha</span>
+                    <span class="resumen-value">${fechaFormateada}</span>
                 </div>
-                <div class="cita-detail">
-                    <span class="cita-detail-label">Hora</span>
-                    <span class="cita-detail-value">${hora12}</span>
+                <div class="resumen-item">
+                    <span class="resumen-label">Hora</span>
+                    <span class="resumen-value">${hora12}</span>
                 </div>
-                <div class="cita-detail">
-                    <span class="cita-detail-label">Tipo</span>
-                    <span class="cita-detail-value">${datos.tipoConsulta}</span>
+                <div class="resumen-item">
+                    <span class="resumen-label">Tipo</span>
+                    <span class="resumen-value">${datos.tipoConsulta}</span>
                 </div>
-                <div class="cita-detail">
-                    <span class="cita-detail-label">Exámenes</span>
-                    <span class="cita-detail-value">${datos.examenes}</span>
+                <div class="resumen-item">
+                    <span class="resumen-label">Exámenes</span>
+                    <span class="resumen-value">${datos.examenes}</span>
                 </div>
             `;
-
-            feather.replace();
         }
     </script>
 </body>
