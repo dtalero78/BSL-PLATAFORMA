@@ -616,9 +616,7 @@
 
                     <div class="form-group" id="empresaContainer" style="display: none;">
                         <label>Empresa <span class="required">*</span></label>
-                        <select class="question-select" id="empresa">
-                            <option value="">Seleccionar empresa...</option>
-                        </select>
+                        <input type="text" class="question-input" id="empresa" placeholder="Nombre de la empresa">
                     </div>
 
                     <div class="form-group">
@@ -736,7 +734,6 @@
         const totalPasos = 5;
         let tipoConsultaSeleccionado = '';
         let examenesSeleccionados = [];
-        let empresasData = [];
         let examenesData = [];
 
         // Obtener parámetros de URL
@@ -747,7 +744,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             actualizarProgreso();
             cargarMeses();
-            cargarEmpresas();
             cargarExamenes();
 
             if (refEmpresa) {
@@ -825,56 +821,61 @@
             document.getElementById('horaSelect').innerHTML = '<option value="">Primero selecciona un día</option>';
         }
 
-        async function actualizarHoras() {
+        function actualizarHoras() {
             const fecha = document.getElementById('dia').value;
             if (!fecha) return;
 
-            const select = document.getElementById('horaSelect');
-            select.innerHTML = '<option value="">Cargando...</option>';
-
-            try {
-                const response = await fetch(`/api/calendario/dia?fecha=${fecha}`);
-                const result = await response.json();
-
-                const citasOcupadas = result.success ? result.data : [];
-                const horasOcupadas = citasOcupadas.map(c => c.hora).filter(h => h);
-
-                generarHorasDisponibles(fecha, horasOcupadas);
-            } catch (error) {
-                console.error('Error al cargar horas:', error);
-                generarHorasDisponibles(fecha, []);
-            }
+            // NUBIA no tiene restricción de cupo - genera horas directamente sin verificar ocupación
+            generarHorasDisponibles(fecha);
         }
 
-        function generarHorasDisponibles(fecha, horasOcupadas) {
+        function generarHorasDisponibles(fecha) {
             const select = document.getElementById('horaSelect');
             const ahora = new Date();
             const fechaSeleccionada = new Date(fecha + 'T00:00:00');
             const esHoy = fechaSeleccionada.toDateString() === ahora.toDateString();
-            const tipoConsulta = document.getElementById('tipoConsulta').value;
 
+            // Horario de 8 AM a 8 PM (20:00)
             let horaInicio = 8;
-            let horaFin = tipoConsulta === 'Presencial' ? 17 : 21;
+            let horaFin = 20;
+            let minutoInicio = 0;
 
+            // Si es hoy, agregar buffer de 1 hora desde la hora actual
             if (esHoy) {
-                horaInicio = Math.max(horaInicio, ahora.getHours() + 1);
+                const horaMinima = ahora.getHours() + 1;
+                const minutoMinimo = ahora.getMinutes();
+
+                if (horaMinima >= horaFin) {
+                    select.innerHTML = '<option value="">No hay horas disponibles para hoy</option>';
+                    return;
+                }
+
+                if (horaMinima > horaInicio) {
+                    horaInicio = horaMinima;
+                    // Redondear al siguiente intervalo de 10 minutos
+                    minutoInicio = Math.ceil(minutoMinimo / 10) * 10;
+                    if (minutoInicio >= 60) {
+                        minutoInicio = 0;
+                        horaInicio++;
+                    }
+                }
             }
 
             select.innerHTML = '<option value="">Seleccionar hora...</option>';
             let hayHoras = false;
 
             for (let hora = horaInicio; hora < horaFin; hora++) {
-                for (let minuto = 0; minuto < 60; minuto += 10) {
+                const startMinuto = (hora === horaInicio) ? minutoInicio : 0;
+                for (let minuto = startMinuto; minuto < 60; minuto += 10) {
                     const horaStr = String(hora).padStart(2, '0');
                     const minutoStr = String(minuto).padStart(2, '0');
                     const horaCompleta = `${horaStr}:${minutoStr}`;
 
-                    if (!horasOcupadas.includes(horaCompleta)) {
-                        const hora12 = hora > 12 ? hora - 12 : (hora === 0 ? 12 : hora);
-                        const ampm = hora >= 12 ? 'PM' : 'AM';
-                        select.innerHTML += `<option value="${horaCompleta}">${hora12}:${minutoStr} ${ampm}</option>`;
-                        hayHoras = true;
-                    }
+                    // Sin restricción de cupo - NUBIA acepta citas simultáneas
+                    const hora12 = hora > 12 ? hora - 12 : (hora === 0 ? 12 : hora);
+                    const ampm = hora >= 12 ? 'PM' : 'AM';
+                    select.innerHTML += `<option value="${horaCompleta}">${hora12}:${minutoStr} ${ampm}</option>`;
+                    hayHoras = true;
                 }
             }
 
@@ -883,20 +884,6 @@
             }
         }
 
-        async function cargarEmpresas() {
-            try {
-                const response = await fetch('/api/empresas');
-                empresasData = await response.json();
-
-                const select = document.getElementById('empresa');
-                select.innerHTML = '<option value="">Seleccionar empresa...</option>';
-                empresasData.forEach(emp => {
-                    select.innerHTML += `<option value="${emp.nombre}">${emp.nombre}</option>`;
-                });
-            } catch (error) {
-                console.error('Error al cargar empresas:', error);
-            }
-        }
 
         async function cargarExamenes() {
             try {
@@ -1096,9 +1083,8 @@
             let empresaNombre = 'PARTICULAR';
 
             if (aNombreDe === 'EMPRESA') {
-                empresaNombre = document.getElementById('empresa').value;
-                const empresaEncontrada = empresasData.find(e => e.nombre === empresaNombre);
-                codEmpresa = empresaEncontrada?.codigo || empresaNombre.toUpperCase();
+                empresaNombre = document.getElementById('empresa').value.trim();
+                codEmpresa = empresaNombre.toUpperCase().replace(/\s+/g, '_');
             }
 
             if (refEmpresa) {
@@ -1130,7 +1116,7 @@
                 tipoExamen: 'Ingreso',
                 atendido: 'PENDIENTE',
                 ciudad: 'Bogotá',
-                medico: document.getElementById('tipoConsulta').value === 'Presencial' ? 'PRESENCIAL' : null
+                medico: 'NUBIA'
             };
 
             try {
