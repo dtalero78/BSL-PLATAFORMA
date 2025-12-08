@@ -3735,12 +3735,26 @@ app.get('/api/barrido-nubia', async (req, res) => {
 // ==========================================
 app.get('/api/nubia/pacientes', async (req, res) => {
     try {
-        // Obtener fecha de hoy (inicio y fin del día)
-        const hoy = new Date();
-        const inicioDelDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0);
-        const finDelDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59);
+        const { desde, hasta } = req.query;
 
-        console.log(`📋 [API NUBIA] Buscando pacientes del día ${inicioDelDia.toISOString()} a ${finDelDia.toISOString()}`);
+        // Si se proporcionan fechas, usarlas; sino usar hoy
+        let inicioDelDia, finDelDia;
+
+        if (desde) {
+            inicioDelDia = new Date(desde + 'T00:00:00');
+        } else {
+            const hoy = new Date();
+            inicioDelDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0);
+        }
+
+        if (hasta) {
+            finDelDia = new Date(hasta + 'T23:59:59');
+        } else {
+            const hoy = new Date();
+            finDelDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59);
+        }
+
+        console.log(`📋 [API NUBIA] Buscando pacientes del ${inicioDelDia.toISOString()} a ${finDelDia.toISOString()}`);
 
         const result = await pool.query(`
             SELECT "_id", "numeroId", "primerNombre", "segundoNombre", "primerApellido", "segundoApellido",

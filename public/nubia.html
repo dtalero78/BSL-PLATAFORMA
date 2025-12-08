@@ -160,6 +160,26 @@
             background: #E5E7EB;
         }
 
+        .date-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .date-filter input[type="date"] {
+            padding: 10px 12px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+        }
+
+        .date-filter input[type="date"]:focus {
+            outline: none;
+            border-color: #0099B2;
+        }
+
         /* ========== TABLE ========== */
         .table-container {
             background: white;
@@ -549,6 +569,12 @@
                 <span class="search-icon">🔍</span>
                 <input type="text" class="search-input" id="searchInput" placeholder="Buscar por cédula o nombre...">
             </div>
+            <div class="date-filter">
+                <input type="date" id="fechaDesde" title="Fecha desde">
+                <span style="color: #6B7280;">a</span>
+                <input type="date" id="fechaHasta" title="Fecha hasta">
+                <button class="btn btn-primary" onclick="cargarPacientes()">Filtrar</button>
+            </div>
             <button class="btn btn-secondary" onclick="cargarPacientes()">🔄 Actualizar</button>
         </div>
 
@@ -782,7 +808,17 @@
                 document.getElementById('tableContainer').style.display = 'none';
                 document.getElementById('emptyState').style.display = 'none';
 
-                const response = await fetch('/api/nubia/pacientes');
+                // Construir URL con filtros de fecha
+                const fechaDesde = document.getElementById('fechaDesde').value;
+                const fechaHasta = document.getElementById('fechaHasta').value;
+
+                let url = '/api/nubia/pacientes';
+                const params = new URLSearchParams();
+                if (fechaDesde) params.append('desde', fechaDesde);
+                if (fechaHasta) params.append('hasta', fechaHasta);
+                if (params.toString()) url += '?' + params.toString();
+
+                const response = await fetch(url);
                 const result = await response.json();
 
                 document.getElementById('loadingState').style.display = 'none';
@@ -885,6 +921,11 @@
         });
 
         // ========== INIT ==========
+        // Establecer fecha de hoy por defecto
+        const hoy = new Date().toISOString().split('T')[0];
+        document.getElementById('fechaDesde').value = hoy;
+        document.getElementById('fechaHasta').value = hoy;
+
         cargarPacientes();
 
         // Auto-refresh cada 60 segundos
