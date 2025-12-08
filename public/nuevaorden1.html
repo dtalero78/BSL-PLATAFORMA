@@ -1305,15 +1305,7 @@
 
             document.getElementById('ordenExistenteInfo').innerHTML = `
                 <div class="resumen-item">
-                    <span class="resumen-label">Nombre</span>
-                    <span class="resumen-value">${ordenExistente.nombre}</span>
-                </div>
-                <div class="resumen-item">
-                    <span class="resumen-label">Empresa</span>
-                    <span class="resumen-value">${ordenExistente.empresa || 'No especificada'}</span>
-                </div>
-                <div class="resumen-item">
-                    <span class="resumen-label">Creada</span>
+                    <span class="resumen-label">Fecha de creación</span>
                     <span class="resumen-value">${fechaCreacion}</span>
                 </div>
             `;
@@ -1349,14 +1341,6 @@
             }
 
             document.getElementById('ordenAtendidaInfo').innerHTML = `
-                <div class="resumen-item">
-                    <span class="resumen-label">Nombre</span>
-                    <span class="resumen-value">${ordenExistente.nombre}</span>
-                </div>
-                <div class="resumen-item">
-                    <span class="resumen-label">Empresa</span>
-                    <span class="resumen-value">${ordenExistente.empresa || 'No especificada'}</span>
-                </div>
                 <div class="resumen-item">
                     <span class="resumen-label">Fecha de consulta</span>
                     <span class="resumen-value">${fechaAtencionStr}</span>
@@ -1399,14 +1383,6 @@
             }
 
             document.getElementById('ordenExpiradaInfo').innerHTML = `
-                <div class="resumen-item">
-                    <span class="resumen-label">Nombre</span>
-                    <span class="resumen-value">${ordenExistente.nombre}</span>
-                </div>
-                <div class="resumen-item">
-                    <span class="resumen-label">Empresa</span>
-                    <span class="resumen-value">${ordenExistente.empresa || 'No especificada'}</span>
-                </div>
                 <div class="resumen-item">
                     <span class="resumen-label">Fecha programada</span>
                     <span class="resumen-value" style="color: #DC2626;">${fechaAtencionStr} (Expirada)</span>

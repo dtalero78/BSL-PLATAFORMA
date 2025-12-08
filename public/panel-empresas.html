@@ -2155,10 +2155,7 @@
             });
 
             document.getElementById('ordenExistenteInfo').innerHTML = `
-                <p style="margin: 4px 0;"><strong>Nombre:</strong> ${ordenExistente.nombre}</p>
-                <p style="margin: 4px 0;"><strong>Empresa:</strong> ${ordenExistente.empresa}</p>
-                <p style="margin: 4px 0;"><strong>Tipo examen:</strong> ${ordenExistente.tipoExamen || 'No especificado'}</p>
-                <p style="margin: 4px 0;"><strong>Creada:</strong> ${fechaCreacion}</p>
+                <p style="margin: 4px 0;"><strong>Fecha de creación:</strong> ${fechaCreacion}</p>
             `;
 
             const mensajeFormulario = document.getElementById('mensajeFormulario');
@@ -2191,9 +2188,6 @@
             }
 
             document.getElementById('ordenAtendidaInfo').innerHTML = `
-                <p style="margin: 4px 0;"><strong>Nombre:</strong> ${ordenExistente.nombre}</p>
-                <p style="margin: 4px 0;"><strong>Empresa:</strong> ${ordenExistente.empresa}</p>
-                <p style="margin: 4px 0;"><strong>Tipo examen:</strong> ${ordenExistente.tipoExamen || 'No especificado'}</p>
                 <p style="margin: 4px 0;"><strong>Fecha de consulta:</strong> ${fechaAtencionStr}</p>
             `;
 
@@ -2216,8 +2210,6 @@
             }
 
             document.getElementById('ordenExpiradaInfo').innerHTML = `
-                <p style="margin: 4px 0;"><strong>Nombre:</strong> ${ordenExistente.nombre}</p>
-                <p style="margin: 4px 0;"><strong>Empresa:</strong> ${ordenExistente.empresa || 'No especificada'}</p>
                 <p style="margin: 4px 0;"><strong>Fecha programada:</strong> <span style="color: #DC2626;">${fechaAtencionStr} (Expirada)</span></p>
             `;
 

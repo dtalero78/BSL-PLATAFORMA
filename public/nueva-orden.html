@@ -1300,10 +1300,7 @@
             });
 
             document.getElementById('ordenExistenteInfo').innerHTML = `
-                <p><strong>Nombre:</strong> ${ordenExistente.nombre}</p>
-                <p><strong>Empresa:</strong> ${ordenExistente.empresa}</p>
-                <p><strong>Tipo examen:</strong> ${ordenExistente.tipoExamen || 'No especificado'}</p>
-                <p><strong>Creada:</strong> ${fechaCreacion}</p>
+                <p><strong>Fecha de creación:</strong> ${fechaCreacion}</p>
             `;
 
             const mensajeFormulario = document.getElementById('mensajeFormulario');
@@ -1333,9 +1330,6 @@
             }
 
             document.getElementById('ordenAtendidaInfo').innerHTML = `
-                <p><strong>Nombre:</strong> ${ordenExistente.nombre}</p>
-                <p><strong>Empresa:</strong> ${ordenExistente.empresa}</p>
-                <p><strong>Tipo examen:</strong> ${ordenExistente.tipoExamen || 'No especificado'}</p>
                 <p><strong>Fecha de consulta:</strong> ${fechaAtencionStr}</p>
             `;
 
@@ -1366,8 +1360,6 @@
             }
 
             document.getElementById('ordenExpiradaInfo').innerHTML = `
-                <p><strong>Nombre:</strong> ${ordenExistente.nombre}</p>
-                <p><strong>Empresa:</strong> ${ordenExistente.empresa || 'No especificada'}</p>
                 <p><strong>Fecha programada:</strong> <span style="color: #DC2626;">${fechaAtencionStr} (Expirada)</span></p>
             `;
 
