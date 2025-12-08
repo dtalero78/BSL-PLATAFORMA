@@ -853,6 +853,61 @@
         </div>
     </div>
 
+    <!-- Modal de cita expirada (PENDIENTE con fecha vencida) -->
+    <div class="modal-overlay" id="modalExpirado">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <div class="icon-warning" style="background: #FEE2E2; color: #DC2626;">
+                    <i data-feather="clock"></i>
+                </div>
+                <h3>Cita expirada</h3>
+            </div>
+            <div class="modal-body">
+                <p>Tenías una cita programada pero la <strong>fecha ya pasó</strong>. Puedes reagendar tu cita.</p>
+                <div class="orden-info" id="ordenExpiradaInfo" style="background: #FEF2F2;">
+                    <!-- Se llena dinámicamente -->
+                </div>
+
+                <div style="background: #F0FDF4; border-radius: 8px; padding: 16px; margin-top: 16px;">
+                    <h4 style="font-size: 14px; font-weight: 600; color: #166534; margin-bottom: 12px;">Nueva fecha y hora:</h4>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label style="font-size: 12px; color: #374151; display: block; margin-bottom: 4px;">Mes</label>
+                            <select id="mesExpirado" onchange="actualizarDiasExpirado()" class="form-input" style="width: 100%;">
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #374151; display: block; margin-bottom: 4px;">Día</label>
+                            <select id="diaExpirado" onchange="actualizarHorasExpirado()" class="form-input" style="width: 100%;">
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 12px; color: #374151; display: block; margin-bottom: 4px;">Hora</label>
+                        <select id="horaExpirado" class="form-input" style="width: 100%;">
+                            <option value="">Primero selecciona un día</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions" style="flex-direction: column; gap: 8px;">
+                <button type="button" class="btn btn-primary" id="btnActualizarFecha" onclick="actualizarFechaYContinuar()" style="width: 100%; background: #10B981;">
+                    Reagendar y continuar
+                </button>
+                <button type="button" class="btn btn-crear-nueva" id="btnCrearNuevaExpirado" style="width: 100%;">
+                    Crear nueva orden
+                </button>
+                <button type="button" class="btn btn-cancelar" id="btnCancelarExpirado" style="width: 100%;">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Función de búsqueda global
         function buscarGlobal(event) {
@@ -1164,6 +1219,9 @@
                     if (checkResult.tipo === 'atendido') {
                         // Mostrar modal de certificado existente
                         mostrarModalAtendido(checkResult.ordenExistente);
+                    } else if (checkResult.tipo === 'expirado') {
+                        // Mostrar modal de cita expirada
+                        mostrarModalExpirado(checkResult.ordenExistente);
                     } else {
                         // Mostrar modal de orden pendiente
                         mostrarModalDuplicado(checkResult.ordenExistente);
@@ -1296,6 +1354,172 @@
             ordenExistenteActual = null;
         }
 
+        // Funciones para modal de CITA EXPIRADA
+        function mostrarModalExpirado(ordenExistente) {
+            ordenExistenteActual = ordenExistente;
+
+            let fechaAtencionStr = 'No disponible';
+            if (ordenExistente.fechaAtencion) {
+                fechaAtencionStr = new Date(ordenExistente.fechaAtencion).toLocaleDateString('es-CO', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                });
+            }
+
+            document.getElementById('ordenExpiradaInfo').innerHTML = `
+                <p><strong>Nombre:</strong> ${ordenExistente.nombre}</p>
+                <p><strong>Empresa:</strong> ${ordenExistente.empresa || 'No especificada'}</p>
+                <p><strong>Fecha programada:</strong> <span style="color: #DC2626;">${fechaAtencionStr} (Expirada)</span></p>
+            `;
+
+            cargarMesesModalExpirado();
+            document.getElementById('modalExpirado').classList.add('show');
+            feather.replace();
+        }
+
+        function cerrarModalExpirado() {
+            document.getElementById('modalExpirado').classList.remove('show');
+            ordenExistenteActual = null;
+        }
+
+        function cargarMesesModalExpirado() {
+            const select = document.getElementById('mesExpirado');
+            const hoy = new Date();
+            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+            select.innerHTML = '<option value="">Seleccionar...</option>';
+            for (let i = 0; i < 3; i++) {
+                const fecha = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+                const mesIndex = fecha.getMonth();
+                const year = fecha.getFullYear();
+                select.innerHTML += `<option value="${mesIndex + 1}-${year}">${meses[mesIndex]} ${year}</option>`;
+            }
+        }
+
+        function actualizarDiasExpirado() {
+            const mesValue = document.getElementById('mesExpirado').value;
+            if (!mesValue) return;
+
+            const [mes, year] = mesValue.split('-').map(Number);
+            const select = document.getElementById('diaExpirado');
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+
+            const primerDia = new Date(year, mes - 1, 1);
+            const ultimoDia = new Date(year, mes, 0);
+
+            let diaInicio = primerDia;
+            if (mes - 1 === hoy.getMonth() && year === hoy.getFullYear()) {
+                diaInicio = hoy;
+            }
+
+            const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            select.innerHTML = '<option value="">Seleccionar...</option>';
+
+            let diaActual = new Date(diaInicio);
+            while (diaActual <= ultimoDia) {
+                const diaSemana = diasSemana[diaActual.getDay()];
+                const diaNum = diaActual.getDate();
+                const esHoy = diaActual.getTime() === hoy.getTime();
+                const fechaISO = diaActual.toISOString().split('T')[0];
+
+                select.innerHTML += `<option value="${fechaISO}">${esHoy ? 'Hoy' : diaSemana + ' ' + diaNum}</option>`;
+                diaActual.setDate(diaActual.getDate() + 1);
+            }
+
+            document.getElementById('horaExpirado').innerHTML = '<option value="">Primero selecciona un día</option>';
+        }
+
+        function actualizarHorasExpirado() {
+            const fecha = document.getElementById('diaExpirado').value;
+            if (!fecha) return;
+
+            const select = document.getElementById('horaExpirado');
+            const ahora = new Date();
+            const fechaSeleccionada = new Date(fecha + 'T00:00:00');
+            const esHoy = fechaSeleccionada.toDateString() === ahora.toDateString();
+
+            let horaInicio = 8;
+            let horaFin = 20;
+            let minutoInicio = 0;
+
+            if (esHoy) {
+                const horaMinima = ahora.getHours() + 1;
+                const minutoMinimo = ahora.getMinutes();
+
+                if (horaMinima >= horaFin) {
+                    select.innerHTML = '<option value="">No hay horas disponibles para hoy</option>';
+                    return;
+                }
+
+                if (horaMinima > horaInicio) {
+                    horaInicio = horaMinima;
+                    minutoInicio = Math.ceil(minutoMinimo / 10) * 10;
+                    if (minutoInicio >= 60) {
+                        minutoInicio = 0;
+                        horaInicio++;
+                    }
+                }
+            }
+
+            select.innerHTML = '<option value="">Seleccionar hora...</option>';
+
+            for (let hora = horaInicio; hora < horaFin; hora++) {
+                const startMinuto = (hora === horaInicio) ? minutoInicio : 0;
+                for (let minuto = startMinuto; minuto < 60; minuto += 10) {
+                    const horaStr = String(hora).padStart(2, '0');
+                    const minutoStr = String(minuto).padStart(2, '0');
+                    const horaCompleta = `${horaStr}:${minutoStr}`;
+                    const hora12 = hora > 12 ? hora - 12 : (hora === 0 ? 12 : hora);
+                    const ampm = hora >= 12 ? 'PM' : 'AM';
+                    select.innerHTML += `<option value="${horaCompleta}">${hora12}:${minutoStr} ${ampm}</option>`;
+                }
+            }
+        }
+
+        async function actualizarFechaYContinuar() {
+            const dia = document.getElementById('diaExpirado').value;
+            const hora = document.getElementById('horaExpirado').value;
+
+            if (!dia || !hora) {
+                alert('Por favor selecciona una nueva fecha y hora');
+                return;
+            }
+
+            const btn = document.getElementById('btnActualizarFecha');
+            btn.disabled = true;
+            btn.textContent = 'Actualizando...';
+
+            try {
+                const [year, month, day] = dia.split('-').map(Number);
+                const [hours, minutes] = hora.split(':').map(Number);
+                const fechaHora = new Date(year, month - 1, day, hours, minutes);
+
+                const response = await fetch(`/api/ordenes/${ordenExistenteActual._id}/fecha-atencion`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fechaAtencion: fechaHora.toISOString(),
+                        horaAtencion: hora
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.href = `/?_id=${ordenExistenteActual._id}`;
+                } else {
+                    alert('Error al actualizar la fecha: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al actualizar la fecha. Intente de nuevo.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Reagendar y continuar';
+            }
+        }
+
         // Event listeners para botones del modal
         document.getElementById('btnUsarExistente').addEventListener('click', () => {
             if (ordenExistenteActual) {
@@ -1330,6 +1554,16 @@
 
         document.getElementById('btnCancelarAtendido').addEventListener('click', () => {
             cerrarModalAtendido();
+        });
+
+        // Event listeners para modal de EXPIRADO
+        document.getElementById('btnCrearNuevaExpirado').addEventListener('click', () => {
+            cerrarModalExpirado();
+            mostrarPaso2();
+        });
+
+        document.getElementById('btnCancelarExpirado').addEventListener('click', () => {
+            cerrarModalExpirado();
         });
 
         form.addEventListener('submit', async (e) => {

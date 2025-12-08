@@ -1059,7 +1059,7 @@ app.get('/api/ordenes/verificar-duplicado/:numeroId', async (req, res) => {
         const resultPendiente = await pool.query(`
             SELECT "_id", "numeroId", "primerNombre", "primerApellido",
                    "codEmpresa", "empresa", "tipoExamen", "atendido",
-                   "_createdDate"
+                   "_createdDate", "fechaAtencion"
             FROM "HistoriaClinica"
             WHERE "numeroId" = $1
               AND "atendido" = 'PENDIENTE'
@@ -1079,10 +1079,21 @@ app.get('/api/ordenes/verificar-duplicado/:numeroId', async (req, res) => {
 
             const tieneFormulario = formResult.rows.length > 0;
 
+            // Verificar si la fecha de atención ya pasó
+            let fechaExpirada = false;
+            if (ordenExistente.fechaAtencion) {
+                const fechaAtencion = new Date(ordenExistente.fechaAtencion);
+                const hoy = new Date();
+                // Comparar solo fechas (sin hora)
+                fechaAtencion.setHours(0, 0, 0, 0);
+                hoy.setHours(0, 0, 0, 0);
+                fechaExpirada = fechaAtencion < hoy;
+            }
+
             return res.json({
                 success: true,
                 hayDuplicado: true,
-                tipo: 'pendiente',
+                tipo: fechaExpirada ? 'expirado' : 'pendiente',
                 ordenExistente: {
                     _id: ordenExistente._id,
                     numeroId: ordenExistente.numeroId,
@@ -1090,6 +1101,7 @@ app.get('/api/ordenes/verificar-duplicado/:numeroId', async (req, res) => {
                     empresa: ordenExistente.empresa || ordenExistente.codEmpresa,
                     tipoExamen: ordenExistente.tipoExamen,
                     fechaCreacion: ordenExistente._createdDate,
+                    fechaAtencion: ordenExistente.fechaAtencion,
                     tieneFormulario
                 }
             });
@@ -1133,6 +1145,77 @@ app.get('/api/ordenes/verificar-duplicado/:numeroId', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al verificar duplicado',
+            error: error.message
+        });
+    }
+});
+
+// Endpoint para actualizar fecha de atención de una orden existente
+app.patch('/api/ordenes/:id/fecha-atencion', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { fechaAtencion, horaAtencion } = req.body;
+
+        if (!fechaAtencion) {
+            return res.status(400).json({
+                success: false,
+                message: 'La fecha de atención es requerida'
+            });
+        }
+
+        // Actualizar en PostgreSQL
+        const result = await pool.query(`
+            UPDATE "HistoriaClinica"
+            SET "fechaAtencion" = $1,
+                "horaAtencion" = $2
+            WHERE "_id" = $3
+            RETURNING "_id", "numeroId", "primerNombre", "primerApellido", "fechaAtencion", "horaAtencion"
+        `, [fechaAtencion, horaAtencion || null, id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Orden no encontrada'
+            });
+        }
+
+        const ordenActualizada = result.rows[0];
+
+        // Intentar actualizar en Wix también
+        try {
+            const wixResponse = await fetch('https://www.bsl-plataforma.com/_functions/actualizarFormulario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idGeneral: id,
+                    fechaAtencion: fechaAtencion,
+                    horaAtencion: horaAtencion || ''
+                })
+            });
+
+            if (wixResponse.ok) {
+                console.log('✅ Fecha actualizada en Wix');
+            }
+        } catch (wixError) {
+            console.error('⚠️ Error al actualizar en Wix (no crítico):', wixError.message);
+        }
+
+        res.json({
+            success: true,
+            message: 'Fecha de atención actualizada correctamente',
+            orden: {
+                _id: ordenActualizada._id,
+                numeroId: ordenActualizada.numeroId,
+                nombre: `${ordenActualizada.primerNombre} ${ordenActualizada.primerApellido}`,
+                fechaAtencion: ordenActualizada.fechaAtencion,
+                horaAtencion: ordenActualizada.horaAtencion
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error al actualizar fecha de atención:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al actualizar la fecha de atención',
             error: error.message
         });
     }
