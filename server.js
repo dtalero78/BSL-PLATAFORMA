@@ -1046,6 +1046,65 @@ app.delete('/api/formularios/:id', async (req, res) => {
     }
 });
 
+// Endpoint para verificar si existe una orden duplicada con el mismo numeroId
+app.get('/api/ordenes/verificar-duplicado/:numeroId', async (req, res) => {
+    try {
+        const { numeroId } = req.params;
+
+        if (!numeroId) {
+            return res.json({ success: true, hayDuplicado: false });
+        }
+
+        // Buscar órdenes existentes con el mismo numeroId que estén pendientes
+        const result = await pool.query(`
+            SELECT "_id", "numeroId", "primerNombre", "primerApellido",
+                   "codEmpresa", "empresa", "tipoExamen", "atendido",
+                   "_createdDate"
+            FROM "HistoriaClinica"
+            WHERE "numeroId" = $1
+              AND "atendido" = 'PENDIENTE'
+            ORDER BY "_createdDate" DESC
+            LIMIT 1
+        `, [numeroId]);
+
+        if (result.rows.length > 0) {
+            const ordenExistente = result.rows[0];
+
+            // Verificar si tiene formulario asociado
+            const formResult = await pool.query(`
+                SELECT id FROM formularios
+                WHERE wix_id = $1 OR numero_id = $2
+                LIMIT 1
+            `, [ordenExistente._id, numeroId]);
+
+            const tieneFormulario = formResult.rows.length > 0;
+
+            res.json({
+                success: true,
+                hayDuplicado: true,
+                ordenExistente: {
+                    _id: ordenExistente._id,
+                    numeroId: ordenExistente.numeroId,
+                    nombre: `${ordenExistente.primerNombre} ${ordenExistente.primerApellido}`,
+                    empresa: ordenExistente.empresa || ordenExistente.codEmpresa,
+                    tipoExamen: ordenExistente.tipoExamen,
+                    fechaCreacion: ordenExistente._createdDate,
+                    tieneFormulario
+                }
+            });
+        } else {
+            res.json({ success: true, hayDuplicado: false });
+        }
+    } catch (error) {
+        console.error('❌ Error al verificar duplicado:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al verificar duplicado',
+            error: error.message
+        });
+    }
+});
+
 // Endpoint para crear nueva orden (guarda en PostgreSQL y Wix HistoriaClinica)
 app.post('/api/ordenes', async (req, res) => {
     try {
