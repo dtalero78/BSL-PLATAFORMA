@@ -3777,7 +3777,7 @@ async function procesarRegistroNubia(registro) {
                 const toNumber = telefonoLimpio.startsWith('57') ? telefonoLimpio : `57${telefonoLimpio}`;
 
                 // Enviar mensaje de WhatsApp al paciente
-                const messageBody = `Hola ${primerNombre}, gracias por asistir a tu cita médico ocupacional con la Dra. Nubia. Tu certificado será enviado pronto. ¡Que tengas un excelente día!`;
+                const messageBody = `Hola ${primerNombre}, gracias por asistir a tu cita médico ocupacional. Puedes descargar tu certificado en el siguiente link: www.bsl.com.co/descargar`;
 
                 try {
                     await sendWhatsAppMessage(toNumber, messageBody);
