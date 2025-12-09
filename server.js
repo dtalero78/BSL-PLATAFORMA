@@ -239,6 +239,16 @@ const initDB = async () => {
             // Columna ya existe o tabla no existe
         }
 
+        // Agregar columna recordatorioLinkEnviado a HistoriaClinica si no existe
+        try {
+            await pool.query(`
+                ALTER TABLE "HistoriaClinica"
+                ADD COLUMN IF NOT EXISTS "recordatorioLinkEnviado" BOOLEAN DEFAULT false
+            `);
+        } catch (err) {
+            // Columna ya existe o tabla no existe
+        }
+
         // Crear tabla medicos_disponibilidad si no existe
         await pool.query(`
             CREATE TABLE IF NOT EXISTS medicos_disponibilidad (
@@ -3610,6 +3620,81 @@ app.delete('/api/examenes/:id', async (req, res) => {
 });
 
 // ==========================================
+// BARRIDO NUBIA - Enviar link médico virtual (5-15 min antes)
+// ==========================================
+async function barridoNubiaEnviarLink() {
+    console.log("🔗 [barridoNubiaEnviarLink] Iniciando ejecución...");
+    try {
+        const ahora = new Date();
+        // Buscar citas que están entre 5 y 15 minutos en el futuro
+        const cincoMinFuturo = new Date(ahora.getTime() + 5 * 60 * 1000);
+        const quinceMinFuturo = new Date(ahora.getTime() + 15 * 60 * 1000);
+
+        console.log(`📅 [barridoNubiaEnviarLink] Buscando citas de NUBIA entre ${cincoMinFuturo.toISOString()} y ${quinceMinFuturo.toISOString()}`);
+
+        // Busca registros con cita próxima que no tengan el recordatorio enviado
+        const result = await pool.query(`
+            SELECT * FROM "HistoriaClinica"
+            WHERE "fechaAtencion" >= $1
+              AND "fechaAtencion" <= $2
+              AND "medico" ILIKE '%NUBIA%'
+              AND ("recordatorioLinkEnviado" IS NULL OR "recordatorioLinkEnviado" = false)
+            LIMIT 20
+        `, [cincoMinFuturo.toISOString(), quinceMinFuturo.toISOString()]);
+
+        console.log(`📊 [barridoNubiaEnviarLink] Registros encontrados: ${result.rows.length}`);
+
+        if (result.rows.length === 0) {
+            console.log("⚠️ [barridoNubiaEnviarLink] No hay citas próximas de NUBIA");
+            return { mensaje: 'No hay citas próximas de NUBIA.', enviados: 0 };
+        }
+
+        let enviados = 0;
+
+        for (const registro of result.rows) {
+            const { primerNombre, celular, _id: historiaId } = registro;
+
+            if (!celular) {
+                console.log(`⚠️ [barridoNubiaEnviarLink] ${primerNombre} no tiene celular`);
+                continue;
+            }
+
+            const telefonoLimpio = celular.replace(/\s+/g, '').replace(/[^\d]/g, '');
+            const toNumber = telefonoLimpio.startsWith('57') ? telefonoLimpio : `57${telefonoLimpio}`;
+
+            // URL del formulario médico virtual
+            const url = `https://sea-lion-app-qcttp.ondigitalocean.app/?_id=${historiaId}`;
+            const messageBody = `Hola ${primerNombre}, tu cita con la Dra. Nubia está próxima.\n\nComunícate ya haciendo clic en este link:\n\n${url}`;
+
+            try {
+                await sendWhatsAppMessage(toNumber, messageBody);
+
+                // Marcar que ya se envió el recordatorio
+                await pool.query(`
+                    UPDATE "HistoriaClinica"
+                    SET "recordatorioLinkEnviado" = true
+                    WHERE "_id" = $1
+                `, [historiaId]);
+
+                console.log(`✅ [barridoNubiaEnviarLink] Link enviado a ${primerNombre} (${toNumber})`);
+                enviados++;
+            } catch (sendError) {
+                console.error(`Error enviando link a ${toNumber}:`, sendError);
+            }
+
+            // Pequeño delay entre mensajes
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        console.log(`✅ [barridoNubiaEnviarLink] Enviados ${enviados} links`);
+        return { mensaje: `Enviados ${enviados} links de NUBIA.`, enviados };
+    } catch (error) {
+        console.error("❌ Error en barridoNubiaEnviarLink:", error.message);
+        throw error;
+    }
+}
+
+// ==========================================
 // BARRIDO NUBIA - Marcar como ATENDIDO citas pasadas
 // Para consultas presenciales con médico NUBIA
 // ==========================================
@@ -3963,6 +4048,10 @@ app.get('/api/nubia/buscar', async (req, res) => {
 cron.schedule('*/5 * * * *', async () => {
     console.log('⏰ [CRON] Ejecutando barrido NUBIA automático...');
     try {
+        // 1. Enviar link médico virtual a citas próximas (5-15 min antes)
+        await barridoNubiaEnviarLink();
+
+        // 2. Marcar como ATENDIDO citas que ya pasaron
         await barridoNubiaMarcarAtendido();
     } catch (error) {
         console.error('❌ [CRON] Error en barrido NUBIA:', error);
