@@ -3895,20 +3895,37 @@ app.get('/api/nubia/pacientes', async (req, res) => {
         const { desde, hasta } = req.query;
 
         // Si se proporcionan fechas, usarlas; sino usar hoy
+        // Colombia es UTC-5, agregamos el offset para que las fechas sean correctas
         let inicioDelDia, finDelDia;
 
         if (desde) {
-            inicioDelDia = new Date(desde + 'T00:00:00');
+            // Fecha en Colombia (UTC-5): 00:00:00 Colombia = 05:00:00 UTC
+            inicioDelDia = new Date(desde + 'T05:00:00.000Z');
         } else {
-            const hoy = new Date();
-            inicioDelDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0);
+            // Obtener fecha actual en Colombia
+            const ahora = new Date();
+            const colombiaOffset = -5 * 60; // UTC-5 en minutos
+            const utcTime = ahora.getTime() + (ahora.getTimezoneOffset() * 60000);
+            const colombiaTime = new Date(utcTime + (colombiaOffset * 60000));
+            const hoyStr = colombiaTime.toISOString().split('T')[0];
+            inicioDelDia = new Date(hoyStr + 'T05:00:00.000Z');
         }
 
         if (hasta) {
-            finDelDia = new Date(hasta + 'T23:59:59');
+            // Fecha en Colombia (UTC-5): 23:59:59 Colombia = 04:59:59 UTC del día siguiente
+            finDelDia = new Date(hasta + 'T05:00:00.000Z');
+            finDelDia.setDate(finDelDia.getDate() + 1);
+            finDelDia.setMilliseconds(finDelDia.getMilliseconds() - 1);
         } else {
-            const hoy = new Date();
-            finDelDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59);
+            // Obtener fecha actual en Colombia
+            const ahora = new Date();
+            const colombiaOffset = -5 * 60;
+            const utcTime = ahora.getTime() + (ahora.getTimezoneOffset() * 60000);
+            const colombiaTime = new Date(utcTime + (colombiaOffset * 60000));
+            const hoyStr = colombiaTime.toISOString().split('T')[0];
+            finDelDia = new Date(hoyStr + 'T05:00:00.000Z');
+            finDelDia.setDate(finDelDia.getDate() + 1);
+            finDelDia.setMilliseconds(finDelDia.getMilliseconds() - 1);
         }
 
         console.log(`📋 [API NUBIA] Buscando pacientes del ${inicioDelDia.toISOString()} a ${finDelDia.toISOString()}`);
