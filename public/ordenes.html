@@ -1734,6 +1734,10 @@
                                 <input type="text" class="form-input" id="edit-hc-pvEstado" name="hc_pvEstado">
                             </div>
                             <div class="form-group">
+                                <label class="form-label">Fecha de Atención</label>
+                                <input type="datetime-local" class="form-input" id="edit-hc-fechaAtencion" name="hc_fechaAtencion">
+                            </div>
+                            <div class="form-group">
                                 <label class="form-label">Talla (cm)</label>
                                 <input type="text" class="form-input" id="edit-hc-talla" name="hc_talla">
                             </div>
@@ -3029,6 +3033,14 @@
                 document.getElementById('edit-hc-atendido').value = orden.atendido || '';
                 document.getElementById('edit-hc-medico').value = orden.medico || '';
                 document.getElementById('edit-hc-pvEstado').value = orden.pvEstado || '';
+                // Fecha de atención (formato datetime-local: YYYY-MM-DDTHH:MM)
+                if (orden.fechaAtencion) {
+                    const fa = new Date(orden.fechaAtencion);
+                    const fechaLocal = new Date(fa.getTime() - fa.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                    document.getElementById('edit-hc-fechaAtencion').value = fechaLocal;
+                } else {
+                    document.getElementById('edit-hc-fechaAtencion').value = '';
+                }
                 document.getElementById('edit-hc-talla').value = orden.talla || '';
                 document.getElementById('edit-hc-peso').value = orden.peso || '';
 
