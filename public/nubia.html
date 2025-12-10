@@ -886,7 +886,7 @@
         }
 
         function getStatusInfo(paciente) {
-            if (paciente.pvEstado === 'Pagado') {
+            if (paciente.pvEstado === 'Pagado' || paciente.pagado === true) {
                 return { class: 'pagado', text: 'ATENDIDO - PAGADO' };
             }
             if (paciente.atendido === 'ATENDIDO') {
@@ -907,7 +907,7 @@
             tbody.innerHTML = data.map(p => {
                 const status = getStatusInfo(p);
                 const isAtendido = p.atendido === 'ATENDIDO';
-                const isPagado = p.pvEstado === 'Pagado';
+                const isPagado = p.pvEstado === 'Pagado' || p.pagado === true;
 
                 return `
                     <tr onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">
@@ -953,7 +953,7 @@
             container.innerHTML = data.map(p => {
                 const status = getStatusInfo(p);
                 const isAtendido = p.atendido === 'ATENDIDO';
-                const isPagado = p.pvEstado === 'Pagado';
+                const isPagado = p.pvEstado === 'Pagado' || p.pagado === true;
 
                 return `
                     <div class="mobile-card" onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">
@@ -1062,7 +1062,7 @@
             const initials = ((paciente.primerNombre || '')[0] || '') + ((paciente.primerApellido || '')[0] || '');
             const status = getStatusInfo(paciente);
             const isAtendido = paciente.atendido === 'ATENDIDO';
-            const isPagado = paciente.pvEstado === 'Pagado';
+            const isPagado = paciente.pvEstado === 'Pagado' || paciente.pagado === true;
 
             const fechaCreacion = paciente._createdDate ? new Date(paciente._createdDate).toLocaleString('es-CO', {
                 day: '2-digit',
