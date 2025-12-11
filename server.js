@@ -2347,14 +2347,15 @@ app.patch('/api/historia-clinica/:id/pago', async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Obtener estado actual
-        const currentResult = await pool.query('SELECT "pagado" FROM "HistoriaClinica" WHERE "_id" = $1', [id]);
+        // Obtener estado actual y numeroId
+        const currentResult = await pool.query('SELECT "pagado", "numeroId" FROM "HistoriaClinica" WHERE "_id" = $1', [id]);
 
         if (currentResult.rows.length === 0) {
             return res.status(404).json({ success: false, message: 'Orden no encontrada' });
         }
 
         const estadoActual = currentResult.rows[0].pagado || false;
+        const numeroId = currentResult.rows[0].numeroId;
         const nuevoEstado = !estadoActual;
         const pvEstado = nuevoEstado ? 'Pagado' : '';
 
@@ -2366,31 +2367,35 @@ app.patch('/api/historia-clinica/:id/pago', async (req, res) => {
 
         console.log(`💰 Pago ${nuevoEstado ? 'marcado' : 'desmarcado'} para orden ${id}`);
 
-        // Sincronizar con Wix (HistoriaClinica)
-        try {
-            const wixPayload = {
-                _id: id,
-                pvEstado: pvEstado
-            };
-            console.log('📤 Sincronizando pvEstado con Wix HistoriaClinica:', JSON.stringify(wixPayload));
+        // Sincronizar con Wix usando endpoint marcarPagado (necesita numeroId)
+        if (numeroId) {
+            try {
+                const wixPayload = {
+                    userId: numeroId,
+                    observaciones: pvEstado
+                };
+                console.log('📤 Sincronizando pvEstado con Wix (marcarPagado):', JSON.stringify(wixPayload));
 
-            const wixResponse = await fetch('https://www.bsl.com.co/_functions/actualizarHistoriaClinica', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(wixPayload)
-            });
+                const wixResponse = await fetch('https://www.bsl.com.co/_functions/marcarPagado', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(wixPayload)
+                });
 
-            const wixText = await wixResponse.text();
-            console.log('📡 WIX Response Status:', wixResponse.status);
-            console.log('📡 WIX Response Body:', wixText);
+                const wixText = await wixResponse.text();
+                console.log('📡 WIX Response Status:', wixResponse.status);
+                console.log('📡 WIX Response Body:', wixText);
 
-            if (wixResponse.ok) {
-                console.log('✅ WIX: pvEstado sincronizado en HistoriaClinica');
-            } else {
-                console.log('⚠️ WIX: No se pudo sincronizar pvEstado:', wixText);
+                if (wixResponse.ok) {
+                    console.log('✅ WIX: pvEstado sincronizado en HistoriaClinica');
+                } else {
+                    console.log('⚠️ WIX: No se pudo sincronizar pvEstado:', wixText);
+                }
+            } catch (wixError) {
+                console.log('⚠️ WIX: Error al sincronizar pvEstado:', wixError.message);
             }
-        } catch (wixError) {
-            console.log('⚠️ WIX: Error al sincronizar pvEstado:', wixError.message);
+        } else {
+            console.log('⚠️ WIX: No se puede sincronizar, falta numeroId');
         }
 
         res.json({ success: true, pagado: nuevoEstado });

@@ -17,7 +17,7 @@ import { obtenerFormularios, actualizarFormulario, obtenerFormularioPorIdGeneral
 import { obtenerAudiometrias, actualizarAudiometria, crearAudiometria } from 'backend/exposeDataBase';
 import { obtenerVisuales, actualizarVisual, crearVisual } from 'backend/exposeDataBase';
 import { obtenerAdcTests, actualizarAdcTest, crearAdcTest } from 'backend/exposeDataBase';
-import { obtenerEstadisticasConsultas, buscarPacientesMediData, obtenerDatosCompletosPaciente } from 'backend/exposeDataBase';
+import { obtenerEstadisticasConsultas, buscarPacientesMediData, obtenerDatosCompletosPaciente, obtenerHistoriaClinicaPorEmpresa, obtenerFormulariosPorIds } from 'backend/exposeDataBase';
 import {
   obtenerEstadisticasMedico,
   obtenerPacientesPendientes,
@@ -1689,6 +1689,60 @@ export function get_historiaClinicaPorNumeroId(request) {
         });
 }
 
+// ENDPOINT PARA BUSCAR HISTORIA CLÍNICA POR CELULAR (BOT DIGITALOCEAN)
+export function get_historiaClinicaPorCelular(request) {
+    console.log("Buscando información de HistoriaClinica por celular");
+
+    const { celular } = request.query;
+
+    if (!celular) {
+        return badRequest({ body: { message: "Falta el parámetro 'celular'" } });
+    }
+
+    // Limpiar el número: quitar código de país y caracteres no numéricos
+    const celularLimpio = celular.replace(/\D/g, '').replace(/^57/, '');
+
+    return wixData.query("HistoriaClinica")
+        .eq("celular", celularLimpio)
+        .descending("fechaAtencion")  // Obtener el más reciente primero
+        .find()
+        .then(result => {
+            if (!result.items || result.items.length === 0) {
+                return ok({
+                    headers: { "Content-Type": "application/json" },
+                    body: { success: false, message: "No se encontró paciente con ese celular" }
+                });
+            }
+
+            // Retornar el más reciente (primero en la lista)
+            const item = result.items[0];
+
+            return ok({
+                headers: { "Content-Type": "application/json" },
+                body: {
+                    success: true,
+                    _id: item._id,
+                    numeroId: item.numeroId,
+                    primerNombre: item.primerNombre,
+                    segundoNombre: item.segundoNombre,
+                    primerApellido: item.primerApellido,
+                    segundoApellido: item.segundoApellido,
+                    celular: item.celular,
+                    fechaConsulta: item.fechaConsulta,
+                    fechaAtencion: item.fechaAtencion,
+                    pvEstado: item.pvEstado,
+                    atendido: item.atendido,
+                    empresa: item.empresa,
+                    codEmpresa: item.codEmpresa
+                }
+            });
+        })
+        .catch(error => {
+            console.error("Error al obtener información por celular:", error);
+            return serverError({ body: { message: "Error al obtener la información" } });
+        });
+}
+
 // ENDPOINT PARA ACTUALIZAR HISTORIA CLÍNICA
 export async function post_actualizarHistoriaClinica(request) {
     try {
@@ -2739,3 +2793,105 @@ export async function get_testPostgres(request) {
     }
 }
 
+/**
+ * ════════════════════════════════════════════════════════════════════════════
+ * ENDPOINTS PARA INFORME DE CONDICIONES DE SALUD
+ * ════════════════════════════════════════════════════════════════════════════
+ */
+
+/**
+ * GET: Obtener HistoriaClinica por empresa y rango de fechas
+ * URL: /_functions/historiaClinicaPorEmpresa?codEmpresa=XXX&fechaInicio=YYYY-MM-DD&fechaFin=YYYY-MM-DD
+ */
+export async function get_historiaClinicaPorEmpresa(request) {
+    const { codEmpresa, fechaInicio, fechaFin } = request.query;
+
+    if (!codEmpresa || !fechaInicio || !fechaFin) {
+        return badRequest({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: { success: false, error: "Los parámetros 'codEmpresa', 'fechaInicio' y 'fechaFin' son requeridos" }
+        });
+    }
+
+    try {
+        console.log(`[historiaClinicaPorEmpresa] Buscando para empresa: ${codEmpresa}`);
+        const resultado = await obtenerHistoriaClinicaPorEmpresa(codEmpresa, fechaInicio, fechaFin);
+
+        return ok({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: resultado
+        });
+    } catch (error) {
+        console.error("[historiaClinicaPorEmpresa] Error:", error);
+        return serverError({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: { success: false, error: error.message }
+        });
+    }
+}
+
+/**
+ * POST: Obtener FORMULARIO por array de IDs (idGeneral)
+ * URL: /_functions/formulariosPorIds
+ * Body: { "ids": ["id1", "id2", ...] }
+ */
+export async function post_formulariosPorIds(request) {
+    try {
+        const body = await request.body.json();
+        const { ids } = body;
+
+        if (!ids || !Array.isArray(ids)) {
+            return badRequest({
+                headers: {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                body: { success: false, error: "El parámetro 'ids' es requerido y debe ser un array" }
+            });
+        }
+
+        console.log(`[formulariosPorIds] Buscando ${ids.length} formularios`);
+        const resultado = await obtenerFormulariosPorIds(ids);
+
+        return ok({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: resultado
+        });
+    } catch (error) {
+        console.error("[formulariosPorIds] Error:", error);
+        return serverError({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: { success: false, error: error.message }
+        });
+    }
+}
+
+/**
+ * OPTIONS: CORS preflight para formulariosPorIds
+ */
+export function options_formulariosPorIds(request) {
+    return {
+        status: 204,
+        headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
+        },
+        body: {}
+    };
+}
