@@ -16,11 +16,21 @@ function construirFechaAtencionColombia(fecha, hora) {
 
     let fechaStr, horaStr;
 
-    // Si viene un datetime-local (2025-12-11T08:50), separar fecha y hora
+    // Si viene un ISO string completo (2025-12-11T16:40:00.000Z), usarlo directamente
+    // pero necesitamos la hora que el usuario seleccionó (hora Colombia)
     if (typeof fecha === 'string' && fecha.includes('T')) {
         const partes = fecha.split('T');
         fechaStr = partes[0];
-        horaStr = partes[1] || hora || '08:00';
+        // Si viene hora como parámetro, usarla; si no, extraer del ISO
+        if (hora) {
+            horaStr = hora;
+        } else {
+            // Extraer hora del ISO (puede tener formato HH:MM:SS.sssZ o HH:MM:SS o HH:MM)
+            let horaParte = partes[1] || '08:00';
+            // Limpiar sufijos como Z, +00:00, .000Z
+            horaParte = horaParte.replace(/[Z].*$/, '').replace(/\.\d+.*$/, '').replace(/[+-]\d{2}:\d{2}$/, '');
+            horaStr = horaParte.substring(0, 5); // Tomar solo HH:MM
+        }
     } else if (typeof fecha === 'string') {
         fechaStr = fecha;
         horaStr = hora || '08:00';
@@ -50,7 +60,7 @@ function construirFechaAtencionColombia(fecha, hora) {
     }
 
     // Construir la fecha con offset Colombia (UTC-5)
-    // Ejemplo: 2025-12-11T08:50:00-05:00 -> Se interpreta como 8:50 AM Colombia -> 13:50 UTC
+    // Ejemplo: 2025-12-11T11:40:00-05:00 -> Se interpreta como 11:40 AM Colombia -> 16:40 UTC
     const fechaCompleta = `${fechaStr}T${horaStr}-05:00`;
 
     console.log(`📅 construirFechaAtencionColombia: ${fecha} + ${hora} -> ${fechaCompleta}`);
