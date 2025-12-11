@@ -17,13 +17,29 @@ function construirFechaAtencionColombia(fecha, hora) {
     let fechaStr, horaStr;
 
     // Si viene un datetime-local (2025-12-11T08:50), separar fecha y hora
-    if (fecha.includes('T')) {
+    if (typeof fecha === 'string' && fecha.includes('T')) {
         const partes = fecha.split('T');
         fechaStr = partes[0];
         horaStr = partes[1] || hora || '08:00';
-    } else {
+    } else if (typeof fecha === 'string') {
         fechaStr = fecha;
         horaStr = hora || '08:00';
+    } else {
+        // Si fecha no es string, intentar convertir
+        try {
+            const fechaObj = new Date(fecha);
+            if (isNaN(fechaObj.getTime())) return null;
+            return fechaObj;
+        } catch (e) {
+            console.log(`⚠️ construirFechaAtencionColombia: fecha inválida`, fecha);
+            return null;
+        }
+    }
+
+    // Validar formato de fecha YYYY-MM-DD
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) {
+        console.log(`⚠️ construirFechaAtencionColombia: formato de fecha inválido`, fechaStr);
+        return null;
     }
 
     // Asegurar formato HH:MM:SS
@@ -39,7 +55,15 @@ function construirFechaAtencionColombia(fecha, hora) {
 
     console.log(`📅 construirFechaAtencionColombia: ${fecha} + ${hora} -> ${fechaCompleta}`);
 
-    return new Date(fechaCompleta);
+    const resultado = new Date(fechaCompleta);
+
+    // Validar que el resultado sea válido
+    if (isNaN(resultado.getTime())) {
+        console.log(`⚠️ construirFechaAtencionColombia: resultado inválido para ${fechaCompleta}`);
+        return null;
+    }
+
+    return resultado;
 }
 
 // ========== SERVER-SENT EVENTS (SSE) ==========
