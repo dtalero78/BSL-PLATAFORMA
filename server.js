@@ -7,6 +7,25 @@ const cron = require('node-cron');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// ========== HELPER: Construir fecha de atención correcta ==========
+// Combina fecha (YYYY-MM-DD) y hora (HH:MM) en zona horaria Colombia (UTC-5)
+// Retorna un objeto Date en UTC que representa la hora correcta en Colombia
+function construirFechaAtencionColombia(fecha, hora) {
+    if (!fecha) return null;
+
+    // Si viene un ISO string completo, extraer solo la fecha
+    const fechaStr = fecha.includes('T') ? fecha.split('T')[0] : fecha;
+
+    // Si no hay hora, usar 08:00 por defecto
+    const horaStr = hora || '08:00';
+
+    // Construir la fecha en formato ISO con offset Colombia (UTC-5)
+    // Ejemplo: 2025-12-11T10:00:00-05:00
+    const fechaCompleta = `${fechaStr}T${horaStr}:00-05:00`;
+
+    return new Date(fechaCompleta);
+}
+
 // ========== SERVER-SENT EVENTS (SSE) ==========
 // Clientes conectados para notificaciones en tiempo real
 let sseClients = [];
@@ -1209,14 +1228,15 @@ app.patch('/api/ordenes/:id/fecha-atencion', async (req, res) => {
             });
         }
 
-        // Actualizar en PostgreSQL
+        // Actualizar en PostgreSQL - construir fecha correcta con zona horaria Colombia
+        const fechaCorrecta = construirFechaAtencionColombia(fechaAtencion, horaAtencion);
         const result = await pool.query(`
             UPDATE "HistoriaClinica"
             SET "fechaAtencion" = $1,
-                "horaAtencion" = $2
-            WHERE "_id" = $3
-            RETURNING "_id", "numeroId", "primerNombre", "primerApellido", "fechaAtencion", "horaAtencion"
-        `, [fechaAtencion, horaAtencion || null, id]);
+                "horaAtencion" = NULL
+            WHERE "_id" = $2
+            RETURNING "_id", "numeroId", "primerNombre", "primerApellido", "fechaAtencion"
+        `, [fechaCorrecta, id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({
@@ -1406,8 +1426,8 @@ app.post('/api/ordenes', async (req, res) => {
             ciudad || null,
             tipoExamen || null,
             medico || null,
-            fechaAtencion ? new Date(fechaAtencion) : null,
-            horaAtencion || null,
+            construirFechaAtencionColombia(fechaAtencion, horaAtencion),
+            null, // horaAtencion ya no se usa, la hora está en fechaAtencion
             atendido || 'PENDIENTE',
             examenes || null
         ];
@@ -1885,7 +1905,14 @@ app.put('/api/historia-clinica/:id', async (req, res) => {
             for (const campo of camposPermitidos) {
                 if (datos[campo] !== undefined) {
                     setClauses.push(`"${campo}" = $${paramIndex}`);
-                    if (['fechaNacimiento', 'fechaAtencion', 'fechaConsulta'].includes(campo) && datos[campo]) {
+                    if (campo === 'fechaAtencion' && datos[campo]) {
+                        // Para fechaAtencion, construir con zona horaria Colombia
+                        // El datetime-local viene como "2025-12-11T10:00" (hora local del usuario)
+                        const fechaHora = datos[campo].split('T');
+                        const fecha = fechaHora[0];
+                        const hora = fechaHora[1] || '08:00';
+                        values.push(construirFechaAtencionColombia(fecha, hora));
+                    } else if (['fechaNacimiento', 'fechaConsulta'].includes(campo) && datos[campo]) {
                         values.push(new Date(datos[campo]));
                     } else {
                         values.push(datos[campo] === '' ? null : datos[campo]);
