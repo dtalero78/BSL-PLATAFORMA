@@ -2369,12 +2369,12 @@ app.patch('/api/historia-clinica/:id/pago', async (req, res) => {
         // Sincronizar con Wix (HistoriaClinica)
         try {
             const wixPayload = {
-                idGeneral: id,
+                _id: id,
                 pvEstado: pvEstado
             };
-            console.log('📤 Sincronizando pvEstado con Wix:', JSON.stringify(wixPayload));
+            console.log('📤 Sincronizando pvEstado con Wix HistoriaClinica:', JSON.stringify(wixPayload));
 
-            const wixResponse = await fetch('https://www.bsl-plataforma.com/_functions/actualizarFormulario', {
+            const wixResponse = await fetch('https://www.bsl-plataforma.com/_functions/actualizarHistoriaClinica', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(wixPayload)
@@ -2385,9 +2385,9 @@ app.patch('/api/historia-clinica/:id/pago', async (req, res) => {
             console.log('📡 WIX Response Body:', wixText);
 
             if (wixResponse.ok) {
-                console.log('✅ WIX: pvEstado sincronizado');
+                console.log('✅ WIX: pvEstado sincronizado en HistoriaClinica');
             } else {
-                console.log('⚠️ WIX: No se pudo sincronizar pvEstado');
+                console.log('⚠️ WIX: No se pudo sincronizar pvEstado:', wixText);
             }
         } catch (wixError) {
             console.log('⚠️ WIX: Error al sincronizar pvEstado:', wixError.message);
