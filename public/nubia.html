@@ -1149,7 +1149,11 @@
                         </div>
                         <div class="detail-field">
                             <div class="detail-field-label">Fecha Consulta</div>
-                            <div class="detail-field-value">${paciente.fechaConsulta ? new Date(paciente.fechaConsulta).toLocaleString('es-CO') : '—'}</div>
+                            <div class="detail-field-value">${paciente.fechaConsulta ? new Date(paciente.fechaConsulta).toLocaleDateString('es-CO') : '—'}</div>
+                        </div>
+                        <div class="detail-field">
+                            <div class="detail-field-label">Hora Consulta</div>
+                            <div class="detail-field-value">${paciente.fechaConsulta ? formatHora(paciente.fechaConsulta) : '—'}</div>
                         </div>
                         <div class="detail-field">
                             <div class="detail-field-label">Estado</div>

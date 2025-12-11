@@ -2233,7 +2233,8 @@
                     const horaStr = String(hora).padStart(2, '0');
                     const minutoStr = String(minuto).padStart(2, '0');
                     const valor = `${horaStr}:${minutoStr}`;
-                    const hora12 = hora > 12 ? hora - 12 : (hora === 0 ? 12 : hora);
+                    // Corregir conversión a formato 12h
+                    const hora12 = hora === 0 ? 12 : (hora > 12 ? hora - 12 : hora);
                     const ampm = hora >= 12 ? 'PM' : 'AM';
                     const texto = `${hora12}:${minutoStr} ${ampm}`;
                     const option = document.createElement('option');
@@ -2286,8 +2287,17 @@
                         document.getElementById('edit-fechaAtencion').value = '';
                     }
 
-                    // Hora
-                    document.getElementById('edit-horaAtencion').value = orden.horaAtencion || '';
+                    // Hora - si no hay horaAtencion, extraer de fechaAtencion en zona horaria Colombia
+                    let horaValue = orden.horaAtencion || '';
+                    if (!horaValue && orden.fechaAtencion) {
+                        const fechaUTC = new Date(orden.fechaAtencion);
+                        // Convertir a hora Colombia (UTC-5)
+                        const horasColombia = fechaUTC.getUTCHours() - 5;
+                        const horasAjustadas = horasColombia < 0 ? horasColombia + 24 : horasColombia;
+                        const minutos = fechaUTC.getUTCMinutes();
+                        horaValue = `${String(horasAjustadas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+                    }
+                    document.getElementById('edit-horaAtencion').value = horaValue;
 
                     // Exámenes
                     if (orden.examenes) {
