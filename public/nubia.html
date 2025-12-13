@@ -1457,8 +1457,9 @@
 
         async function editarOrdenModal() {
             if (!pacienteActual) return;
+            const ordenId = pacienteActual._id; // Guardar ID antes de cerrar modal
             cerrarModalDetalles();
-            await editarOrden(pacienteActual._id);
+            await editarOrden(ordenId);
         }
 
         // ========== MODAL: EDITAR ==========
