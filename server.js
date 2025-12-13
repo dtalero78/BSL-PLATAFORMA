@@ -356,6 +356,17 @@ const initDB = async () => {
             // Columna ya existe
         }
 
+        // Eliminar constraint UNIQUE para permitir múltiples rangos horarios por día
+        // Esto permite configurar horarios como 8-12 y 14-17 para manejar almuerzo
+        try {
+            await pool.query(`
+                ALTER TABLE medicos_disponibilidad
+                DROP CONSTRAINT IF EXISTS medicos_disponibilidad_medico_id_dia_semana_modalidad_key
+            `);
+        } catch (err) {
+            // Constraint no existe o ya fue eliminada
+        }
+
         console.log('✅ Base de datos inicializada correctamente');
     } catch (error) {
         console.error('❌ Error al inicializar la base de datos:', error);
@@ -1385,6 +1396,7 @@ app.post('/api/ordenes', async (req, res) => {
             const modalidadBuscar = modalidad || 'presencial';
 
             // Buscar médicos disponibles para esa hora, fecha y modalidad (excepto NUBIA)
+            // Ahora puede devolver múltiples filas por médico (múltiples rangos horarios)
             const medicosResult = await pool.query(`
                 SELECT m.id, m.primer_nombre, m.primer_apellido,
                        COALESCE(m.tiempo_consulta, 10) as tiempo_consulta,
@@ -1397,24 +1409,47 @@ app.post('/api/ordenes', async (req, res) => {
                   AND md.modalidad = $1
                   AND md.dia_semana = $2
                   AND UPPER(CONCAT(m.primer_nombre, ' ', m.primer_apellido)) NOT LIKE '%NUBIA%'
-                ORDER BY m.primer_nombre
+                ORDER BY m.primer_nombre, md.hora_inicio
             `, [modalidadBuscar, diaSemana]);
+
+            // Agrupar rangos horarios por médico
+            const medicosPorId = {};
+            for (const row of medicosResult.rows) {
+                if (!medicosPorId[row.id]) {
+                    medicosPorId[row.id] = {
+                        id: row.id,
+                        nombre: `${row.primer_nombre} ${row.primer_apellido}`,
+                        rangos: []
+                    };
+                }
+                medicosPorId[row.id].rangos.push({
+                    horaInicio: row.hora_inicio,
+                    horaFin: row.hora_fin
+                });
+            }
 
             // Filtrar médicos que realmente están disponibles en esa hora
             const medicosDisponibles = [];
-            for (const med of medicosResult.rows) {
-                const medicoNombre = `${med.primer_nombre} ${med.primer_apellido}`;
-                const [horaInicioH, horaInicioM] = med.hora_inicio.split(':').map(Number);
-                const [horaFinH, horaFinM] = med.hora_fin.split(':').map(Number);
-                const [horaSelH, horaSelM] = horaAtencion.split(':').map(Number);
+            const [horaSelH, horaSelM] = horaAtencion.split(':').map(Number);
+            const horaSelMinutos = horaSelH * 60 + horaSelM;
 
-                // Verificar que la hora está dentro del rango del médico
-                const horaSelMinutos = horaSelH * 60 + horaSelM;
-                const horaInicioMinutos = horaInicioH * 60 + horaInicioM;
-                const horaFinMinutos = horaFinH * 60 + horaFinM;
+            for (const med of Object.values(medicosPorId)) {
+                // Verificar si la hora está dentro de ALGUNO de los rangos del médico
+                let dentroDeRango = false;
+                for (const rango of med.rangos) {
+                    const [horaInicioH, horaInicioM] = rango.horaInicio.split(':').map(Number);
+                    const [horaFinH, horaFinM] = rango.horaFin.split(':').map(Number);
+                    const horaInicioMinutos = horaInicioH * 60 + horaInicioM;
+                    const horaFinMinutos = horaFinH * 60 + horaFinM;
 
-                if (horaSelMinutos < horaInicioMinutos || horaSelMinutos >= horaFinMinutos) {
-                    continue; // Fuera del horario del médico
+                    if (horaSelMinutos >= horaInicioMinutos && horaSelMinutos < horaFinMinutos) {
+                        dentroDeRango = true;
+                        break;
+                    }
+                }
+
+                if (!dentroDeRango) {
+                    continue; // Fuera de todos los horarios del médico
                 }
 
                 // Verificar que no tenga cita a esa hora
@@ -1425,10 +1460,10 @@ app.post('/api/ordenes', async (req, res) => {
                       AND "fechaAtencion" < ($1::timestamp + interval '1 day')
                       AND "medico" = $2
                       AND "horaAtencion" = $3
-                `, [fechaAtencion, medicoNombre, horaAtencion]);
+                `, [fechaAtencion, med.nombre, horaAtencion]);
 
                 if (parseInt(citaExistente.rows[0].total) === 0) {
-                    medicosDisponibles.push(medicoNombre);
+                    medicosDisponibles.push(med.nombre);
                 }
             }
 
@@ -2863,7 +2898,7 @@ app.put('/api/medicos/:id/tiempo-consulta', async (req, res) => {
 app.get('/api/medicos/:id/disponibilidad', async (req, res) => {
     try {
         const { id } = req.params;
-        const { modalidad } = req.query; // Opcional: 'presencial' o 'virtual'
+        const { modalidad, agrupado } = req.query; // agrupado=true para agrupar rangos por día
 
         let query = `
             SELECT id, medico_id, dia_semana,
@@ -2881,9 +2916,35 @@ app.get('/api/medicos/:id/disponibilidad', async (req, res) => {
             params.push(modalidad);
         }
 
-        query += ` ORDER BY modalidad, dia_semana`;
+        query += ` ORDER BY modalidad, dia_semana, hora_inicio`;
 
         const result = await pool.query(query, params);
+
+        // Si se solicita agrupado, consolidar múltiples rangos por día
+        if (agrupado === 'true') {
+            const agrupados = {};
+            for (const row of result.rows) {
+                const key = `${row.dia_semana}-${row.modalidad}`;
+                if (!agrupados[key]) {
+                    agrupados[key] = {
+                        dia_semana: row.dia_semana,
+                        modalidad: row.modalidad,
+                        activo: true,
+                        rangos: []
+                    };
+                }
+                agrupados[key].rangos.push({
+                    id: row.id,
+                    hora_inicio: row.hora_inicio,
+                    hora_fin: row.hora_fin
+                });
+            }
+
+            return res.json({
+                success: true,
+                data: Object.values(agrupados)
+            });
+        }
 
         res.json({
             success: true,
@@ -2925,12 +2986,27 @@ app.post('/api/medicos/:id/disponibilidad', async (req, res) => {
         await pool.query('DELETE FROM medicos_disponibilidad WHERE medico_id = $1 AND modalidad = $2', [id, modalidad]);
 
         // Insertar nueva disponibilidad
+        // Ahora soporta múltiples rangos por día usando el campo 'rangos'
         for (const dia of disponibilidad) {
-            if (dia.activo && dia.hora_inicio && dia.hora_fin) {
-                await pool.query(`
-                    INSERT INTO medicos_disponibilidad (medico_id, dia_semana, hora_inicio, hora_fin, modalidad, activo)
-                    VALUES ($1, $2, $3, $4, $5, $6)
-                `, [id, dia.dia_semana, dia.hora_inicio, dia.hora_fin, modalidad, dia.activo]);
+            if (dia.activo) {
+                // Nuevo formato: { dia_semana, activo, rangos: [{hora_inicio, hora_fin}, ...] }
+                if (dia.rangos && Array.isArray(dia.rangos)) {
+                    for (const rango of dia.rangos) {
+                        if (rango.hora_inicio && rango.hora_fin) {
+                            await pool.query(`
+                                INSERT INTO medicos_disponibilidad (medico_id, dia_semana, hora_inicio, hora_fin, modalidad, activo)
+                                VALUES ($1, $2, $3, $4, $5, $6)
+                            `, [id, dia.dia_semana, rango.hora_inicio, rango.hora_fin, modalidad, true]);
+                        }
+                    }
+                }
+                // Formato anterior: { dia_semana, activo, hora_inicio, hora_fin }
+                else if (dia.hora_inicio && dia.hora_fin) {
+                    await pool.query(`
+                        INSERT INTO medicos_disponibilidad (medico_id, dia_semana, hora_inicio, hora_fin, modalidad, activo)
+                        VALUES ($1, $2, $3, $4, $5, $6)
+                    `, [id, dia.dia_semana, dia.hora_inicio, dia.hora_fin, modalidad, dia.activo]);
+                }
             }
         }
 
@@ -3417,25 +3493,25 @@ app.get('/api/horarios-disponibles', async (req, res) => {
         const medicoId = medicoResult.rows[0].id;
         const tiempoConsulta = medicoResult.rows[0].tiempo_consulta;
 
-        // Obtener disponibilidad configurada para este día de la semana Y modalidad
+        // Obtener TODOS los rangos de disponibilidad para este día de la semana Y modalidad
         const disponibilidadResult = await pool.query(`
             SELECT TO_CHAR(hora_inicio, 'HH24:MI') as hora_inicio,
                    TO_CHAR(hora_fin, 'HH24:MI') as hora_fin
             FROM medicos_disponibilidad
             WHERE medico_id = $1 AND dia_semana = $2 AND modalidad = $3 AND activo = true
+            ORDER BY hora_inicio
         `, [medicoId, diaSemana, modalidad]);
 
         // Si no hay disponibilidad configurada para este día y modalidad
-        let horaInicio = 6;
-        let horaFin = 23;
+        let rangosHorarios = [];
         let medicoDisponible = true;
 
         if (disponibilidadResult.rows.length > 0) {
-            const config = disponibilidadResult.rows[0];
-            const [hiH] = config.hora_inicio.split(':').map(Number);
-            const [hfH] = config.hora_fin.split(':').map(Number);
-            horaInicio = hiH;
-            horaFin = hfH;
+            // Múltiples rangos (ej: 8-12 y 14-18)
+            rangosHorarios = disponibilidadResult.rows.map(config => ({
+                horaInicio: parseInt(config.hora_inicio.split(':')[0]),
+                horaFin: parseInt(config.hora_fin.split(':')[0])
+            }));
         } else {
             // Verificar si tiene alguna disponibilidad configurada para esta modalidad (en cualquier día)
             const tieneConfigResult = await pool.query(`
@@ -3446,8 +3522,10 @@ app.get('/api/horarios-disponibles', async (req, res) => {
             // Si tiene configuración para esta modalidad pero no para este día, no está disponible
             if (parseInt(tieneConfigResult.rows[0].total) > 0) {
                 medicoDisponible = false;
+            } else {
+                // Si no tiene ninguna configuración para esta modalidad, usar horario por defecto (6-23)
+                rangosHorarios = [{ horaInicio: 6, horaFin: 23 }];
             }
-            // Si no tiene ninguna configuración para esta modalidad, usar horario por defecto (6-23)
         }
 
         if (!medicoDisponible) {
@@ -3475,27 +3553,30 @@ app.get('/api/horarios-disponibles', async (req, res) => {
 
         const horasOcupadas = citasResult.rows.map(r => r.hora);
 
-        // Generar horarios dentro del rango configurado
+        // Generar horarios dentro de TODOS los rangos configurados
         const horariosDisponibles = [];
-        for (let hora = horaInicio; hora <= horaFin; hora++) {
-            for (let minuto = 0; minuto < 60; minuto += tiempoConsulta) {
-                if (hora === horaFin && minuto > 0) break; // No pasar de la hora de fin
+        for (const rango of rangosHorarios) {
+            for (let hora = rango.horaInicio; hora < rango.horaFin; hora++) {
+                for (let minuto = 0; minuto < 60; minuto += tiempoConsulta) {
+                    const horaStr = `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
 
-                const horaStr = `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
+                    // Verificar si este horario está ocupado
+                    const ocupado = horasOcupadas.some(horaOcupada => {
+                        if (!horaOcupada) return false;
+                        const horaOcupadaNorm = horaOcupada.substring(0, 5);
+                        return horaOcupadaNorm === horaStr;
+                    });
 
-                // Verificar si este horario está ocupado
-                const ocupado = horasOcupadas.some(horaOcupada => {
-                    if (!horaOcupada) return false;
-                    const horaOcupadaNorm = horaOcupada.substring(0, 5);
-                    return horaOcupadaNorm === horaStr;
-                });
-
-                horariosDisponibles.push({
-                    hora: horaStr,
-                    disponible: !ocupado
-                });
+                    horariosDisponibles.push({
+                        hora: horaStr,
+                        disponible: !ocupado
+                    });
+                }
             }
         }
+
+        // Ordenar horarios
+        horariosDisponibles.sort((a, b) => a.hora.localeCompare(b.hora));
 
         res.json({
             success: true,
@@ -3504,8 +3585,7 @@ app.get('/api/horarios-disponibles', async (req, res) => {
             modalidad,
             tiempoConsulta,
             disponible: true,
-            horaInicio: `${String(horaInicio).padStart(2, '0')}:00`,
-            horaFin: `${String(horaFin).padStart(2, '0')}:00`,
+            rangos: rangosHorarios,
             horarios: horariosDisponibles
         });
     } catch (error) {
@@ -3536,6 +3616,7 @@ app.get('/api/turnos-disponibles', async (req, res) => {
         const diaSemana = fechaObj.getDay();
 
         // Obtener todos los médicos activos con disponibilidad para esta modalidad y día (excepto NUBIA)
+        // Ahora puede devolver múltiples filas por médico (múltiples rangos horarios)
         const medicosResult = await pool.query(`
             SELECT m.id, m.primer_nombre, m.primer_apellido,
                    COALESCE(m.tiempo_consulta, 10) as tiempo_consulta,
@@ -3548,7 +3629,7 @@ app.get('/api/turnos-disponibles', async (req, res) => {
               AND md.modalidad = $1
               AND md.dia_semana = $2
               AND UPPER(CONCAT(m.primer_nombre, ' ', m.primer_apellido)) NOT LIKE '%NUBIA%'
-            ORDER BY m.primer_nombre
+            ORDER BY m.primer_nombre, md.hora_inicio
         `, [modalidad, diaSemana]);
 
         if (medicosResult.rows.length === 0) {
@@ -3561,14 +3642,29 @@ app.get('/api/turnos-disponibles', async (req, res) => {
             });
         }
 
+        // Agrupar rangos horarios por médico
+        const medicosPorId = {};
+        for (const row of medicosResult.rows) {
+            if (!medicosPorId[row.id]) {
+                medicosPorId[row.id] = {
+                    id: row.id,
+                    nombre: `${row.primer_nombre} ${row.primer_apellido}`,
+                    tiempoConsulta: row.tiempo_consulta,
+                    rangos: []
+                };
+            }
+            medicosPorId[row.id].rangos.push({
+                horaInicio: parseInt(row.hora_inicio.split(':')[0]),
+                horaFin: parseInt(row.hora_fin.split(':')[0])
+            });
+        }
+
         // Para cada médico, generar sus horarios y verificar disponibilidad
         const turnosPorHora = {}; // { "08:00": [{ medicoId, nombre, disponible }], ... }
 
-        for (const medico of medicosResult.rows) {
-            const medicoNombre = `${medico.primer_nombre} ${medico.primer_apellido}`;
-            const tiempoConsulta = medico.tiempo_consulta;
-            const [horaInicioH] = medico.hora_inicio.split(':').map(Number);
-            const [horaFinH] = medico.hora_fin.split(':').map(Number);
+        for (const medico of Object.values(medicosPorId)) {
+            const medicoNombre = medico.nombre;
+            const tiempoConsulta = medico.tiempoConsulta;
 
             // Obtener citas existentes del médico para esa fecha
             const citasResult = await pool.query(`
@@ -3582,28 +3678,55 @@ app.get('/api/turnos-disponibles', async (req, res) => {
 
             const horasOcupadas = citasResult.rows.map(r => r.hora ? r.hora.substring(0, 5) : null).filter(Boolean);
 
-            // Generar horarios para este médico
-            for (let hora = horaInicioH; hora < horaFinH; hora++) {
-                for (let minuto = 0; minuto < 60; minuto += tiempoConsulta) {
-                    const horaStr = `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
-                    const ocupado = horasOcupadas.includes(horaStr);
+            // Generar horarios para TODOS los rangos de este médico
+            for (const rango of medico.rangos) {
+                for (let hora = rango.horaInicio; hora < rango.horaFin; hora++) {
+                    for (let minuto = 0; minuto < 60; minuto += tiempoConsulta) {
+                        const horaStr = `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
+                        const ocupado = horasOcupadas.includes(horaStr);
 
-                    if (!turnosPorHora[horaStr]) {
-                        turnosPorHora[horaStr] = [];
+                        if (!turnosPorHora[horaStr]) {
+                            turnosPorHora[horaStr] = [];
+                        }
+
+                        // Evitar duplicar si ya existe este médico en esta hora
+                        const yaExiste = turnosPorHora[horaStr].some(m => m.medicoId === medico.id);
+                        if (!yaExiste) {
+                            turnosPorHora[horaStr].push({
+                                medicoId: medico.id,
+                                medicoNombre: medicoNombre,
+                                disponible: !ocupado
+                            });
+                        }
                     }
-
-                    turnosPorHora[horaStr].push({
-                        medicoId: medico.id,
-                        medicoNombre: medicoNombre,
-                        disponible: !ocupado
-                    });
                 }
             }
         }
 
+        // Obtener hora actual en Colombia (UTC-5)
+        const ahora = new Date();
+        const ahoraColombia = new Date(ahora.getTime() - (5 * 60 * 60 * 1000));
+        const horaActual = ahoraColombia.getHours();
+        const minutoActual = ahoraColombia.getMinutes();
+
+        // Verificar si la fecha seleccionada es hoy
+        const fechaHoyColombia = ahoraColombia.toISOString().split('T')[0];
+        const esHoy = fecha === fechaHoyColombia;
+
         // Convertir a array de turnos consolidados (solo mostrar hora y si hay al menos un médico disponible)
         const turnos = Object.keys(turnosPorHora)
             .sort()
+            .filter(hora => {
+                // Si es hoy, filtrar las horas que ya pasaron
+                if (esHoy) {
+                    const [h, m] = hora.split(':').map(Number);
+                    // Solo mostrar horas futuras (al menos 1 hora después de ahora para dar margen)
+                    if (h < horaActual || (h === horaActual && m <= minutoActual)) {
+                        return false;
+                    }
+                }
+                return true;
+            })
             .map(hora => {
                 const medicosEnHora = turnosPorHora[hora];
                 const medicosDisponibles = medicosEnHora.filter(m => m.disponible);

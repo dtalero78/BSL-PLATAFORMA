@@ -259,6 +259,88 @@
             font-size: 13px;
         }
 
+        /* Contenedor de rangos horarios múltiples */
+        .dia-container {
+            background: #F8FAFC;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            padding: 10px 12px;
+        }
+
+        .dia-container:hover {
+            background: #F1F5F9;
+        }
+
+        .dia-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rangos-container {
+            margin-top: 8px;
+            padding-left: 130px;
+        }
+
+        .rango-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .rango-row select {
+            padding: 6px 10px;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .rango-row select:focus {
+            outline: none;
+            border-color: #2563EB;
+        }
+
+        .rango-row select:disabled {
+            background: #F3F4F6;
+            color: #9CA3AF;
+            cursor: not-allowed;
+        }
+
+        .btn-agregar-rango {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            font-size: 12px;
+            color: #2563EB;
+            background: #EFF6FF;
+            border: 1px solid #BFDBFE;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+
+        .btn-agregar-rango:hover {
+            background: #DBEAFE;
+        }
+
+        .btn-eliminar-rango {
+            padding: 4px 8px;
+            font-size: 14px;
+            color: #DC2626;
+            background: #FEE2E2;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-eliminar-rango:hover {
+            background: #FECACA;
+        }
+
         .medico-selector {
             margin-bottom: 20px;
         }
@@ -1649,92 +1731,13 @@
                         </button>
                     </div>
 
-                    <!-- Días de la semana -->
+                    <!-- Días de la semana con múltiples rangos -->
                     <div class="disponibilidad-section">
                         <h4>Días y horarios de trabajo <span id="modalidadActualLabel" style="font-weight: normal; color: #2563EB;">(Presencial)</span></h4>
+                        <p style="font-size: 12px; color: #64748B; margin-bottom: 12px;">Puedes agregar múltiples rangos por día (ej: mañana y tarde)</p>
 
-                        <div class="dia-row" data-dia="1">
-                            <div class="dia-checkbox">
-                                <input type="checkbox" id="dia-1" onchange="toggleDia(1)">
-                                <label for="dia-1">Lunes</label>
-                            </div>
-                            <div class="dia-horarios">
-                                <select id="inicio-1" disabled></select>
-                                <span>a</span>
-                                <select id="fin-1" disabled></select>
-                            </div>
-                        </div>
-
-                        <div class="dia-row" data-dia="2">
-                            <div class="dia-checkbox">
-                                <input type="checkbox" id="dia-2" onchange="toggleDia(2)">
-                                <label for="dia-2">Martes</label>
-                            </div>
-                            <div class="dia-horarios">
-                                <select id="inicio-2" disabled></select>
-                                <span>a</span>
-                                <select id="fin-2" disabled></select>
-                            </div>
-                        </div>
-
-                        <div class="dia-row" data-dia="3">
-                            <div class="dia-checkbox">
-                                <input type="checkbox" id="dia-3" onchange="toggleDia(3)">
-                                <label for="dia-3">Miércoles</label>
-                            </div>
-                            <div class="dia-horarios">
-                                <select id="inicio-3" disabled></select>
-                                <span>a</span>
-                                <select id="fin-3" disabled></select>
-                            </div>
-                        </div>
-
-                        <div class="dia-row" data-dia="4">
-                            <div class="dia-checkbox">
-                                <input type="checkbox" id="dia-4" onchange="toggleDia(4)">
-                                <label for="dia-4">Jueves</label>
-                            </div>
-                            <div class="dia-horarios">
-                                <select id="inicio-4" disabled></select>
-                                <span>a</span>
-                                <select id="fin-4" disabled></select>
-                            </div>
-                        </div>
-
-                        <div class="dia-row" data-dia="5">
-                            <div class="dia-checkbox">
-                                <input type="checkbox" id="dia-5" onchange="toggleDia(5)">
-                                <label for="dia-5">Viernes</label>
-                            </div>
-                            <div class="dia-horarios">
-                                <select id="inicio-5" disabled></select>
-                                <span>a</span>
-                                <select id="fin-5" disabled></select>
-                            </div>
-                        </div>
-
-                        <div class="dia-row" data-dia="6">
-                            <div class="dia-checkbox">
-                                <input type="checkbox" id="dia-6" onchange="toggleDia(6)">
-                                <label for="dia-6">Sábado</label>
-                            </div>
-                            <div class="dia-horarios">
-                                <select id="inicio-6" disabled></select>
-                                <span>a</span>
-                                <select id="fin-6" disabled></select>
-                            </div>
-                        </div>
-
-                        <div class="dia-row" data-dia="0">
-                            <div class="dia-checkbox">
-                                <input type="checkbox" id="dia-0" onchange="toggleDia(0)">
-                                <label for="dia-0">Domingo</label>
-                            </div>
-                            <div class="dia-horarios">
-                                <select id="inicio-0" disabled></select>
-                                <span>a</span>
-                                <select id="fin-0" disabled></select>
-                            </div>
+                        <div id="diasContainer">
+                            <!-- Los días se generan dinámicamente -->
                         </div>
                     </div>
 
@@ -2376,18 +2379,21 @@
         let medicoSeleccionadoId = null;
         let modalidadActual = 'presencial';
         // Almacenar la configuración de disponibilidad por modalidad
+        // Nuevo formato: { presencial: { 0: { activo, rangos: [{hora_inicio, hora_fin}, ...] }, ... }, virtual: { ... } }
         let disponibilidadPorModalidad = {
             presencial: {},
             virtual: {}
         };
 
+        const diasNombres = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
         function abrirModalTiempoConsulta() {
             document.getElementById('modalTiempoConsulta').classList.add('active');
             document.getElementById('disponibilidadGuardada').classList.remove('show');
             poblarSelectMedicosDisponibilidad();
-            inicializarSelectoresHora();
             modalidadActual = 'presencial';
             actualizarTabsModalidad();
+            renderizarDias();
             feather.replace();
         }
 
@@ -2408,8 +2414,8 @@
             modalidadActual = modalidad;
             actualizarTabsModalidad();
 
-            // Cargar configuración de la nueva modalidad
-            cargarConfiguracionDesdeMemoria(modalidad);
+            // Renderizar días con la nueva modalidad
+            renderizarDias();
         }
 
         function actualizarTabsModalidad() {
@@ -2421,43 +2427,170 @@
             feather.replace();
         }
 
-        function guardarConfiguracionEnMemoria(modalidad) {
-            disponibilidadPorModalidad[modalidad] = {};
-            for (let dia = 0; dia <= 6; dia++) {
-                const activo = document.getElementById(`dia-${dia}`).checked;
-                const horaInicio = document.getElementById(`inicio-${dia}`).value;
-                const horaFin = document.getElementById(`fin-${dia}`).value;
+        function generarOpcionesHora() {
+            let opciones = '';
+            for (let hora = 6; hora <= 22; hora++) {
+                const horaStr = `${String(hora).padStart(2, '0')}:00`;
+                const hora12 = hora > 12 ? hora - 12 : hora;
+                const ampm = hora >= 12 ? 'PM' : 'AM';
+                opciones += `<option value="${horaStr}">${hora12}:00 ${ampm}</option>`;
+            }
+            return opciones;
+        }
 
-                disponibilidadPorModalidad[modalidad][dia] = {
-                    activo,
-                    hora_inicio: horaInicio,
-                    hora_fin: horaFin
-                };
+        function renderizarDias() {
+            const container = document.getElementById('diasContainer');
+            const config = disponibilidadPorModalidad[modalidadActual];
+            const opcionesHora = generarOpcionesHora();
+
+            // Orden: Lunes(1) a Sábado(6), luego Domingo(0)
+            const ordenDias = [1, 2, 3, 4, 5, 6, 0];
+
+            let html = '';
+            for (const dia of ordenDias) {
+                const diaConfig = config[dia] || { activo: false, rangos: [] };
+                const activo = diaConfig.activo;
+                const rangos = diaConfig.rangos && diaConfig.rangos.length > 0
+                    ? diaConfig.rangos
+                    : [{ hora_inicio: '08:00', hora_fin: '17:00' }];
+
+                html += `
+                    <div class="dia-container" data-dia="${dia}">
+                        <div class="dia-header">
+                            <div class="dia-checkbox">
+                                <input type="checkbox" id="dia-${dia}" ${activo ? 'checked' : ''} onchange="toggleDia(${dia})">
+                                <label for="dia-${dia}">${diasNombres[dia]}</label>
+                            </div>
+                        </div>
+                        <div class="rangos-container" id="rangos-${dia}" style="${activo ? '' : 'display: none;'}">
+                            ${rangos.map((rango, idx) => `
+                                <div class="rango-row" data-rango-idx="${idx}">
+                                    <select class="rango-inicio" ${!activo ? 'disabled' : ''}>
+                                        ${opcionesHora.replace(`value="${rango.hora_inicio}"`, `value="${rango.hora_inicio}" selected`)}
+                                    </select>
+                                    <span>a</span>
+                                    <select class="rango-fin" ${!activo ? 'disabled' : ''}>
+                                        ${opcionesHora.replace(`value="${rango.hora_fin}"`, `value="${rango.hora_fin}" selected`)}
+                                    </select>
+                                    ${rangos.length > 1 ? `<button type="button" class="btn-eliminar-rango" onclick="eliminarRango(${dia}, ${idx})">×</button>` : ''}
+                                </div>
+                            `).join('')}
+                            <button type="button" class="btn-agregar-rango" onclick="agregarRango(${dia})" ${!activo ? 'style="display:none;"' : ''}>
+                                + Agregar horario
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleDia(dia) {
+            const checkbox = document.getElementById(`dia-${dia}`);
+            const rangosContainer = document.getElementById(`rangos-${dia}`);
+            const activo = checkbox.checked;
+
+            rangosContainer.style.display = activo ? 'block' : 'none';
+
+            // Habilitar/deshabilitar selects
+            rangosContainer.querySelectorAll('select').forEach(select => {
+                select.disabled = !activo;
+            });
+
+            // Mostrar/ocultar botón agregar
+            rangosContainer.querySelector('.btn-agregar-rango').style.display = activo ? 'inline-flex' : 'none';
+        }
+
+        function agregarRango(dia) {
+            const opcionesHora = generarOpcionesHora();
+            const rangosContainer = document.getElementById(`rangos-${dia}`);
+            const rangos = rangosContainer.querySelectorAll('.rango-row');
+            const nuevoIdx = rangos.length;
+
+            const nuevoRango = document.createElement('div');
+            nuevoRango.className = 'rango-row';
+            nuevoRango.dataset.rangoIdx = nuevoIdx;
+            nuevoRango.innerHTML = `
+                <select class="rango-inicio">
+                    ${opcionesHora.replace('value="14:00"', 'value="14:00" selected')}
+                </select>
+                <span>a</span>
+                <select class="rango-fin">
+                    ${opcionesHora.replace('value="18:00"', 'value="18:00" selected')}
+                </select>
+                <button type="button" class="btn-eliminar-rango" onclick="eliminarRango(${dia}, ${nuevoIdx})">×</button>
+            `;
+
+            rangosContainer.insertBefore(nuevoRango, rangosContainer.querySelector('.btn-agregar-rango'));
+
+            // Agregar botón eliminar al primer rango si ahora hay más de uno
+            if (rangos.length === 1) {
+                const primerRango = rangos[0];
+                if (!primerRango.querySelector('.btn-eliminar-rango')) {
+                    const btnEliminar = document.createElement('button');
+                    btnEliminar.type = 'button';
+                    btnEliminar.className = 'btn-eliminar-rango';
+                    btnEliminar.onclick = () => eliminarRango(dia, 0);
+                    btnEliminar.textContent = '×';
+                    primerRango.appendChild(btnEliminar);
+                }
             }
         }
 
-        function cargarConfiguracionDesdeMemoria(modalidad) {
-            const config = disponibilidadPorModalidad[modalidad];
+        function eliminarRango(dia, idx) {
+            const rangosContainer = document.getElementById(`rangos-${dia}`);
+            const rangos = rangosContainer.querySelectorAll('.rango-row');
 
-            for (let dia = 0; dia <= 6; dia++) {
-                const checkbox = document.getElementById(`dia-${dia}`);
-                const selectInicio = document.getElementById(`inicio-${dia}`);
-                const selectFin = document.getElementById(`fin-${dia}`);
+            if (rangos.length <= 1) return; // No eliminar si es el único
 
-                if (config && config[dia]) {
-                    checkbox.checked = config[dia].activo;
-                    selectInicio.disabled = !config[dia].activo;
-                    selectFin.disabled = !config[dia].activo;
-                    selectInicio.value = config[dia].hora_inicio;
-                    selectFin.value = config[dia].hora_fin;
-                } else {
-                    // Valores por defecto
-                    checkbox.checked = false;
-                    selectInicio.disabled = true;
-                    selectFin.disabled = true;
-                    selectInicio.value = '08:00';
-                    selectFin.value = '17:00';
+            rangos[idx].remove();
+
+            // Re-indexar rangos y actualizar onclick
+            const nuevosRangos = rangosContainer.querySelectorAll('.rango-row');
+            nuevosRangos.forEach((rango, nuevoIdx) => {
+                rango.dataset.rangoIdx = nuevoIdx;
+                const btn = rango.querySelector('.btn-eliminar-rango');
+                if (btn) {
+                    btn.onclick = () => eliminarRango(dia, nuevoIdx);
                 }
+            });
+
+            // Si solo queda uno, quitar el botón eliminar
+            if (nuevosRangos.length === 1) {
+                const btn = nuevosRangos[0].querySelector('.btn-eliminar-rango');
+                if (btn) btn.remove();
+            }
+        }
+
+        function guardarConfiguracionEnMemoria(modalidad) {
+            disponibilidadPorModalidad[modalidad] = {};
+
+            const ordenDias = [0, 1, 2, 3, 4, 5, 6];
+            for (const dia of ordenDias) {
+                const checkbox = document.getElementById(`dia-${dia}`);
+                if (!checkbox) continue;
+
+                const activo = checkbox.checked;
+                const rangosContainer = document.getElementById(`rangos-${dia}`);
+                const rangosRows = rangosContainer ? rangosContainer.querySelectorAll('.rango-row') : [];
+
+                const rangos = [];
+                rangosRows.forEach(row => {
+                    const inicio = row.querySelector('.rango-inicio');
+                    const fin = row.querySelector('.rango-fin');
+                    if (inicio && fin) {
+                        rangos.push({
+                            hora_inicio: inicio.value,
+                            hora_fin: fin.value
+                        });
+                    }
+                });
+
+                disponibilidadPorModalidad[modalidad][dia] = {
+                    activo,
+                    rangos: rangos.length > 0 ? rangos : [{ hora_inicio: '08:00', hora_fin: '17:00' }]
+                };
             }
         }
 
@@ -2472,31 +2605,6 @@
                 option.dataset.tiempoConsulta = medico.tiempo_consulta || 10;
                 select.appendChild(option);
             });
-        }
-
-        function inicializarSelectoresHora() {
-            // Generar opciones de hora para todos los selectores
-            for (let dia = 0; dia <= 6; dia++) {
-                const selectInicio = document.getElementById(`inicio-${dia}`);
-                const selectFin = document.getElementById(`fin-${dia}`);
-
-                selectInicio.innerHTML = '';
-                selectFin.innerHTML = '';
-
-                for (let hora = 6; hora <= 22; hora++) {
-                    const horaStr = `${String(hora).padStart(2, '0')}:00`;
-                    const hora12 = hora > 12 ? hora - 12 : hora;
-                    const ampm = hora >= 12 ? 'PM' : 'AM';
-                    const texto = `${hora12}:00 ${ampm}`;
-
-                    selectInicio.innerHTML += `<option value="${horaStr}">${texto}</option>`;
-                    selectFin.innerHTML += `<option value="${horaStr}">${texto}</option>`;
-                }
-
-                // Valores por defecto: 8:00 - 17:00
-                selectInicio.value = '08:00';
-                selectFin.value = '17:00';
-            }
         }
 
         async function cargarDisponibilidadMedico() {
@@ -2521,19 +2629,10 @@
             // Resetear configuración en memoria
             disponibilidadPorModalidad = { presencial: {}, virtual: {} };
 
-            // Resetear todos los días en UI
-            for (let dia = 0; dia <= 6; dia++) {
-                document.getElementById(`dia-${dia}`).checked = false;
-                document.getElementById(`inicio-${dia}`).disabled = true;
-                document.getElementById(`fin-${dia}`).disabled = true;
-                document.getElementById(`inicio-${dia}`).value = '08:00';
-                document.getElementById(`fin-${dia}`).value = '17:00';
-            }
-
             // Cargar disponibilidad existente para AMBAS modalidades
             try {
-                // Cargar presencial
-                const responsePresencial = await fetch(`/api/medicos/${medicoId}/disponibilidad?modalidad=presencial`);
+                // Cargar presencial (agrupado por día con múltiples rangos)
+                const responsePresencial = await fetch(`/api/medicos/${medicoId}/disponibilidad?modalidad=presencial&agrupado=true`);
                 const resultPresencial = await responsePresencial.json();
 
                 if (resultPresencial.success && resultPresencial.data.length > 0) {
@@ -2541,14 +2640,13 @@
                         const dia = config.dia_semana;
                         disponibilidadPorModalidad.presencial[dia] = {
                             activo: true,
-                            hora_inicio: config.hora_inicio,
-                            hora_fin: config.hora_fin
+                            rangos: config.rangos || [{ hora_inicio: '08:00', hora_fin: '17:00' }]
                         };
                     });
                 }
 
-                // Cargar virtual
-                const responseVirtual = await fetch(`/api/medicos/${medicoId}/disponibilidad?modalidad=virtual`);
+                // Cargar virtual (agrupado por día con múltiples rangos)
+                const responseVirtual = await fetch(`/api/medicos/${medicoId}/disponibilidad?modalidad=virtual&agrupado=true`);
                 const resultVirtual = await responseVirtual.json();
 
                 if (resultVirtual.success && resultVirtual.data.length > 0) {
@@ -2556,8 +2654,7 @@
                         const dia = config.dia_semana;
                         disponibilidadPorModalidad.virtual[dia] = {
                             activo: true,
-                            hora_inicio: config.hora_inicio,
-                            hora_fin: config.hora_fin
+                            rangos: config.rangos || [{ hora_inicio: '08:00', hora_fin: '17:00' }]
                         };
                     });
                 }
@@ -2565,20 +2662,11 @@
                 // Mostrar la modalidad actual (presencial por defecto)
                 modalidadActual = 'presencial';
                 actualizarTabsModalidad();
-                cargarConfiguracionDesdeMemoria('presencial');
+                renderizarDias();
 
             } catch (error) {
                 console.error('Error al cargar disponibilidad:', error);
             }
-        }
-
-        function toggleDia(dia) {
-            const checkbox = document.getElementById(`dia-${dia}`);
-            const selectInicio = document.getElementById(`inicio-${dia}`);
-            const selectFin = document.getElementById(`fin-${dia}`);
-
-            selectInicio.disabled = !checkbox.checked;
-            selectFin.disabled = !checkbox.checked;
         }
 
         async function guardarDisponibilidad() {
@@ -2604,25 +2692,15 @@
                     body: JSON.stringify({ tiempoConsulta })
                 });
 
-                // 2. Guardar disponibilidad PRESENCIAL
+                // 2. Guardar disponibilidad PRESENCIAL (con múltiples rangos)
                 const disponibilidadPresencial = [];
                 for (let dia = 0; dia <= 6; dia++) {
                     const config = disponibilidadPorModalidad.presencial[dia];
-                    if (config) {
-                        disponibilidadPresencial.push({
-                            dia_semana: dia,
-                            hora_inicio: config.hora_inicio,
-                            hora_fin: config.hora_fin,
-                            activo: config.activo
-                        });
-                    } else {
-                        disponibilidadPresencial.push({
-                            dia_semana: dia,
-                            hora_inicio: '08:00',
-                            hora_fin: '17:00',
-                            activo: false
-                        });
-                    }
+                    disponibilidadPresencial.push({
+                        dia_semana: dia,
+                        activo: config ? config.activo : false,
+                        rangos: config && config.rangos ? config.rangos : [{ hora_inicio: '08:00', hora_fin: '17:00' }]
+                    });
                 }
 
                 await fetch(`/api/medicos/${medicoSeleccionadoId}/disponibilidad`, {
@@ -2631,25 +2709,15 @@
                     body: JSON.stringify({ disponibilidad: disponibilidadPresencial, modalidad: 'presencial' })
                 });
 
-                // 3. Guardar disponibilidad VIRTUAL
+                // 3. Guardar disponibilidad VIRTUAL (con múltiples rangos)
                 const disponibilidadVirtual = [];
                 for (let dia = 0; dia <= 6; dia++) {
                     const config = disponibilidadPorModalidad.virtual[dia];
-                    if (config) {
-                        disponibilidadVirtual.push({
-                            dia_semana: dia,
-                            hora_inicio: config.hora_inicio,
-                            hora_fin: config.hora_fin,
-                            activo: config.activo
-                        });
-                    } else {
-                        disponibilidadVirtual.push({
-                            dia_semana: dia,
-                            hora_inicio: '08:00',
-                            hora_fin: '17:00',
-                            activo: false
-                        });
-                    }
+                    disponibilidadVirtual.push({
+                        dia_semana: dia,
+                        activo: config ? config.activo : false,
+                        rangos: config && config.rangos ? config.rangos : [{ hora_inicio: '08:00', hora_fin: '17:00' }]
+                    });
                 }
 
                 const response = await fetch(`/api/medicos/${medicoSeleccionadoId}/disponibilidad`, {
