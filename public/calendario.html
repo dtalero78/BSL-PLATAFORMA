@@ -312,15 +312,15 @@
         .btn-agregar-rango {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            padding: 4px 10px;
-            font-size: 12px;
+            justify-content: center;
+            padding: 4px 8px;
+            font-size: 14px;
             color: #2563EB;
             background: #EFF6FF;
             border: 1px solid #BFDBFE;
             border-radius: 4px;
             cursor: pointer;
-            margin-top: 4px;
+            min-width: 26px;
         }
 
         .btn-agregar-rango:hover {
@@ -352,7 +352,7 @@
             border: 1px solid #6EE7B7;
             border-radius: 4px;
             cursor: pointer;
-            margin-left: 8px;
+            margin-top: 8px;
         }
 
         .btn-copiar-todos:hover {
@@ -2479,9 +2479,6 @@
                                 <input type="checkbox" id="dia-${dia}" ${activo ? 'checked' : ''} onchange="toggleDia(${dia})">
                                 <label for="dia-${dia}">${diasNombres[dia]}</label>
                             </div>
-                            <button type="button" class="btn-copiar-todos" onclick="copiarATodos(${dia})" style="${activo ? '' : 'display:none;'}" id="btn-copiar-${dia}">
-                                Copiar a todos
-                            </button>
                         </div>
                         <div class="rangos-container" id="rangos-${dia}" style="${activo ? '' : 'display: none;'}">
                             ${rangos.map((rango, idx) => `
@@ -2494,10 +2491,11 @@
                                         ${opcionesHora.replace(`value="${rango.hora_fin}"`, `value="${rango.hora_fin}" selected`)}
                                     </select>
                                     ${rangos.length > 1 ? `<button type="button" class="btn-eliminar-rango" onclick="eliminarRango(${dia}, ${idx})">×</button>` : ''}
+                                    <button type="button" class="btn-agregar-rango" onclick="agregarRango(${dia})">+</button>
                                 </div>
                             `).join('')}
-                            <button type="button" class="btn-agregar-rango" onclick="agregarRango(${dia})" ${!activo ? 'style="display:none;"' : ''}>
-                                + Agregar horario
+                            <button type="button" class="btn-copiar-todos" onclick="copiarATodos(${dia})" id="btn-copiar-${dia}">
+                                Copiar a todos los días
                             </button>
                         </div>
                     </div>
@@ -2510,19 +2508,14 @@
         function toggleDia(dia) {
             const checkbox = document.getElementById(`dia-${dia}`);
             const rangosContainer = document.getElementById(`rangos-${dia}`);
-            const btnCopiar = document.getElementById(`btn-copiar-${dia}`);
             const activo = checkbox.checked;
 
             rangosContainer.style.display = activo ? 'block' : 'none';
-            if (btnCopiar) btnCopiar.style.display = activo ? 'inline-flex' : 'none';
 
             // Habilitar/deshabilitar selects
             rangosContainer.querySelectorAll('select').forEach(select => {
                 select.disabled = !activo;
             });
-
-            // Mostrar/ocultar botón agregar
-            rangosContainer.querySelector('.btn-agregar-rango').style.display = activo ? 'inline-flex' : 'none';
         }
 
         function copiarATodos(diaOrigen) {
@@ -2594,9 +2587,10 @@
                     ${opcionesHora.replace('value="18:00"', 'value="18:00" selected')}
                 </select>
                 <button type="button" class="btn-eliminar-rango" onclick="eliminarRango(${dia}, ${nuevoIdx})">×</button>
+                <button type="button" class="btn-agregar-rango" onclick="agregarRango(${dia})">+</button>
             `;
 
-            rangosContainer.insertBefore(nuevoRango, rangosContainer.querySelector('.btn-agregar-rango'));
+            rangosContainer.insertBefore(nuevoRango, rangosContainer.querySelector('.btn-copiar-todos'));
 
             // Agregar botón eliminar al primer rango si ahora hay más de uno
             if (rangos.length === 1) {
@@ -2607,7 +2601,9 @@
                     btnEliminar.className = 'btn-eliminar-rango';
                     btnEliminar.onclick = () => eliminarRango(dia, 0);
                     btnEliminar.textContent = '×';
-                    primerRango.appendChild(btnEliminar);
+                    // Insertar antes del botón "+"
+                    const btnAgregar = primerRango.querySelector('.btn-agregar-rango');
+                    primerRango.insertBefore(btnEliminar, btnAgregar);
                 }
             }
         }
