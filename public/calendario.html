@@ -341,6 +341,24 @@
             background: #FECACA;
         }
 
+        .btn-copiar-todos {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            font-size: 12px;
+            color: #059669;
+            background: #D1FAE5;
+            border: 1px solid #6EE7B7;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .btn-copiar-todos:hover {
+            background: #A7F3D0;
+        }
+
         .medico-selector {
             margin-bottom: 20px;
         }
@@ -2461,6 +2479,9 @@
                                 <input type="checkbox" id="dia-${dia}" ${activo ? 'checked' : ''} onchange="toggleDia(${dia})">
                                 <label for="dia-${dia}">${diasNombres[dia]}</label>
                             </div>
+                            <button type="button" class="btn-copiar-todos" onclick="copiarATodos(${dia})" style="${activo ? '' : 'display:none;'}" id="btn-copiar-${dia}">
+                                Copiar a todos
+                            </button>
                         </div>
                         <div class="rangos-container" id="rangos-${dia}" style="${activo ? '' : 'display: none;'}">
                             ${rangos.map((rango, idx) => `
@@ -2489,9 +2510,11 @@
         function toggleDia(dia) {
             const checkbox = document.getElementById(`dia-${dia}`);
             const rangosContainer = document.getElementById(`rangos-${dia}`);
+            const btnCopiar = document.getElementById(`btn-copiar-${dia}`);
             const activo = checkbox.checked;
 
             rangosContainer.style.display = activo ? 'block' : 'none';
+            if (btnCopiar) btnCopiar.style.display = activo ? 'inline-flex' : 'none';
 
             // Habilitar/deshabilitar selects
             rangosContainer.querySelectorAll('select').forEach(select => {
@@ -2500,6 +2523,57 @@
 
             // Mostrar/ocultar botón agregar
             rangosContainer.querySelector('.btn-agregar-rango').style.display = activo ? 'inline-flex' : 'none';
+        }
+
+        function copiarATodos(diaOrigen) {
+            // Obtener los rangos del día origen
+            const rangosContainer = document.getElementById(`rangos-${diaOrigen}`);
+            const rangosRows = rangosContainer.querySelectorAll('.rango-row');
+
+            const rangosOrigen = [];
+            rangosRows.forEach(row => {
+                const inicio = row.querySelector('.rango-inicio');
+                const fin = row.querySelector('.rango-fin');
+                if (inicio && fin) {
+                    rangosOrigen.push({
+                        hora_inicio: inicio.value,
+                        hora_fin: fin.value
+                    });
+                }
+            });
+
+            if (rangosOrigen.length === 0) return;
+
+            // Aplicar a todos los demás días
+            const ordenDias = [0, 1, 2, 3, 4, 5, 6];
+            for (const dia of ordenDias) {
+                if (dia === diaOrigen) continue;
+
+                // Activar el checkbox
+                const checkbox = document.getElementById(`dia-${dia}`);
+                checkbox.checked = true;
+
+                // Actualizar la configuración en memoria
+                disponibilidadPorModalidad[modalidadActual][dia] = {
+                    activo: true,
+                    rangos: [...rangosOrigen]
+                };
+            }
+
+            // Re-renderizar para mostrar los cambios
+            renderizarDias();
+
+            // Mostrar confirmación visual
+            const btn = document.getElementById(`btn-copiar-${diaOrigen}`);
+            const textoOriginal = btn.textContent;
+            btn.textContent = '✓ Copiado';
+            btn.style.background = '#10B981';
+            btn.style.color = 'white';
+            setTimeout(() => {
+                btn.textContent = textoOriginal;
+                btn.style.background = '';
+                btn.style.color = '';
+            }, 1500);
         }
 
         function agregarRango(dia) {
