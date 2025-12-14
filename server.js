@@ -1591,7 +1591,7 @@ app.post('/api/ordenes', async (req, res) => {
             // Buscar médicos disponibles para esa hora, fecha y modalidad (excepto NUBIA)
             // Ahora puede devolver múltiples filas por médico (múltiples rangos horarios)
             const medicosResult = await pool.query(`
-                SELECT m.id, m.primer_nombre, m.primer_apellido,
+                SELECT m.id, m.primer_nombre, m.primer_apellido, m.alias,
                        COALESCE(m.tiempo_consulta, 10) as tiempo_consulta,
                        TO_CHAR(md.hora_inicio, 'HH24:MI') as hora_inicio,
                        TO_CHAR(md.hora_fin, 'HH24:MI') as hora_fin
@@ -1611,7 +1611,7 @@ app.post('/api/ordenes', async (req, res) => {
                 if (!medicosPorId[row.id]) {
                     medicosPorId[row.id] = {
                         id: row.id,
-                        nombre: `${row.primer_nombre} ${row.primer_apellido}`,
+                        nombre: row.alias || `${row.primer_nombre} ${row.primer_apellido}`,
                         rangos: []
                     };
                 }
@@ -3814,7 +3814,7 @@ app.get('/api/turnos-disponibles', async (req, res) => {
         // Obtener todos los médicos activos con disponibilidad para esta modalidad y día (excepto NUBIA)
         // Ahora puede devolver múltiples filas por médico (múltiples rangos horarios)
         const medicosResult = await pool.query(`
-            SELECT m.id, m.primer_nombre, m.primer_apellido,
+            SELECT m.id, m.primer_nombre, m.primer_apellido, m.alias,
                    COALESCE(m.tiempo_consulta, 10) as tiempo_consulta,
                    TO_CHAR(md.hora_inicio, 'HH24:MI') as hora_inicio,
                    TO_CHAR(md.hora_fin, 'HH24:MI') as hora_fin
@@ -3844,7 +3844,7 @@ app.get('/api/turnos-disponibles', async (req, res) => {
             if (!medicosPorId[row.id]) {
                 medicosPorId[row.id] = {
                     id: row.id,
-                    nombre: `${row.primer_nombre} ${row.primer_apellido}`,
+                    nombre: row.alias || `${row.primer_nombre} ${row.primer_apellido}`,
                     tiempoConsulta: row.tiempo_consulta,
                     rangos: []
                 };
