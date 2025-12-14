@@ -2356,12 +2356,12 @@ app.put('/api/historia-clinica/:id', async (req, res) => {
     }
 });
 
-// Endpoint para listar todas las HistoriaClinica (órdenes) + formularios sin sincronizar
+// Endpoint para listar órdenes de HistoriaClinica (sincronizadas desde Wix)
 app.get('/api/historia-clinica/list', async (req, res) => {
     try {
-        console.log('📋 Listando órdenes de HistoriaClinica + formularios...');
+        console.log('📋 Listando órdenes de HistoriaClinica...');
 
-        // Obtener registros de HistoriaClinica
+        // Solo obtener registros de HistoriaClinica (sincronizados desde Wix)
         const historiaResult = await pool.query(`
             SELECT "_id", "numeroId", "primerNombre", "segundoNombre", "primerApellido", "segundoApellido",
                    "celular", "cargo", "ciudad", "tipoExamen", "codEmpresa", "empresa", "medico",
@@ -2372,79 +2372,12 @@ app.get('/api/historia-clinica/list', async (req, res) => {
             LIMIT 500
         `);
 
-        // Obtener cédulas que ya están en HistoriaClinica
-        const cedulasHistoria = historiaResult.rows.map(r => r.numeroId).filter(Boolean);
-
-        // Obtener registros de formularios que NO están en HistoriaClinica
-        let formulariosResult = { rows: [] };
-        if (cedulasHistoria.length > 0) {
-            formulariosResult = await pool.query(`
-                SELECT
-                    COALESCE(wix_id, id::text) as "_id",
-                    id as "formId",
-                    numero_id as "numeroId",
-                    primer_nombre as "primerNombre",
-                    NULL as "segundoNombre",
-                    primer_apellido as "primerApellido",
-                    NULL as "segundoApellido",
-                    celular,
-                    NULL as "cargo",
-                    ciudad_residencia as "ciudad",
-                    NULL as "tipoExamen",
-                    cod_empresa as "codEmpresa",
-                    empresa,
-                    NULL as "medico",
-                    atendido,
-                    NULL as "examenes",
-                    fecha_registro as "_createdDate",
-                    fecha_consulta as "fechaConsulta",
-                    'formulario' as origen
-                FROM formularios
-                WHERE numero_id IS NOT NULL
-                AND numero_id NOT IN (${cedulasHistoria.map((_, i) => `$${i + 1}`).join(',')})
-                ORDER BY fecha_registro DESC
-                LIMIT 100
-            `, cedulasHistoria);
-        } else {
-            // Si no hay registros en HistoriaClinica, traer todos los formularios
-            formulariosResult = await pool.query(`
-                SELECT
-                    COALESCE(wix_id, id::text) as "_id",
-                    id as "formId",
-                    numero_id as "numeroId",
-                    primer_nombre as "primerNombre",
-                    NULL as "segundoNombre",
-                    primer_apellido as "primerApellido",
-                    NULL as "segundoApellido",
-                    celular,
-                    NULL as "cargo",
-                    ciudad_residencia as "ciudad",
-                    NULL as "tipoExamen",
-                    cod_empresa as "codEmpresa",
-                    empresa,
-                    NULL as "medico",
-                    atendido,
-                    NULL as "examenes",
-                    fecha_registro as "_createdDate",
-                    fecha_consulta as "fechaConsulta",
-                    'formulario' as origen
-                FROM formularios
-                WHERE numero_id IS NOT NULL
-                ORDER BY fecha_registro DESC
-                LIMIT 100
-            `);
-        }
-
-        // Combinar y ordenar por fecha
-        const todosLosRegistros = [...historiaResult.rows, ...formulariosResult.rows]
-            .sort((a, b) => new Date(b._createdDate) - new Date(a._createdDate));
-
-        console.log(`✅ HistoriaClinica: ${historiaResult.rows.length}, Formularios sin sincronizar: ${formulariosResult.rows.length}`);
+        console.log(`✅ HistoriaClinica: ${historiaResult.rows.length} registros`);
 
         res.json({
             success: true,
-            total: todosLosRegistros.length,
-            data: todosLosRegistros
+            total: historiaResult.rows.length,
+            data: historiaResult.rows
         });
 
     } catch (error) {
