@@ -1673,6 +1673,7 @@
                             <th>CodEmpresa</th>
                             <th>Tipo Examen</th>
                             <th>Estado</th>
+                            <th>Fecha Creación</th>
                             <th>Fecha Atención</th>
                             <th>Acciones</th>
                         </tr>
@@ -2362,12 +2363,29 @@
         function formatearFechaAtencion(fecha) {
             if (!fecha) return '—';
             const date = new Date(fecha);
-            const mes = String(date.getMonth() + 1).padStart(2, '0');
-            const dia = String(date.getDate()).padStart(2, '0');
-            const año = date.getFullYear();
-            const horas = String(date.getHours()).padStart(2, '0');
-            const minutos = String(date.getMinutes()).padStart(2, '0');
-            return `${mes}/${dia}/${año} ${horas}:${minutos}`;
+            return date.toLocaleString('es-CO', {
+                timeZone: 'America/Bogota',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        function formatearFechaCreacion(fecha) {
+            if (!fecha) return '—';
+            const date = new Date(fecha);
+            return date.toLocaleString('es-CO', {
+                timeZone: 'America/Bogota',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
         }
 
         function getInitials(nombre, apellido) {
@@ -2422,6 +2440,7 @@
                                 ${getStatusText(orden.atendido)}
                             </span>
                         </td>
+                        <td>${formatearFechaCreacion(orden._createdDate)}</td>
                         <td>${formatearFechaAtencion(orden.fechaAtencion)}</td>
                         <td>
                             <div class="actions-cell">
