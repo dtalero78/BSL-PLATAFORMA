@@ -2090,6 +2090,12 @@
         let currentFilter = 'todos';
         let pacienteActual = null;
 
+        // Función para capitalizar (primera letra mayúscula de cada palabra)
+        function capitalize(str) {
+            if (!str) return str;
+            return str.trim().toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+        }
+
         // Elementos del DOM
         const loginScreen = document.getElementById('loginScreen');
         const panelScreen = document.getElementById('panelScreen');
@@ -2535,10 +2541,10 @@
             const ordenId = document.getElementById('edit-id').value;
 
             const datos = {
-                primerNombre: document.getElementById('edit-primerNombre').value.trim(),
-                segundoNombre: document.getElementById('edit-segundoNombre').value.trim() || null,
-                primerApellido: document.getElementById('edit-primerApellido').value.trim(),
-                segundoApellido: document.getElementById('edit-segundoApellido').value.trim() || null,
+                primerNombre: capitalize(document.getElementById('edit-primerNombre').value),
+                segundoNombre: document.getElementById('edit-segundoNombre').value.trim() ? capitalize(document.getElementById('edit-segundoNombre').value) : null,
+                primerApellido: capitalize(document.getElementById('edit-primerApellido').value),
+                segundoApellido: document.getElementById('edit-segundoApellido').value.trim() ? capitalize(document.getElementById('edit-segundoApellido').value) : null,
                 celular: document.getElementById('edit-celular').value.trim(),
                 ciudad: document.getElementById('edit-ciudad').value.trim(),
                 cargo: document.getElementById('edit-cargo').value.trim(),
@@ -2797,10 +2803,10 @@
                 empresa: codEmpresa,
                 numeroId: numeroId,
                 celular: celular,
-                primerNombre: primerNombre,
-                segundoNombre: document.getElementById('modalSegundoNombre').value.trim() || null,
-                primerApellido: primerApellido,
-                segundoApellido: document.getElementById('modalSegundoApellido').value.trim() || null,
+                primerNombre: capitalize(primerNombre),
+                segundoNombre: document.getElementById('modalSegundoNombre').value.trim() ? capitalize(document.getElementById('modalSegundoNombre').value) : null,
+                primerApellido: capitalize(primerApellido),
+                segundoApellido: document.getElementById('modalSegundoApellido').value.trim() ? capitalize(document.getElementById('modalSegundoApellido').value) : null,
                 cargo: cargo,
                 ciudad: ciudad,
                 tipoExamen: tipoExamen,

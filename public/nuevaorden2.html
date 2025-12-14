@@ -806,6 +806,12 @@
         let turnosDisponibles = []; // Turnos cargados del servidor
         let medicoAsignado = null; // Médico que será asignado automáticamente
 
+        // Función para capitalizar (primera letra mayúscula de cada palabra)
+        function capitalize(str) {
+            if (!str) return str;
+            return str.trim().toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+        }
+
         // Obtener parámetros de URL
         const urlParams = new URLSearchParams(window.location.search);
         const refEmpresa = urlParams.get('ref');
@@ -1183,10 +1189,10 @@
             }
 
             const datos = {
-                primerNombre: document.getElementById('primerNombre').value.trim(),
-                segundoNombre: document.getElementById('segundoNombre').value.trim() || null,
-                primerApellido: document.getElementById('primerApellido').value.trim(),
-                segundoApellido: document.getElementById('segundoApellido').value.trim() || null,
+                primerNombre: capitalize(document.getElementById('primerNombre').value),
+                segundoNombre: document.getElementById('segundoNombre').value.trim() ? capitalize(document.getElementById('segundoNombre').value) : null,
+                primerApellido: capitalize(document.getElementById('primerApellido').value),
+                segundoApellido: document.getElementById('segundoApellido').value.trim() ? capitalize(document.getElementById('segundoApellido').value) : null,
                 numeroId: document.getElementById('numeroId').value.replace(/\D/g, ''),
                 celular: document.getElementById('celular').value.replace(/\D/g, ''),
                 tipoConsulta: 'Telemedicina',

@@ -743,6 +743,12 @@
         let medicoEditando = null;
         let firmaBase64 = null;
 
+        // Función para capitalizar (primera letra mayúscula de cada palabra)
+        function capitalize(str) {
+            if (!str) return str;
+            return str.trim().toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+        }
+
         // Buscar órdenes globalmente
         function buscarGlobal(event) {
             if (event.key === 'Enter') {
@@ -926,10 +932,10 @@
 
             const form = e.target;
             const datos = {
-                primerNombre: form.primerNombre.value,
-                segundoNombre: form.segundoNombre.value || null,
-                primerApellido: form.primerApellido.value,
-                segundoApellido: form.segundoApellido.value || null,
+                primerNombre: capitalize(form.primerNombre.value),
+                segundoNombre: form.segundoNombre.value ? capitalize(form.segundoNombre.value) : null,
+                primerApellido: capitalize(form.primerApellido.value),
+                segundoApellido: form.segundoApellido.value ? capitalize(form.segundoApellido.value) : null,
                 alias: form.alias.value || null,
                 numeroLicencia: form.numeroLicencia.value,
                 tipoLicencia: form.tipoLicencia.value || null,

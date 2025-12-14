@@ -976,6 +976,12 @@
         let examenesData = [];
         let examenesSeleccionados = [];
 
+        // Función para capitalizar (primera letra mayúscula de cada palabra)
+        function capitalize(str) {
+            if (!str) return str;
+            return str.trim().toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+        }
+
         // Cargar datos al iniciar
         document.addEventListener('DOMContentLoaded', () => {
             feather.replace();
@@ -1618,6 +1624,11 @@
             const datos = Object.fromEntries(formData.entries());
             // Asegurar que el numeroId venga del paso 1
             datos.numeroId = document.getElementById('inputNumeroId').value.trim();
+            // Capitalizar nombres y apellidos
+            if (datos.primerNombre) datos.primerNombre = capitalize(datos.primerNombre);
+            if (datos.segundoNombre) datos.segundoNombre = capitalize(datos.segundoNombre);
+            if (datos.primerApellido) datos.primerApellido = capitalize(datos.primerApellido);
+            if (datos.segundoApellido) datos.segundoApellido = capitalize(datos.segundoApellido);
             datosFormularioActual = datos;
 
             try {
