@@ -2464,6 +2464,28 @@
                         <div class="detail-field-value">${paciente.examenes || '-'}</div>
                     </div>
                 </div>
+
+                ${paciente.atendido === 'ATENDIDO' ? `
+                <div class="detail-card">
+                    <div class="detail-card-title">Resultados Médicos</div>
+                    <div class="detail-field">
+                        <div class="detail-field-label">Concepto Médico Final</div>
+                        <div class="detail-field-value">${paciente.mdConceptoFinal || '-'}</div>
+                    </div>
+                    <div class="detail-field">
+                        <div class="detail-field-label">Recomendaciones Médicas</div>
+                        <div class="detail-field-value">${paciente.mdRecomendacionesMedicasAdicionales || '-'}</div>
+                    </div>
+                    <div class="detail-field">
+                        <div class="detail-field-label">Observaciones del Certificado</div>
+                        <div class="detail-field-value">${paciente.mdObservacionesCertificado || '-'}</div>
+                    </div>
+                    <div class="detail-field">
+                        <div class="detail-field-label">Observaciones para Mi Doc Ya</div>
+                        <div class="detail-field-value">${paciente.mdObsParaMiDocYa || '-'}</div>
+                    </div>
+                </div>
+                ` : ''}
             `;
 
             // Configurar botón PDF

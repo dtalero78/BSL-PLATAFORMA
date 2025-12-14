@@ -2366,6 +2366,7 @@ app.get('/api/historia-clinica/list', async (req, res) => {
             SELECT "_id", "numeroId", "primerNombre", "segundoNombre", "primerApellido", "segundoApellido",
                    "celular", "cargo", "ciudad", "tipoExamen", "codEmpresa", "empresa", "medico",
                    "atendido", "examenes", "_createdDate", "fechaConsulta", "fechaAtencion", "horaAtencion",
+                   "mdConceptoFinal", "mdRecomendacionesMedicasAdicionales", "mdObservacionesCertificado", "mdObsParaMiDocYa",
                    'historia' as origen
             FROM "HistoriaClinica"
             ORDER BY "_createdDate" DESC
@@ -2409,6 +2410,7 @@ app.get('/api/historia-clinica/buscar', async (req, res) => {
                    "ciudad", "tipoExamen", "codEmpresa", "empresa", "medico",
                    "atendido", "examenes", "_createdDate", "fechaConsulta",
                    "fechaAtencion", "horaAtencion",
+                   "mdConceptoFinal", "mdRecomendacionesMedicasAdicionales", "mdObservacionesCertificado", "mdObsParaMiDocYa",
                    'historia' as origen
             FROM "HistoriaClinica"
             WHERE "numeroId" ILIKE $1
