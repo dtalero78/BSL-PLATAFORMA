@@ -2474,6 +2474,7 @@ app.get('/api/historia-clinica/buscar', async (req, res) => {
                    "primerApellido", "segundoApellido", "celular", "cargo",
                    "ciudad", "tipoExamen", "codEmpresa", "empresa", "medico",
                    "atendido", "examenes", "_createdDate", "fechaConsulta",
+                   "fechaAtencion", "horaAtencion",
                    'historia' as origen
             FROM "HistoriaClinica"
             WHERE "numeroId" ILIKE $1
