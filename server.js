@@ -1808,7 +1808,8 @@ app.get('/api/ordenes', async (req, res) => {
             SELECT "_id", "numeroId", "primerNombre", "segundoNombre", "primerApellido", "segundoApellido",
                    "codEmpresa", "empresa", "cargo", "tipoExamen", "medico", "atendido",
                    "fechaAtencion", "horaAtencion", "examenes", "ciudad", "celular",
-                   "_createdDate", "_updatedDate", "fechaConsulta"
+                   "_createdDate", "_updatedDate", "fechaConsulta",
+                   "mdConceptoFinal", "mdRecomendacionesMedicasAdicionales", "mdObservacionesCertificado", "mdObsParaMiDocYa"
             FROM "HistoriaClinica"
             WHERE 1=1
         `;
