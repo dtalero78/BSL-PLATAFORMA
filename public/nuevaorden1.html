@@ -640,6 +640,53 @@
                         <label>Cargo (opcional)</label>
                         <input type="text" class="question-input" id="cargo" placeholder="Ej: Analista, Operario, etc.">
                     </div>
+
+                    <div class="form-group">
+                        <label>Ciudad de Residencia <span class="required">*</span></label>
+                        <select class="question-select" id="ciudad" required>
+                            <option value="">Seleccionar ciudad...</option>
+                            <option value="Bogotá">Bogotá D.C.</option>
+                            <option value="Medellín">Medellín</option>
+                            <option value="Cali">Cali</option>
+                            <option value="Barranquilla">Barranquilla</option>
+                            <option value="Cartagena">Cartagena</option>
+                            <option value="Cúcuta">Cúcuta</option>
+                            <option value="Bucaramanga">Bucaramanga</option>
+                            <option value="Pereira">Pereira</option>
+                            <option value="Santa Marta">Santa Marta</option>
+                            <option value="Ibagué">Ibagué</option>
+                            <option value="Pasto">Pasto</option>
+                            <option value="Manizales">Manizales</option>
+                            <option value="Neiva">Neiva</option>
+                            <option value="Villavicencio">Villavicencio</option>
+                            <option value="Armenia">Armenia</option>
+                            <option value="Valledupar">Valledupar</option>
+                            <option value="Montería">Montería</option>
+                            <option value="Sincelejo">Sincelejo</option>
+                            <option value="Popayán">Popayán</option>
+                            <option value="Floridablanca">Floridablanca</option>
+                            <option value="Buenaventura">Buenaventura</option>
+                            <option value="Soledad">Soledad</option>
+                            <option value="Itagüí">Itagüí</option>
+                            <option value="Soacha">Soacha</option>
+                            <option value="Bello">Bello</option>
+                            <option value="Palmira">Palmira</option>
+                            <option value="Tunja">Tunja</option>
+                            <option value="Girardot">Girardot</option>
+                            <option value="Riohacha">Riohacha</option>
+                            <option value="Barrancabermeja">Barrancabermeja</option>
+                            <option value="Dosquebradas">Dosquebradas</option>
+                            <option value="Envigado">Envigado</option>
+                            <option value="Tuluá">Tuluá</option>
+                            <option value="Sogamoso">Sogamoso</option>
+                            <option value="Duitama">Duitama</option>
+                            <option value="Zipaquirá">Zipaquirá</option>
+                            <option value="Facatativá">Facatativá</option>
+                            <option value="Chía">Chía</option>
+                            <option value="Fusagasugá">Fusagasugá</option>
+                            <option value="Otro">Otra ciudad</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="navigation">
@@ -1029,6 +1076,7 @@
                 if (document.getElementById('aNombreDe').value === 'EMPRESA' && !document.getElementById('empresa').value) {
                     camposFaltantes.push('Empresa');
                 }
+                if (!document.getElementById('ciudad').value) camposFaltantes.push('Ciudad de Residencia');
             } else if (pasoActual === 3) {
                 if (!document.getElementById('mes').value) camposFaltantes.push('Mes');
                 if (!document.getElementById('dia').value) camposFaltantes.push('Día');
@@ -1157,7 +1205,7 @@
                 examenes: examenesSeleccionados.join(', '),
                 tipoExamen: 'Ingreso',
                 atendido: 'PENDIENTE',
-                ciudad: 'Bogotá',
+                ciudad: document.getElementById('ciudad').value,
                 medico: 'NUBIA'
             };
 
