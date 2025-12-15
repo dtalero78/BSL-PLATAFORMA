@@ -2954,8 +2954,8 @@
             body.innerHTML = `
                 <!-- Profile Header -->
                 <div class="profile-header-horizontal">
-                    <div class="profile-photo ${form?.foto ? 'has-photo' : ''}">
-                        ${form?.foto ? `<img src="${form.foto}" alt="Foto">` : `<span class="profile-initials">${initials}</span>`}
+                    <div class="profile-photo ${(form?.foto_url || form?.foto) ? 'has-photo' : ''}">
+                        ${(form?.foto_url || form?.foto) ? `<img src="${form.foto_url || form.foto}" alt="Foto">` : `<span class="profile-initials">${initials}</span>`}
                     </div>
                     <div class="profile-info">
                         <div class="profile-name">${nombreCompleto}</div>
