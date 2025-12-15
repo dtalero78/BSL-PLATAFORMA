@@ -2442,7 +2442,16 @@ app.put('/api/historia-clinica/:id', async (req, res) => {
 // Endpoint para listar órdenes de HistoriaClinica (sincronizadas desde Wix)
 app.get('/api/historia-clinica/list', async (req, res) => {
     try {
-        console.log('📋 Listando órdenes de HistoriaClinica...');
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+
+        console.log(`📋 Listando órdenes de HistoriaClinica (página ${page}, limit ${limit})...`);
+
+        // Contar total de registros
+        const countResult = await pool.query('SELECT COUNT(*) FROM "HistoriaClinica"');
+        const totalRegistros = parseInt(countResult.rows[0].count);
+        const totalPaginas = Math.ceil(totalRegistros / limit);
 
         // Obtener registros de HistoriaClinica con foto_url del formulario más reciente
         const historiaResult = await pool.query(`
@@ -2459,14 +2468,17 @@ app.get('/api/historia-clinica/list', async (req, res) => {
                 ORDER BY fecha_registro DESC LIMIT 1
             ) f ON true
             ORDER BY h."_createdDate" DESC
-            LIMIT 500
-        `);
+            LIMIT $1 OFFSET $2
+        `, [limit, offset]);
 
-        console.log(`✅ HistoriaClinica: ${historiaResult.rows.length} registros`);
+        console.log(`✅ HistoriaClinica: ${historiaResult.rows.length} registros (página ${page}/${totalPaginas})`);
 
         res.json({
             success: true,
-            total: historiaResult.rows.length,
+            total: totalRegistros,
+            page,
+            limit,
+            totalPaginas,
             data: historiaResult.rows
         });
 

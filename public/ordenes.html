@@ -427,6 +427,51 @@
             color: var(--text-primary);
         }
 
+        /* ========== PAGINATION ========== */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            padding: 20px;
+            margin-top: 16px;
+        }
+
+        .pagination-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-color);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
         /* ========== TABLE ========== */
         .table-container {
             background: var(--bg-secondary);
@@ -1754,6 +1799,17 @@
                 <!-- Mobile cards will be inserted here -->
             </div>
 
+            <!-- Pagination -->
+            <div id="paginationContainer" class="pagination-container" style="display: none;">
+                <button class="pagination-btn" id="btnPrevPage" onclick="cambiarPagina(-1)">
+                    <i data-feather="chevron-left"></i> Anterior
+                </button>
+                <span class="pagination-info" id="paginationInfo">Página 1 de 1</span>
+                <button class="pagination-btn" id="btnNextPage" onclick="cambiarPagina(1)">
+                    Siguiente <i data-feather="chevron-right"></i>
+                </button>
+            </div>
+
             <!-- Empty State -->
             <div id="emptyState" class="empty-state" style="display: none;">
                 <div class="empty-state-icon"><i data-feather="clipboard" style="width:48px;height:48px;stroke:#9CA3AF;"></i></div>
@@ -2412,6 +2468,12 @@
         let columnaOrden = '_createdDate';
         let direccionOrden = 'desc'; // 'asc' o 'desc'
 
+        // Pagination state
+        let paginaActual = 1;
+        let totalPaginas = 1;
+        let totalRegistros = 0;
+        const registrosPorPagina = 20;
+
         // ========== EXÁMENES STATE ==========
         let examenesData = [];
         let editExamenesSeleccionados = [];
@@ -2702,8 +2764,10 @@
             // Aplicar ordenamiento actual
             ordenarFormularios();
 
-            // Update stats
-            document.getElementById('statsCounter').innerHTML = `<strong>${resultado.length}</strong> de ${todosLosFormularios.length} registros`;
+            // Update stats - show pagination info
+            const inicio = ((paginaActual - 1) * registrosPorPagina) + 1;
+            const fin = Math.min(paginaActual * registrosPorPagina, totalRegistros);
+            document.getElementById('statsCounter').innerHTML = `<strong>${inicio}-${fin}</strong> de ${totalRegistros.toLocaleString()} registros`;
 
             // Show/hide states
             const tableContainer = document.getElementById('tableContainer');
@@ -2723,9 +2787,13 @@
         }
 
         // ========== DATA LOADING ==========
-        async function cargarFormularios() {
+        async function cargarFormularios(page = 1) {
             try {
-                const response = await fetch('/api/historia-clinica/list');
+                document.getElementById('loadingState').style.display = 'flex';
+                document.getElementById('tableContainer').style.display = 'none';
+                document.getElementById('paginationContainer').style.display = 'none';
+
+                const response = await fetch(`/api/historia-clinica/list?page=${page}&limit=${registrosPorPagina}`);
                 if (!response.ok) throw new Error('Error del servidor');
 
                 const result = await response.json();
@@ -2735,19 +2803,53 @@
                 if (!result.success || result.total === 0) {
                     document.getElementById('emptyState').style.display = 'block';
                     document.getElementById('statsCounter').innerHTML = '<strong>0</strong> registros';
+                    document.getElementById('paginationContainer').style.display = 'none';
                     return;
                 }
 
+                // Update pagination state
+                paginaActual = result.page;
+                totalPaginas = result.totalPaginas;
+                totalRegistros = result.total;
+
                 todosLosFormularios = result.data;
                 actualizarVista();
+                actualizarPaginacion();
 
             } catch (error) {
                 console.error('Error:', error);
+                document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('loadingState').innerHTML = `
                     <div class="empty-state-icon">⚠️</div>
                     <p class="empty-state-title">Error al cargar</p>
                     <p class="empty-state-text">${error.message}</p>
                 `;
+            }
+        }
+
+        function actualizarPaginacion() {
+            const container = document.getElementById('paginationContainer');
+            const info = document.getElementById('paginationInfo');
+            const btnPrev = document.getElementById('btnPrevPage');
+            const btnNext = document.getElementById('btnNextPage');
+
+            // Only show pagination if not searching and there are multiple pages
+            if (buscandoEnServidor || totalPaginas <= 1) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'flex';
+            info.textContent = `Página ${paginaActual} de ${totalPaginas}`;
+            btnPrev.disabled = paginaActual <= 1;
+            btnNext.disabled = paginaActual >= totalPaginas;
+            feather.replace();
+        }
+
+        function cambiarPagina(delta) {
+            const nuevaPagina = paginaActual + delta;
+            if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+                cargarFormularios(nuevaPagina);
             }
         }
 
