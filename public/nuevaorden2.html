@@ -816,6 +816,11 @@
         const urlParams = new URLSearchParams(window.location.search);
         const refEmpresa = urlParams.get('ref');
 
+        // Parámetros desde Wix (Calendly)
+        const wixPrimerNombre = urlParams.get('invitee_first_name');
+        const wixPrimerApellido = urlParams.get('invitee_last_name');
+        const wixCedula = urlParams.get('answer_3');
+
         // Inicialización
         document.addEventListener('DOMContentLoaded', () => {
             actualizarProgreso();
@@ -824,6 +829,25 @@
 
             if (refEmpresa) {
                 configurarPorReferencia(refEmpresa);
+            }
+
+            // Pre-llenar campos si vienen desde Wix
+            if (wixCedula) {
+                document.getElementById('numeroId').value = wixCedula;
+            }
+            if (wixPrimerNombre) {
+                document.getElementById('primerNombre').value = capitalize(decodeURIComponent(wixPrimerNombre));
+            }
+            if (wixPrimerApellido) {
+                document.getElementById('primerApellido').value = capitalize(decodeURIComponent(wixPrimerApellido));
+            }
+
+            // Si tenemos la cédula desde Wix, saltar automáticamente a verificar
+            if (wixCedula) {
+                // Auto-verificar la cédula después de un pequeño delay
+                setTimeout(() => {
+                    verificarCedulaYContinuar();
+                }, 500);
             }
         });
 
@@ -1329,6 +1353,14 @@
         function mostrarPaso1b() {
             const numeroId = document.getElementById('numeroId').value.trim();
             document.getElementById('displayNumeroId').value = numeroId;
+
+            // Pre-llenar campos si vienen desde Wix y no están llenos
+            if (wixPrimerNombre && !document.getElementById('primerNombre').value) {
+                document.getElementById('primerNombre').value = capitalize(decodeURIComponent(wixPrimerNombre));
+            }
+            if (wixPrimerApellido && !document.getElementById('primerApellido').value) {
+                document.getElementById('primerApellido').value = capitalize(decodeURIComponent(wixPrimerApellido));
+            }
 
             // Ocultar step 1, mostrar step 1b
             document.querySelectorAll('.question-slide').forEach(s => s.classList.remove('active'));
