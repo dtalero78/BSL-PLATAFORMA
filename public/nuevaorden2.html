@@ -1189,17 +1189,17 @@
             const hora = document.getElementById('horaSelect').value; // HH:MM
 
             const aNombreDe = document.getElementById('aNombreDe').value;
-            // Siempre SANITHELP-JJ para codEmpresa
-            let codEmpresa = 'SANITHELP-JJ';
+            // Por defecto SANITHELP-JJ, pero PARTICULAR si viene de Wix
+            let codEmpresa = wixCedula ? 'PARTICULAR' : 'SANITHELP-JJ';
             let empresaNombre = '';
 
-            if (aNombreDe === 'PARTICULAR') {
+            if (aNombreDe === 'PARTICULAR' || wixCedula) {
                 empresaNombre = 'PARTICULAR';
             } else if (aNombreDe === 'EMPRESA') {
                 empresaNombre = document.getElementById('empresa').value.trim() || '';
             }
 
-            // Solo empresas especiales tienen su propio codEmpresa
+            // Solo empresas especiales tienen su propio codEmpresa (override de Wix)
             if (refEmpresa) {
                 const empresasEspeciales = {
                     'DeStori': { codEmpresa: 'STORI', empresa: 'Stori Card' },
