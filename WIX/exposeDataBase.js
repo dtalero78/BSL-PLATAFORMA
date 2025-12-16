@@ -132,6 +132,15 @@ export async function consultarPorCelular(celular) {
 // FUNCIÓN PARA CREAR NUEVA HISTORIA CLÍNICA (ORDEN)
 export async function crearHistoriaClinica(datos) {
     try {
+        // Convertir fechaAtencion a Date si viene como string
+        if (datos.fechaAtencion && typeof datos.fechaAtencion === 'string') {
+            datos.fechaAtencion = new Date(datos.fechaAtencion);
+        }
+        // Convertir fechaConsulta a Date si viene como string
+        if (datos.fechaConsulta && typeof datos.fechaConsulta === 'string') {
+            datos.fechaConsulta = new Date(datos.fechaConsulta);
+        }
+
         const result = await wixData.insert("HistoriaClinica", datos);
         return { success: true, item: result };
     } catch (error) {
@@ -144,6 +153,15 @@ export async function crearHistoriaClinica(datos) {
 export async function actualizarHistoriaClinica(_id, datos) {
     try {
         const existingItem = await wixData.get("HistoriaClinica", _id);
+
+        // Convertir fechaAtencion a Date si viene como string
+        if (datos.fechaAtencion && typeof datos.fechaAtencion === 'string') {
+            datos.fechaAtencion = new Date(datos.fechaAtencion);
+        }
+        // Convertir fechaConsulta a Date si viene como string
+        if (datos.fechaConsulta && typeof datos.fechaConsulta === 'string') {
+            datos.fechaConsulta = new Date(datos.fechaConsulta);
+        }
 
         // Actualizar solo los campos proporcionados
         Object.keys(datos).forEach(key => {
@@ -163,6 +181,14 @@ export async function actualizarHistoriaClinica(_id, datos) {
 // FUNCIONES PARA EXPONER BASE DE DATOS FORMULARIO
 export async function crearFormulario(datos) {
     try {
+        // Convertir campos de fecha a Date si vienen como string
+        if (datos.fechaAtencion && typeof datos.fechaAtencion === 'string') {
+            datos.fechaAtencion = new Date(datos.fechaAtencion);
+        }
+        if (datos.fechaConsulta && typeof datos.fechaConsulta === 'string') {
+            datos.fechaConsulta = new Date(datos.fechaConsulta);
+        }
+
         const result = await wixData.insert("FORMULARIO", datos);
         return { success: true, item: result };
     } catch (error) {
@@ -212,14 +238,22 @@ export async function obtenerFormularioPorIdGeneral(idGeneral) {
 export async function actualizarFormulario(_id, datos) {
     try {
         const existingItem = await wixData.get("FORMULARIO", _id);
-        
+
+        // Convertir campos de fecha a Date si vienen como string
+        if (datos.fechaAtencion && typeof datos.fechaAtencion === 'string') {
+            datos.fechaAtencion = new Date(datos.fechaAtencion);
+        }
+        if (datos.fechaConsulta && typeof datos.fechaConsulta === 'string') {
+            datos.fechaConsulta = new Date(datos.fechaConsulta);
+        }
+
         // Actualizar solo los campos proporcionados
         Object.keys(datos).forEach(key => {
             if (key !== '_id') {
                 existingItem[key] = datos[key];
             }
         });
-        
+
         const result = await wixData.update("FORMULARIO", existingItem);
         return { success: true, item: result };
     } catch (error) {
