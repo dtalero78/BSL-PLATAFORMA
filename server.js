@@ -1585,12 +1585,28 @@ app.patch('/api/ordenes/:id/fecha-atencion', async (req, res) => {
 
         // Intentar actualizar en Wix también
         try {
+            // Construir ISO string con hora Colombia para Wix
+            let fechaAtencionWix = null;
+            if (fechaAtencion && horaAtencion) {
+                const fechaConHora = construirFechaAtencionColombia(fechaAtencion, horaAtencion);
+                if (fechaConHora) {
+                    fechaAtencionWix = fechaConHora.toISOString();
+                }
+            } else if (fechaAtencion) {
+                const fechaConHora = construirFechaAtencionColombia(fechaAtencion, '08:00');
+                if (fechaConHora) {
+                    fechaAtencionWix = fechaConHora.toISOString();
+                }
+            }
+
+            console.log('📅 Fecha para Wix (actualización):', fechaAtencionWix);
+
             const wixResponse = await fetch('https://www.bsl-plataforma.com/_functions/actualizarFormulario', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     idGeneral: id,
-                    fechaAtencion: fechaAtencion,
+                    fechaAtencion: fechaAtencionWix,
                     horaAtencion: horaAtencion || ''
                 })
             });
@@ -1800,6 +1816,23 @@ app.post('/api/ordenes', async (req, res) => {
         console.log('📤 Sincronizando con Wix...');
 
         try {
+            // Construir fecha para Wix: debe ser ISO string con hora Colombia
+            // Wix espera un Date que se serializa como ISO string
+            let fechaAtencionWix = null;
+            if (fechaAtencion && horaAtencion) {
+                // Construir ISO string con hora Colombia (UTC-5)
+                const fechaConHora = construirFechaAtencionColombia(fechaAtencion, horaAtencion);
+                if (fechaConHora) {
+                    fechaAtencionWix = fechaConHora.toISOString();
+                }
+            } else if (fechaAtencion) {
+                // Solo fecha, usar hora por defecto 08:00
+                const fechaConHora = construirFechaAtencionColombia(fechaAtencion, '08:00');
+                if (fechaConHora) {
+                    fechaAtencionWix = fechaConHora.toISOString();
+                }
+            }
+
             const wixPayload = {
                 _id: wixId,
                 numeroId,
@@ -1814,10 +1847,13 @@ app.post('/api/ordenes', async (req, res) => {
                 ciudad: ciudad || '',
                 tipoExamen: tipoExamen || '',
                 medico: medico || '',
-                fechaAtencion: fechaAtencion || '',
+                fechaAtencion: fechaAtencionWix,
+                horaAtencion: horaAtencion || '',
                 atendido: atendido || 'PENDIENTE',
                 examenes: examenes || ''
             };
+
+            console.log('📅 Fecha para Wix:', fechaAtencionWix);
 
             const wixResponse = await fetch('https://www.bsl.com.co/_functions/crearHistoriaClinica', {
                 method: 'POST',
@@ -2302,7 +2338,21 @@ app.put('/api/historia-clinica/:id', async (req, res) => {
             // Sincronizar con Wix
             try {
                 const fetch = (await import('node-fetch')).default;
+
+                // Preparar payload para Wix, convirtiendo fechaAtencion a ISO string
                 const wixPayload = { _id: id, ...datos };
+
+                // Si hay fechaAtencion, convertirla a ISO string para Wix
+                if (datos.fechaAtencion) {
+                    const fechaHora = datos.fechaAtencion.split('T');
+                    const fecha = fechaHora[0];
+                    const hora = fechaHora[1] || '08:00';
+                    const fechaObj = construirFechaAtencionColombia(fecha, hora);
+                    if (fechaObj) {
+                        wixPayload.fechaAtencion = fechaObj.toISOString();
+                        console.log('📅 Fecha para Wix (edición):', wixPayload.fechaAtencion);
+                    }
+                }
 
                 console.log('📤 Sincronizando HistoriaClinica con Wix...');
                 const wixResponse = await fetch('https://www.bsl.com.co/_functions/actualizarHistoriaClinica', {
