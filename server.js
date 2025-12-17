@@ -1922,21 +1922,19 @@ app.get('/api/ordenes', async (req, res) => {
     try {
         const { codEmpresa, buscar, limit = 100, offset = 0 } = req.query;
 
-        // Query con JOIN para obtener foto_url del formulario vinculado
+        // Query con subquery para obtener foto_url del formulario más reciente (evita duplicados)
         let query = `
             SELECT h."_id", h."numeroId", h."primerNombre", h."segundoNombre", h."primerApellido", h."segundoApellido",
                    h."codEmpresa", h."empresa", h."cargo", h."tipoExamen", h."medico", h."atendido",
                    h."fechaAtencion", h."horaAtencion", h."examenes", h."ciudad", h."celular",
                    h."_createdDate", h."_updatedDate", h."fechaConsulta",
                    h."mdConceptoFinal", h."mdRecomendacionesMedicasAdicionales", h."mdObservacionesCertificado", h."mdObsParaMiDocYa",
-                   COALESCE(f_exact.foto_url, f_fallback.foto_url) as foto_url
+                   (
+                       SELECT foto_url FROM formularios
+                       WHERE (wix_id = h."_id" OR numero_id = h."numeroId") AND foto_url IS NOT NULL
+                       ORDER BY fecha_registro DESC LIMIT 1
+                   ) as foto_url
             FROM "HistoriaClinica" h
-            LEFT JOIN formularios f_exact ON f_exact.wix_id = h."_id"
-            LEFT JOIN LATERAL (
-                SELECT foto_url FROM formularios
-                WHERE numero_id = h."numeroId" AND foto_url IS NOT NULL
-                ORDER BY fecha_registro DESC LIMIT 1
-            ) f_fallback ON f_exact.id IS NULL
             WHERE 1=1
         `;
         const params = [];
