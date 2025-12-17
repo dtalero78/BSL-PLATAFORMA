@@ -4021,12 +4021,13 @@ app.get('/api/turnos-disponibles', async (req, res) => {
 
         // Obtener hora actual en Colombia (UTC-5)
         const ahora = new Date();
-        const ahoraColombia = new Date(ahora.getTime() - (5 * 60 * 60 * 1000));
+        const colombiaTime = ahora.toLocaleString('en-US', { timeZone: 'America/Bogota' });
+        const ahoraColombia = new Date(colombiaTime);
         const horaActual = ahoraColombia.getHours();
         const minutoActual = ahoraColombia.getMinutes();
 
         // Verificar si la fecha seleccionada es hoy
-        const fechaHoyColombia = ahoraColombia.toISOString().split('T')[0];
+        const fechaHoyColombia = ahora.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }); // formato YYYY-MM-DD
         const esHoy = fecha === fechaHoyColombia;
 
         // Convertir a array de turnos consolidados (solo mostrar hora y si hay al menos un médico disponible)
