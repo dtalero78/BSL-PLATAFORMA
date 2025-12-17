@@ -1742,6 +1742,7 @@
                                 <option value="RETIRO">Retiro</option>
                                 <option value="REUBICACION">Reubicación</option>
                                 <option value="POST-INCAPACIDAD">Post-incapacidad</option>
+                                <option value="SEGUIMIENTO OCUPACIONAL">Seguimiento Ocupacional</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -2543,18 +2544,41 @@
             document.getElementById('edit-tipoExamen').value = pacienteActual.tipoExamen || '';
             document.getElementById('edit-examenes').value = pacienteActual.examenes || '';
 
-            // Formatear fecha
+            // Formatear fecha y verificar si ya pasó
+            const inputFecha = document.getElementById('edit-fechaAtencion');
+            const inputHora = document.getElementById('edit-horaAtencion');
+
             if (pacienteActual.fechaAtencion) {
                 const fecha = new Date(pacienteActual.fechaAtencion);
                 const year = fecha.getFullYear();
                 const month = String(fecha.getMonth() + 1).padStart(2, '0');
                 const day = String(fecha.getDate()).padStart(2, '0');
-                document.getElementById('edit-fechaAtencion').value = `${year}-${month}-${day}`;
+                inputFecha.value = `${year}-${month}-${day}`;
+
+                // Deshabilitar si la fecha ya pasó
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                const fechaSinHora = new Date(year, fecha.getMonth(), parseInt(day));
+                if (fechaSinHora < hoy) {
+                    inputFecha.disabled = true;
+                    inputHora.disabled = true;
+                    inputFecha.title = 'No se puede editar una fecha de atención pasada';
+                    inputHora.title = 'No se puede editar una fecha de atención pasada';
+                } else {
+                    inputFecha.disabled = false;
+                    inputHora.disabled = false;
+                    inputFecha.title = '';
+                    inputHora.title = '';
+                }
             } else {
-                document.getElementById('edit-fechaAtencion').value = '';
+                inputFecha.value = '';
+                inputFecha.disabled = false;
+                inputHora.disabled = false;
+                inputFecha.title = '';
+                inputHora.title = '';
             }
 
-            document.getElementById('edit-horaAtencion').value = pacienteActual.horaAtencion || '';
+            inputHora.value = pacienteActual.horaAtencion || '';
 
             cerrarModalDetalles();
             document.getElementById('modalEdicion').classList.add('active');
