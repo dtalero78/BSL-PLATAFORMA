@@ -2175,7 +2175,13 @@ app.post('/api/estadisticas-ia', async (req, res) => {
                 COUNT(*) FILTER (WHERE UPPER(familia_infartos) = 'SI') as familia_infartos,
                 COUNT(*) FILTER (WHERE UPPER(familia_trastornos) = 'SI') as familia_trastornos_mentales,
                 COUNT(*) FILTER (WHERE UPPER(familia_hereditarias) = 'SI') as familia_enfermedades_hereditarias,
-                COUNT(*) FILTER (WHERE UPPER(familia_geneticas) = 'SI') as familia_enfermedades_geneticas
+                COUNT(*) FILTER (WHERE UPPER(familia_geneticas) = 'SI') as familia_enfermedades_geneticas,
+                -- Consumo de licor
+                COUNT(*) FILTER (WHERE UPPER(consumo_licor) = 'NUNCA') as licor_nunca,
+                COUNT(*) FILTER (WHERE UPPER(consumo_licor) = 'OCASIONALMENTE') as licor_ocasional,
+                COUNT(*) FILTER (WHERE UPPER(consumo_licor) = '1 DÍA SEMANAL' OR UPPER(consumo_licor) = '1 DIA SEMANAL') as licor_1_dia,
+                COUNT(*) FILTER (WHERE UPPER(consumo_licor) = '2 DÍAS SEMANALES' OR UPPER(consumo_licor) = '2 DIAS SEMANALES') as licor_2_dias,
+                COUNT(*) FILTER (WHERE UPPER(consumo_licor) LIKE '%+ DE 2%' OR UPPER(consumo_licor) LIKE '%MAS DE 2%') as licor_mas_2_dias
             FROM formularios
             WHERE UPPER(cod_empresa) = UPPER($1)
         `;
@@ -2208,6 +2214,13 @@ HÁBITOS Y FACTORES DE RIESGO:
 - Con problemas cardíacos: ${stats.problemas_cardiacos}
 - Con diabetes o problemas de azúcar: ${stats.diabetes}
 - Con problemas de sueño: ${stats.problemas_sueno}
+
+CONSUMO DE LICOR:
+- Nunca consumen licor: ${stats.licor_nunca}
+- Consumen ocasionalmente: ${stats.licor_ocasional}
+- Consumen 1 día a la semana: ${stats.licor_1_dia}
+- Consumen 2 días a la semana: ${stats.licor_2_dias}
+- Consumen más de 2 días a la semana: ${stats.licor_mas_2_dias}
 
 SÍNTOMAS Y CONDICIONES:
 - Con hormigueos: ${stats.hormigueos}
