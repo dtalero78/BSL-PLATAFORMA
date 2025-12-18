@@ -2181,7 +2181,12 @@ app.post('/api/estadisticas-ia', async (req, res) => {
                 COUNT(*) FILTER (WHERE UPPER(consumo_licor) = 'OCASIONALMENTE') as licor_ocasional,
                 COUNT(*) FILTER (WHERE UPPER(consumo_licor) = '1 DÍA SEMANAL' OR UPPER(consumo_licor) = '1 DIA SEMANAL') as licor_1_dia,
                 COUNT(*) FILTER (WHERE UPPER(consumo_licor) = '2 DÍAS SEMANALES' OR UPPER(consumo_licor) = '2 DIAS SEMANALES') as licor_2_dias,
-                COUNT(*) FILTER (WHERE UPPER(consumo_licor) LIKE '%+ DE 2%' OR UPPER(consumo_licor) LIKE '%MAS DE 2%') as licor_mas_2_dias
+                COUNT(*) FILTER (WHERE UPPER(consumo_licor) LIKE '%+ DE 2%' OR UPPER(consumo_licor) LIKE '%MAS DE 2%') as licor_mas_2_dias,
+                -- Ejercicio fisico
+                COUNT(*) FILTER (WHERE UPPER(ejercicio) = 'OCASIONALMENTE') as ejercicio_ocasional,
+                COUNT(*) FILTER (WHERE UPPER(ejercicio) = '1 DÍA SEMANAL' OR UPPER(ejercicio) = '1 DIA SEMANAL') as ejercicio_1_dia,
+                COUNT(*) FILTER (WHERE UPPER(ejercicio) = '2 DÍAS SEMANALES' OR UPPER(ejercicio) = '2 DIAS SEMANALES') as ejercicio_2_dias,
+                COUNT(*) FILTER (WHERE UPPER(ejercicio) LIKE '%+ DE 2%' OR UPPER(ejercicio) LIKE '%MAS DE 2%') as ejercicio_mas_2_dias
             FROM formularios
             WHERE UPPER(cod_empresa) = UPPER($1)
         `;
@@ -2221,6 +2226,12 @@ CONSUMO DE LICOR:
 - Consumen 1 día a la semana: ${stats.licor_1_dia}
 - Consumen 2 días a la semana: ${stats.licor_2_dias}
 - Consumen más de 2 días a la semana: ${stats.licor_mas_2_dias}
+
+EJERCICIO FÍSICO:
+- Hacen ejercicio ocasionalmente: ${stats.ejercicio_ocasional}
+- Hacen ejercicio 1 día a la semana: ${stats.ejercicio_1_dia}
+- Hacen ejercicio 2 días a la semana: ${stats.ejercicio_2_dias}
+- Hacen ejercicio más de 2 días a la semana: ${stats.ejercicio_mas_2_dias}
 
 SÍNTOMAS Y CONDICIONES:
 - Con hormigueos: ${stats.hormigueos}
