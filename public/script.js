@@ -352,7 +352,12 @@ document.addEventListener('DOMContentLoaded', async function() {
             return { valid: false, message: 'Este campo es obligatorio' };
         }
 
-        // Validaciones específicas según el campo
+        // Los selects con valor ya seleccionado son válidos (no necesitan validación de formato)
+        if (input.tagName === 'SELECT') {
+            return { valid: true };
+        }
+
+        // Validaciones específicas según el campo (solo para inputs de texto/número)
         switch(name) {
             case 'edad':
                 const edad = parseInt(value);
@@ -394,13 +399,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const hijos = parseInt(value);
                 if (isNaN(hijos) || hijos < 0 || hijos > 20) {
                     return { valid: false, message: 'Ingresa un número válido de hijos (0-20)' };
-                }
-                break;
-
-            case 'estatura':
-                const estatura = parseFloat(value.replace(',', '.'));
-                if (isNaN(estatura) || estatura < 0.5 || estatura > 2.5) {
-                    return { valid: false, message: 'Ingresa una estatura válida en metros (ej: 1.70)' };
                 }
                 break;
 
