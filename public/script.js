@@ -283,16 +283,162 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
-    // Validar slide actual
+    // ========== SISTEMA DE VALIDACIÓN EN TIEMPO REAL ==========
+
+    // Mostrar error en un campo
+    function showFieldError(input, message) {
+        // Remover error previo si existe
+        clearFieldError(input);
+
+        // Agregar clase de error
+        input.classList.add('input-error');
+        input.classList.remove('input-valid');
+
+        // Crear mensaje de error
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = message;
+        errorDiv.setAttribute('data-error-for', input.name || input.id);
+
+        // Insertar después del input o del contenedor de radio
+        if (input.type === 'radio') {
+            const radioGroup = input.closest('.radio-group');
+            if (radioGroup) {
+                radioGroup.classList.add('input-error');
+                radioGroup.parentNode.insertBefore(errorDiv, radioGroup.nextSibling);
+            }
+        } else {
+            input.parentNode.insertBefore(errorDiv, input.nextSibling);
+        }
+
+        input.focus();
+    }
+
+    // Limpiar error de un campo
+    function clearFieldError(input) {
+        input.classList.remove('input-error');
+
+        // Remover mensaje de error existente
+        const errorId = input.name || input.id;
+        const existingError = document.querySelector(`[data-error-for="${errorId}"]`);
+        if (existingError) {
+            existingError.remove();
+        }
+
+        // Para radio buttons
+        if (input.type === 'radio') {
+            const radioGroup = input.closest('.radio-group');
+            if (radioGroup) {
+                radioGroup.classList.remove('input-error');
+            }
+        }
+    }
+
+    // Marcar campo como válido
+    function markFieldValid(input) {
+        clearFieldError(input);
+        if (input.type !== 'radio' && input.type !== 'file' && input.type !== 'hidden') {
+            input.classList.add('input-valid');
+        }
+    }
+
+    // Validaciones específicas por tipo de campo
+    function validateField(input) {
+        const value = input.value ? input.value.trim() : '';
+        const name = input.name;
+
+        // Campo vacío
+        if (!value || value === '-') {
+            return { valid: false, message: 'Este campo es obligatorio' };
+        }
+
+        // Validaciones específicas según el campo
+        switch(name) {
+            case 'edad':
+                const edad = parseInt(value);
+                if (isNaN(edad) || edad < 15 || edad > 120) {
+                    return { valid: false, message: 'Ingresa una edad válida (entre 15 y 120 años)' };
+                }
+                break;
+
+            case 'fechaNacimiento':
+                // Formato DD/MM/AAAA
+                const fechaRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+                if (!fechaRegex.test(value)) {
+                    return { valid: false, message: 'Formato inválido. Usa DD/MM/AAAA (ej: 15/03/1990)' };
+                }
+                const [, dia, mes, anio] = value.match(fechaRegex);
+                if (parseInt(dia) < 1 || parseInt(dia) > 31 || parseInt(mes) < 1 || parseInt(mes) > 12) {
+                    return { valid: false, message: 'Fecha inválida. Verifica día y mes' };
+                }
+                if (parseInt(anio) < 1900 || parseInt(anio) > new Date().getFullYear()) {
+                    return { valid: false, message: 'Año inválido' };
+                }
+                break;
+
+            case 'email':
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(value)) {
+                    return { valid: false, message: 'Ingresa un correo electrónico válido' };
+                }
+                break;
+
+            case 'celular':
+                const celularLimpio = value.replace(/\D/g, '');
+                if (celularLimpio.length < 10) {
+                    return { valid: false, message: 'El celular debe tener al menos 10 dígitos' };
+                }
+                break;
+
+            case 'hijos':
+                const hijos = parseInt(value);
+                if (isNaN(hijos) || hijos < 0 || hijos > 20) {
+                    return { valid: false, message: 'Ingresa un número válido de hijos (0-20)' };
+                }
+                break;
+
+            case 'estatura':
+                const estatura = parseFloat(value.replace(',', '.'));
+                if (isNaN(estatura) || estatura < 0.5 || estatura > 2.5) {
+                    return { valid: false, message: 'Ingresa una estatura válida en metros (ej: 1.70)' };
+                }
+                break;
+
+            case 'peso':
+                const peso = parseFloat(value.replace(',', '.'));
+                if (isNaN(peso) || peso < 20 || peso > 300) {
+                    return { valid: false, message: 'Ingresa un peso válido en kg (entre 20 y 300)' };
+                }
+                break;
+
+            case 'lugarDeNacimiento':
+            case 'ciudadDeResidencia':
+                if (value.length < 2) {
+                    return { valid: false, message: 'Ingresa el nombre completo de la ciudad' };
+                }
+                break;
+
+            case 'profesionUOficio':
+                if (value.length < 2) {
+                    return { valid: false, message: 'Ingresa tu profesión u oficio' };
+                }
+                break;
+        }
+
+        return { valid: true };
+    }
+
+    // Validar slide actual (versión mejorada)
     function validateCurrentSlide() {
         const currentSlideElement = slides[currentSlide];
         const inputs = currentSlideElement.querySelectorAll('input[required], textarea[required], select[required]');
+        let isValid = true;
 
         for (let input of inputs) {
-            // Skip hidden inputs
+            // Skip hidden inputs excepto firma
             if (input.type === 'hidden') {
                 if (input.id === 'firmaData' && !input.value) {
-                    alert('Por favor firma antes de continuar.');
+                    showFieldError(input, 'Por favor firma antes de continuar');
                     return false;
                 }
                 continue;
@@ -302,24 +448,69 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const name = input.name;
                 const checked = currentSlideElement.querySelector(`[name="${name}"]:checked`);
                 if (!checked) {
-                    alert('Por favor selecciona una opción antes de continuar.');
-                    return false;
+                    showFieldError(input, 'Selecciona una opción');
+                    isValid = false;
+                    break;
+                } else {
+                    clearFieldError(input);
                 }
             } else if (input.type === 'file') {
                 if (!input.files || input.files.length === 0) {
-                    alert('Por favor sube una foto antes de continuar.');
-                    return false;
+                    showFieldError(input, 'Por favor sube una foto');
+                    isValid = false;
+                    break;
                 }
             } else {
-                if (!input.value || input.value.trim() === '' || input.value === '-') {
-                    alert('Por favor completa este campo antes de continuar.');
-                    input.focus();
-                    return false;
+                const validation = validateField(input);
+                if (!validation.valid) {
+                    showFieldError(input, validation.message);
+                    isValid = false;
+                    break;
+                } else {
+                    markFieldValid(input);
                 }
             }
         }
-        return true;
+        return isValid;
     }
+
+    // Agregar validación en tiempo real a todos los inputs
+    document.querySelectorAll('.question-input, .question-select').forEach(input => {
+        // Validar al perder el foco (blur)
+        input.addEventListener('blur', function() {
+            if (this.hasAttribute('required') && this.value && this.value !== '-') {
+                const validation = validateField(this);
+                if (!validation.valid) {
+                    showFieldError(this, validation.message);
+                } else {
+                    markFieldValid(this);
+                }
+            }
+        });
+
+        // Limpiar error mientras escribe
+        input.addEventListener('input', function() {
+            if (this.classList.contains('input-error')) {
+                clearFieldError(this);
+            }
+        });
+    });
+
+    // Limpiar error en selects al cambiar
+    document.querySelectorAll('select').forEach(select => {
+        select.addEventListener('change', function() {
+            if (this.classList.contains('input-error') && this.value && this.value !== '-') {
+                markFieldValid(this);
+            }
+        });
+    });
+
+    // Limpiar error en radio buttons al seleccionar
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            clearFieldError(this);
+        });
+    });
 
     // Navegación - Siguiente
     nextBtn.addEventListener('click', function() {

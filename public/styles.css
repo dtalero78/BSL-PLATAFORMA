@@ -604,3 +604,64 @@ input[type="number"]::-webkit-inner-spin-button {
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
+
+/* ========== ESTILOS DE VALIDACIÓN ========== */
+
+/* Estado de error en inputs y selects */
+.question-input.input-error,
+.question-select.input-error {
+    border-color: #e74c3c !important;
+    background-color: #fdf2f2 !important;
+    animation: shake 0.5s ease-in-out;
+}
+
+.question-input.input-error:focus,
+.question-select.input-error:focus {
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2) !important;
+}
+
+/* Estado válido en inputs y selects */
+.question-input.input-valid,
+.question-select.input-valid {
+    border-color: #27ae60 !important;
+}
+
+/* Mensaje de error */
+.error-message {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: fadeIn 0.3s ease;
+}
+
+.error-message::before {
+    content: "⚠️";
+}
+
+/* Error en radio buttons */
+.radio-group.input-error .radio-option {
+    border-color: #e74c3c !important;
+    background-color: #fdf2f2 !important;
+}
+
+/* Animación de sacudida */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Animación de aparición */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Botón siguiente deshabilitado visualmente */
+.nav-btn.btn-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
