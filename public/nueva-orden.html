@@ -1162,7 +1162,9 @@
             const select = document.getElementById('selectMedico');
 
             // Validar que la fecha no sea pasada (timezone Colombia)
-            if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+            // Solo validar si el año es >= 2024 (evita falsos positivos mientras se escribe)
+            const match = fecha ? fecha.match(/^(\d{4})-(\d{2})-(\d{2})$/) : null;
+            if (match && parseInt(match[1]) >= 2024) {
                 const hoyColombia = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
                 if (fecha < hoyColombia) {
                     inputFecha.value = '';
