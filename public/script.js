@@ -403,9 +403,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                 break;
 
             case 'peso':
-                const peso = parseFloat(value.replace(',', '.'));
-                if (isNaN(peso) || peso < 20 || peso > 300) {
-                    return { valid: false, message: 'Ingresa un peso válido en kg (entre 20 y 300)' };
+                // Limpiar: solo permitir números, punto y coma
+                const pesoLimpio = value.replace(',', '.').replace(/[^\d.]/g, '');
+                const peso = parseFloat(pesoLimpio);
+                if (pesoLimpio !== value.replace(',', '.') || isNaN(peso) || peso < 20 || peso > 300) {
+                    return { valid: false, message: 'Ingresa solo el número en kg (ej: 70 o 70.5)' };
                 }
                 break;
 
