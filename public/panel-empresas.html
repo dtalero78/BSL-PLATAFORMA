@@ -2764,6 +2764,11 @@
                 return;
             }
 
+            // Verificar que la fecha esté completa (formato YYYY-MM-DD)
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+                return; // Fecha incompleta, esperar
+            }
+
             // Validar que la fecha no sea pasada (timezone Colombia)
             const hoyColombia = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
             if (fecha < hoyColombia) {
@@ -3142,6 +3147,11 @@
             if (!fecha) {
                 select.innerHTML = '<option value="">Primero selecciona una fecha</option>';
                 return;
+            }
+
+            // Verificar que la fecha esté completa (formato YYYY-MM-DD)
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+                return; // Fecha incompleta, esperar
             }
 
             // Validar que la fecha no sea pasada (timezone Colombia)
