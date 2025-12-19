@@ -67,7 +67,7 @@
             position: fixed;
             height: 100vh;
             overflow-y: auto;
-            overflow-x: hidden;
+            overflow-x: visible;
             transition: width 0.3s ease, background 0.3s ease, border-color 0.3s ease;
             z-index: 150;
         }
@@ -106,14 +106,15 @@
             margin-top: 8px;
         }
 
-        /* Toggle Button */
+        /* Toggle Button - centrado verticalmente en el borde derecho */
         .sidebar-toggle {
             position: absolute;
-            top: 24px;
-            right: 12px;
-            width: 32px;
-            height: 32px;
-            background: var(--bg-tertiary);
+            top: 50%;
+            right: -14px;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 50%;
             display: flex;
@@ -121,28 +122,20 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease;
-            z-index: 160;
+            z-index: 200;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
         .sidebar-toggle:hover {
-            background: var(--accent-color);
-            border-color: var(--accent-color);
-        }
-
-        .sidebar-toggle:hover i {
-            color: white;
+            background: var(--bg-tertiary);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
         }
 
         .sidebar-toggle i {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             color: var(--text-secondary);
-            transition: transform 0.3s ease, color 0.2s ease;
-        }
-
-        .sidebar.collapsed .sidebar-toggle {
-            right: 50%;
-            transform: translateX(50%);
+            transition: transform 0.3s ease;
         }
 
         .sidebar.collapsed .sidebar-toggle i {
