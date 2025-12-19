@@ -67,7 +67,13 @@
             position: fixed;
             height: 100vh;
             overflow-y: auto;
-            transition: background 0.3s ease, border-color 0.3s ease;
+            overflow-x: hidden;
+            transition: width 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+            z-index: 150;
+        }
+
+        .sidebar.collapsed {
+            width: 68px;
         }
 
         .sidebar-logo {
@@ -75,11 +81,21 @@
             border-bottom: 1px solid var(--border-color);
             margin-bottom: 16px;
             text-align: center;
+            transition: padding 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-logo {
+            padding: 0 10px 24px;
         }
 
         .sidebar-logo img {
             max-width: 140px;
             height: auto;
+            transition: max-width 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-logo img {
+            max-width: 44px;
         }
 
         .sidebar-logo span {
@@ -90,8 +106,46 @@
             margin-top: 8px;
         }
 
+        /* Toggle Button */
+        .sidebar-toggle {
+            position: absolute;
+            top: 20px;
+            right: -14px;
+            width: 28px;
+            height: 28px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 160;
+            box-shadow: var(--shadow-md);
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .sidebar-toggle i {
+            width: 16px;
+            height: 16px;
+            color: var(--text-secondary);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-toggle i {
+            transform: rotate(180deg);
+        }
+
         .sidebar-nav {
             padding: 0 12px;
+        }
+
+        .sidebar.collapsed .sidebar-nav {
+            padding: 0 8px;
         }
 
         .nav-item {
@@ -106,6 +160,24 @@
             font-weight: 500;
             transition: all 0.15s ease;
             margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .sidebar.collapsed .nav-item {
+            padding: 10px;
+            justify-content: center;
+        }
+
+        .nav-item span {
+            opacity: 1;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar.collapsed .nav-item span {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
         }
 
         .nav-item:hover {
@@ -127,6 +199,37 @@
             width: 20px;
             height: 20px;
             stroke-width: 2;
+            flex-shrink: 0;
+        }
+
+        /* Tooltip para sidebar colapsado */
+        .sidebar.collapsed .nav-item {
+            position: relative;
+        }
+
+        .sidebar.collapsed .nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            margin-left: 10px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            z-index: 200;
+        }
+
+        .sidebar.collapsed .nav-item:hover::after {
+            opacity: 1;
         }
 
         /* Top Bar Fijo */
@@ -143,7 +246,12 @@
             justify-content: space-between;
             padding: 0 32px;
             z-index: 100;
-            transition: background 0.3s ease, border-color 0.3s ease;
+            transition: left 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .sidebar.collapsed ~ .top-bar,
+        body.sidebar-collapsed .top-bar {
+            left: 68px;
         }
 
         .top-bar-search {
@@ -222,6 +330,11 @@
             margin-left: 240px;
             padding: 32px 40px;
             padding-top: 96px; /* 64px top-bar + 32px padding */
+            transition: margin-left 0.3s ease;
+        }
+
+        body.sidebar-collapsed .main-content {
+            margin-left: 68px;
         }
 
         /* ========== HEADER ========== */
@@ -1671,42 +1784,45 @@
 <body>
     <div class="app-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
+            <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+                <i data-feather="chevron-left"></i>
+            </button>
             <div class="sidebar-logo">
                 <img src="/bsl-logo.png" alt="BSL - Bienestar & Salud Laboral">
             </div>
             <nav class="sidebar-nav">
-                <a href="/" class="nav-item">
+                <a href="/" class="nav-item" data-tooltip="Formulario Médico">
                     <i data-feather="file-text"></i>
-                    Formulario Médico
+                    <span>Formulario Médico</span>
                 </a>
-                <a href="/ordenes.html" class="nav-item active">
+                <a href="/ordenes.html" class="nav-item active" data-tooltip="Ordenes">
                     <i data-feather="clipboard-list"></i>
-                    Ordenes
+                    <span>Ordenes</span>
                 </a>
-                <a href="/nueva-orden.html" class="nav-item">
+                <a href="/nueva-orden.html" class="nav-item" data-tooltip="Nueva Orden">
                     <i data-feather="plus-circle"></i>
-                    Nueva Orden
+                    <span>Nueva Orden</span>
                 </a>
-                <a href="/calendario.html" class="nav-item">
+                <a href="/calendario.html" class="nav-item" data-tooltip="Calendario">
                     <i data-feather="calendar"></i>
-                    Calendario
+                    <span>Calendario</span>
                 </a>
-                <a href="/medicos.html" class="nav-item">
+                <a href="/medicos.html" class="nav-item" data-tooltip="Médicos">
                     <i data-feather="users"></i>
-                    Médicos
+                    <span>Médicos</span>
                 </a>
-                <a href="/examenes.html" class="nav-item">
+                <a href="/examenes.html" class="nav-item" data-tooltip="Exámenes">
                     <i data-feather="activity"></i>
-                    Exámenes
+                    <span>Exámenes</span>
                 </a>
-                <a href="/empresas.html" class="nav-item">
+                <a href="/empresas.html" class="nav-item" data-tooltip="Empresas">
                     <i data-feather="briefcase"></i>
-                    Empresas
+                    <span>Empresas</span>
                 </a>
-                <a href="https://bsl-plataforma.com/panel-empresas.html" class="nav-item" target="_blank">
+                <a href="https://bsl-plataforma.com/panel-empresas.html" class="nav-item" target="_blank" data-tooltip="Panel Empresas">
                     <i data-feather="grid"></i>
-                    Panel Empresas
+                    <span>Panel Empresas</span>
                 </a>
             </nav>
         </aside>
@@ -2436,6 +2552,32 @@
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             updateThemeButton(newTheme);
+        }
+
+        // Sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const body = document.body;
+
+            sidebar.classList.toggle('collapsed');
+            body.classList.toggle('sidebar-collapsed');
+
+            // Guardar estado en localStorage
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+
+            // Re-render feather icons para el botón toggle
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+        }
+
+        function initSidebar() {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (isCollapsed) {
+                document.getElementById('sidebar').classList.add('collapsed');
+                document.body.classList.add('sidebar-collapsed');
+            }
         }
 
         function updateThemeButton(theme) {
@@ -3652,6 +3794,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize Feather Icons
             feather.replace();
+
+            // Initialize Sidebar state
+            initSidebar();
 
             // Marcar columna de ordenamiento inicial
             const columnaInicial = document.querySelector(`.data-table th.sortable[data-sort="${columnaOrden}"]`);
