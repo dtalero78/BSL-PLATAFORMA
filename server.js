@@ -5488,53 +5488,126 @@ function generarExamenesHTML(examenes) {
  * @param {string} firmaPaciente - Firma del paciente (base64 o URL)
  * @returns {string} HTML completo del certificado
  */
-function generarHTMLCertificado(datos, medico, fotoUrl, firmaPaciente) {
+// Mapeo de médicos según la guía
+const MEDICOS_MAP = {
+    'SIXTA': {
+        nombre: 'SIXTA VIVERO CARRASCAL',
+        registro: 'REGISTRO MÉDICO NO 55300504',
+        licencia: 'LICENCIA SALUD OCUPACIONAL 583',
+        firma: '/firmas/FIRMA-SIXTA.png'
+    },
+    'JUAN 134': {
+        nombre: 'JUAN JOSE REATIGA',
+        registro: 'CC. 7472.676 - REGISTRO MEDICO NO 14791',
+        licencia: 'LICENCIA SALUD OCUPACIONAL 460',
+        firma: '/firmas/FIRMA-JUAN134.jpeg'
+    },
+    'CESAR': {
+        nombre: 'CÉSAR ADOLFO ZAMBRANO MARTÍNEZ',
+        registro: 'REGISTRO MEDICO NO 1192803570',
+        licencia: 'LICENCIA SALUD OCUPACIONAL # 3241',
+        firma: '/firmas/FIRMA-CESAR.jpeg'
+    },
+    'MARY': {
+        nombre: 'MARY',
+        registro: '',
+        licencia: '',
+        firma: '/firmas/FIRMA-MARY.jpeg'
+    },
+    'NUBIA': {
+        nombre: 'JUAN JOSE REATIGA',
+        registro: 'CC. 7472.676 - REGISTRO MEDICO NO 14791',
+        licencia: 'LICENCIA SALUD OCUPACIONAL 460',
+        firma: '/firmas/FIRMA-JUAN134.jpeg'
+    },
+    'PRESENCIAL': {
+        nombre: '',
+        registro: '',
+        licencia: '',
+        firma: '/firmas/FIRMA-PRESENCIAL.jpeg'
+    }
+};
+
+function generarHTMLCertificado(historia, medico, fotoUrl, firmaPaciente, datosFormulario) {
     // Leer template base
     const templatePath = path.join(__dirname, 'public', 'certificado-template.html');
     let html = fs.readFileSync(templatePath, 'utf8');
 
     // Nombres completos
     const nombresCompletos = [
-        datos.primerNombre,
-        datos.segundoNombre,
-        datos.primerApellido,
-        datos.segundoApellido
+        historia.primerNombre,
+        historia.segundoNombre,
+        historia.primerApellido,
+        historia.segundoApellido
     ].filter(Boolean).join(' ').toUpperCase();
 
-    // Nombre del médico
-    const medicoNombre = medico ?
-        [medico.primer_nombre, medico.primer_apellido].filter(Boolean).join(' ').toUpperCase() :
-        (datos.medico || 'MÉDICO OCUPACIONAL');
+    // Datos del médico - primero intentar mapeo por nombre, luego BD
+    let medicoNombre = '';
+    let medicoRegistro = '';
+    let medicoLicencia = '';
+    let firmaMedico = '';
 
-    // Licencia del médico
-    const medicoLicencia = medico && medico.numero_licencia ?
-        `Lic. S.O. ${medico.numero_licencia}` :
-        '';
-
-    // Firma del médico (puede ser base64 o URL)
-    const firmaMedico = medico && medico.firma ? medico.firma : '';
+    const medicoKey = historia.medico ? historia.medico.toUpperCase() : '';
+    if (MEDICOS_MAP[medicoKey]) {
+        const medicoData = MEDICOS_MAP[medicoKey];
+        medicoNombre = medicoData.nombre;
+        medicoRegistro = medicoData.registro;
+        medicoLicencia = medicoData.licencia;
+        firmaMedico = medicoData.firma;
+    } else if (medico) {
+        // Fallback a datos de BD
+        medicoNombre = [medico.primer_nombre, medico.primer_apellido].filter(Boolean).join(' ').toUpperCase();
+        medicoRegistro = medico.registro_medico ? `REGISTRO MÉDICO NO ${medico.registro_medico}` : '';
+        medicoLicencia = medico.numero_licencia ? `LICENCIA SALUD OCUPACIONAL ${medico.numero_licencia}` : '';
+        firmaMedico = medico.firma || '';
+    } else {
+        medicoNombre = historia.medico || 'MÉDICO OCUPACIONAL';
+    }
 
     // URL del logo
     const logoUrl = '/bsl-logo.png';
 
+    // Calcular vigencia (3 años por defecto)
+    const vigencia = 'Tres años';
+
+    // IPS/Sede según la guía
+    const ipsSede = 'Sede norte DHSS0244914';
+
+    // Datos del formulario (demográficos)
+    const df = datosFormulario || {};
+
     // Reemplazos en el template
     const replacements = {
         '{{LOGO_URL}}': logoUrl,
-        '{{TIPO_EXAMEN}}': datos.tipoExamen || 'OCUPACIONAL',
-        '{{FECHA_ATENCION}}': formatearFechaCertificado(datos.fechaConsulta || datos.fechaAtencion),
-        '{{ORDEN_ID}}': datos._id || '',
+        '{{TIPO_EXAMEN}}': historia.tipoExamen || 'OCUPACIONAL',
+        '{{FECHA_ATENCION}}': formatearFechaCertificado(historia.fechaConsulta || historia.fechaAtencion),
+        '{{ORDEN_ID}}': historia._id || '',
         '{{NOMBRES_COMPLETOS}}': nombresCompletos,
-        '{{NUMERO_ID}}': datos.numeroId || '',
-        '{{EMPRESA}}': (datos.empresa || '').toUpperCase(),
-        '{{COD_EMPRESA}}': datos.codEmpresa || '',
-        '{{CARGO}}': (datos.cargo || '').toUpperCase(),
-        '{{CIUDAD}}': (datos.ciudad || 'BUCARAMANGA').toUpperCase(),
-        '{{EXAMENES_HTML}}': generarExamenesHTML(datos.examenes),
-        '{{CONCEPTO_FINAL}}': datos.mdConceptoFinal || 'PENDIENTE',
-        '{{CONCEPTO_CLASS}}': getConceptoClass(datos.mdConceptoFinal),
-        '{{RECOMENDACIONES}}': datos.mdRecomendacionesMedicasAdicionales || '',
-        '{{OBSERVACIONES_CERTIFICADO}}': datos.mdObservacionesCertificado || '',
+        '{{NUMERO_ID}}': historia.numeroId || '',
+        '{{EMPRESA}}': (historia.empresa || '').toUpperCase(),
+        '{{COD_EMPRESA}}': historia.codEmpresa || '',
+        '{{CARGO}}': (historia.cargo || '').toUpperCase(),
+        '{{CIUDAD}}': (historia.ciudad || 'BOGOTA').toUpperCase(),
+        '{{VIGENCIA}}': vigencia,
+        '{{IPS_SEDE}}': ipsSede,
+        '{{GENERO}}': df.genero || '',
+        '{{EDAD}}': df.edad || '',
+        '{{FECHA_NACIMIENTO}}': df.fecha_nacimiento ? formatearFechaCertificado(df.fecha_nacimiento) : '',
+        '{{ESTADO_CIVIL}}': df.estado_civil || '',
+        '{{HIJOS}}': df.hijos || '0',
+        '{{PROFESION}}': df.profesion_oficio || '',
+        '{{EMAIL}}': df.email || historia.email || '',
+        '{{EPS}}': df.eps || '',
+        '{{ARL}}': df.arl || '',
+        '{{PENSIONES}}': df.pensiones || '',
+        '{{NIVEL_EDUCATIVO}}': df.nivel_educativo || '',
+        '{{EXAMENES_HTML}}': generarExamenesHTML(historia.examenes),
+        '{{CONCEPTO_FINAL}}': historia.mdConceptoFinal || 'PENDIENTE',
+        '{{CONCEPTO_CLASS}}': getConceptoClass(historia.mdConceptoFinal),
+        '{{RECOMENDACIONES}}': historia.mdRecomendacionesMedicasAdicionales || '',
+        '{{OBSERVACIONES_CERTIFICADO}}': historia.mdObservacionesCertificado || '',
         '{{MEDICO_NOMBRE}}': medicoNombre,
+        '{{MEDICO_REGISTRO}}': medicoRegistro,
         '{{MEDICO_LICENCIA}}': medicoLicencia,
         '{{FIRMA_MEDICO}}': firmaMedico,
         '{{FIRMA_PACIENTE}}': firmaPaciente || '',
@@ -5569,14 +5642,14 @@ function generarHTMLCertificado(datos, medico, fotoUrl, firmaPaciente) {
     }
 
     // Recomendaciones
-    if (datos.mdRecomendacionesMedicasAdicionales) {
+    if (historia.mdRecomendacionesMedicasAdicionales) {
         html = html.replace(/\{\{#if RECOMENDACIONES\}\}([\s\S]*?)\{\{\/if\}\}/g, '$1');
     } else {
         html = html.replace(/\{\{#if RECOMENDACIONES\}\}[\s\S]*?\{\{\/if\}\}/g, '');
     }
 
     // Observaciones
-    if (datos.mdObservacionesCertificado) {
+    if (historia.mdObservacionesCertificado) {
         html = html.replace(/\{\{#if OBSERVACIONES_CERTIFICADO\}\}([\s\S]*?)\{\{\/if\}\}/g, '$1');
     } else {
         html = html.replace(/\{\{#if OBSERVACIONES_CERTIFICADO\}\}[\s\S]*?\{\{\/if\}\}/g, '');
@@ -5808,31 +5881,28 @@ app.get('/preview-certificado/:id', async (req, res) => {
 
         const historia = historiaResult.rows[0];
 
-        // 2. Obtener foto del paciente desde formularios
+        // 2. Obtener datos completos del formulario (foto, firma y demográficos)
         let fotoUrl = null;
-        const fotoResult = await pool.query(`
-            SELECT foto_url FROM formularios
-            WHERE (wix_id = $1 OR numero_id = $2) AND foto_url IS NOT NULL
-            ORDER BY fecha_registro DESC LIMIT 1
-        `, [id, historia.numeroId]);
-
-        if (fotoResult.rows.length > 0) {
-            fotoUrl = fotoResult.rows[0].foto_url;
-        }
-
-        // 3. Obtener firma del paciente desde formularios
         let firmaPaciente = null;
-        const firmaResult = await pool.query(`
-            SELECT firma FROM formularios
-            WHERE (wix_id = $1 OR numero_id = $2) AND firma IS NOT NULL
+        let datosFormulario = {};
+
+        const formularioResult = await pool.query(`
+            SELECT foto_url, firma, genero, edad, estado_civil, hijos,
+                   profesion_oficio, fecha_nacimiento, email, eps, arl,
+                   pensiones, nivel_educativo
+            FROM formularios
+            WHERE (wix_id = $1 OR numero_id = $2)
             ORDER BY fecha_registro DESC LIMIT 1
         `, [id, historia.numeroId]);
 
-        if (firmaResult.rows.length > 0) {
-            firmaPaciente = firmaResult.rows[0].firma;
+        if (formularioResult.rows.length > 0) {
+            const formData = formularioResult.rows[0];
+            fotoUrl = formData.foto_url;
+            firmaPaciente = formData.firma;
+            datosFormulario = formData;
         }
 
-        // 4. Obtener datos del médico (si está registrado)
+        // 3. Obtener datos del médico (si está registrado)
         let medico = null;
         if (historia.medico) {
             const medicoResult = await pool.query(`
@@ -5847,8 +5917,8 @@ app.get('/preview-certificado/:id', async (req, res) => {
             }
         }
 
-        // 5. Generar HTML
-        const html = generarHTMLCertificado(historia, medico, fotoUrl, firmaPaciente);
+        // 4. Generar HTML
+        const html = generarHTMLCertificado(historia, medico, fotoUrl, firmaPaciente, datosFormulario);
 
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.send(html);

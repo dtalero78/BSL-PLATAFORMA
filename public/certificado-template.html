@@ -15,39 +15,39 @@
             font-family: Arial, sans-serif;
             background: #f0f0f0;
             padding: 10px;
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 10px;
+            line-height: 1.3;
         }
 
         .certificate-container {
             max-width: 8.5in;
             margin: 0 auto;
             background: white;
-            padding: 25px 30px;
+            padding: 20px 25px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
 
-        /* Header con 3 columnas: Logo | Título | Código */
+        /* Header con 3 columnas: Logo | Título | QR/Foto */
         .header {
             display: grid;
-            grid-template-columns: 150px 1fr 150px;
+            grid-template-columns: 180px 1fr 120px;
             gap: 15px;
             align-items: start;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
             border-bottom: 3px solid #00a651;
         }
 
         .logo-section img {
-            width: 140px;
+            width: 160px;
             height: auto;
         }
 
         .company-info {
-            font-size: 9px;
+            font-size: 8px;
             color: #666;
             margin-top: 5px;
-            line-height: 1.3;
+            line-height: 1.2;
         }
 
         .title-section {
@@ -63,9 +63,9 @@
         }
 
         .security-code {
-            font-size: 10px;
+            font-size: 9px;
             color: #666;
-            margin-top: 8px;
+            margin-top: 5px;
         }
 
         .exam-type {
@@ -76,72 +76,101 @@
             text-transform: uppercase;
         }
 
-        .exam-date {
-            font-size: 10px;
-            color: #333;
-            margin-top: 5px;
-        }
-
         .photo-section {
             text-align: right;
         }
 
         .photo-section img {
-            width: 100px;
-            height: 120px;
+            width: 90px;
+            height: 110px;
             object-fit: cover;
-            border: 2px solid #ddd;
-            border-radius: 4px;
+            border: 2px solid #0066cc;
+            border-radius: 5px;
         }
 
         .photo-placeholder {
-            width: 100px;
-            height: 120px;
+            width: 90px;
+            height: 110px;
             background: #f5f5f5;
             border: 2px dashed #ddd;
-            border-radius: 4px;
+            border-radius: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #999;
-            font-size: 10px;
+            font-size: 9px;
         }
 
         /* Secciones */
         .section {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .section-title {
             background: linear-gradient(90deg, #0066cc 0%, #00a651 100%);
             color: white;
-            padding: 6px 12px;
-            font-size: 11px;
+            padding: 5px 10px;
+            font-size: 10px;
             font-weight: bold;
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+
+        /* Contenedor de datos personales con foto */
+        .personal-data-container {
+            display: flex;
+            gap: 12px;
+        }
+
+        .personal-photo {
+            flex-shrink: 0;
+        }
+
+        .personal-photo img {
+            width: 90px;
+            height: 110px;
+            object-fit: cover;
+            border: 2px solid #0066cc;
+            border-radius: 5px;
+        }
+
+        .personal-photo .photo-placeholder {
+            width: 90px;
+            height: 110px;
+            background: #f5f5f5;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 9px;
+        }
+
+        .personal-table-container {
+            flex: 1;
         }
 
         /* Tabla de datos */
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 10px;
+            font-size: 9px;
         }
 
         .data-table td {
-            padding: 5px 8px;
+            padding: 3px 6px;
             border: 1px solid #ddd;
-            vertical-align: top;
+            vertical-align: middle;
         }
 
         .data-table td.label {
             background: #f5f5f5;
             font-weight: bold;
             color: #0066cc;
-            width: 15%;
+            width: 18%;
             white-space: nowrap;
         }
 
@@ -153,14 +182,14 @@
         .exams-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+            gap: 6px;
         }
 
         .exam-box {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
+            background: #e8e8e8;
+            border: 1px solid #d0d0d0;
             border-radius: 4px;
-            padding: 8px;
+            padding: 8px 5px;
             text-align: center;
         }
 
@@ -170,10 +199,11 @@
         }
 
         .exam-box h4 {
-            font-size: 9px;
-            color: #333;
-            margin-bottom: 3px;
+            font-size: 8px;
+            color: #0066cc;
+            margin-bottom: 2px;
             text-transform: uppercase;
+            line-height: 1.2;
         }
 
         .exam-box .estado {
@@ -184,22 +214,23 @@
 
         /* Concepto médico */
         .concept-box {
+            background: #f0f8ff;
             border: 2px solid #0066cc;
             border-radius: 8px;
             padding: 15px;
             text-align: center;
-            margin: 10px 0;
+            margin: 8px 0;
         }
 
         .concept-label {
-            font-size: 10px;
+            font-size: 9px;
             color: #666;
             text-transform: uppercase;
             margin-bottom: 8px;
         }
 
         .concept-value {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             color: #28a745;
             text-transform: uppercase;
@@ -222,25 +253,32 @@
             color: #6c757d;
         }
 
+        .concept-description {
+            font-size: 9px;
+            color: #333;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
         /* Recomendaciones */
         .recommendations-box {
             background: #fff3cd;
             border: 1px solid #ffeeba;
             border-radius: 4px;
-            padding: 10px;
-            margin-top: 10px;
+            padding: 8px;
+            margin-top: 8px;
         }
 
         .recommendations-box h4 {
-            font-size: 10px;
+            font-size: 9px;
             color: #856404;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         .recommendations-box p {
-            font-size: 10px;
+            font-size: 9px;
             color: #856404;
-            line-height: 1.4;
+            line-height: 1.3;
         }
 
         /* Observaciones */
@@ -248,63 +286,71 @@
             background: #e7f3ff;
             border: 1px solid #b8daff;
             border-radius: 4px;
-            padding: 10px;
-            margin-top: 10px;
+            padding: 8px;
+            margin-top: 8px;
         }
 
         .observations-box h4 {
-            font-size: 10px;
+            font-size: 9px;
             color: #004085;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         .observations-box p {
-            font-size: 10px;
+            font-size: 9px;
             color: #004085;
-            line-height: 1.4;
+            line-height: 1.3;
         }
 
         /* Firmas */
         .signatures-section {
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .signatures-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-top: 10px;
+            gap: 30px;
+            margin-top: 8px;
         }
 
         .signature-box {
             text-align: center;
-            border-top: 2px solid #333;
-            padding-top: 10px;
+            padding-top: 8px;
+        }
+
+        .signature-line {
+            border-bottom: 2px solid #333;
+            min-height: 60px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 5px;
         }
 
         .signature-img {
-            max-width: 150px;
-            max-height: 60px;
-            margin-bottom: 5px;
+            max-width: 140px;
+            max-height: 55px;
         }
 
         .signature-name {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             color: #333;
-            margin-bottom: 3px;
+            margin-top: 5px;
+            margin-bottom: 2px;
         }
 
         .signature-details {
-            font-size: 9px;
+            font-size: 8px;
             color: #666;
-            line-height: 1.3;
+            line-height: 1.2;
         }
 
         /* Footer */
         .footer {
-            margin-top: 20px;
-            padding-top: 10px;
+            margin-top: 15px;
+            padding-top: 8px;
             border-top: 1px solid #ddd;
             text-align: center;
             font-size: 8px;
@@ -325,7 +371,7 @@
 
             .certificate-container {
                 box-shadow: none;
-                padding: 15px;
+                padding: 10px;
             }
 
             .section {
@@ -351,7 +397,6 @@
         .text-right { text-align: right; }
         .text-uppercase { text-transform: uppercase; }
         .font-bold { font-weight: bold; }
-        .mb-10 { margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -363,14 +408,14 @@
                 <div class="company-info">
                     BSL - Bienestar, Salud & Laboral SAS<br>
                     NIT: 900.844.030-8<br>
-                    Licencia S.O. No. 64 del 10-01-2017
+                    Licencia S.O. No. 64 del 10-01-2017<br>
+                    Calle 134 # 7-83 cons 233, Bogotá D.C.
                 </div>
             </div>
             <div class="title-section">
                 <h1>Certificado Médico Ocupacional</h1>
                 <div class="exam-type">{{TIPO_EXAMEN}}</div>
-                <div class="exam-date">Fecha: {{FECHA_ATENCION}}</div>
-                <div class="security-code">ID: {{ORDEN_ID}}</div>
+                <div class="security-code">Código: {{ORDEN_ID}}</div>
             </div>
             <div class="photo-section">
                 {{#if FOTO_URL}}
@@ -383,25 +428,69 @@
 
         <!-- DATOS PERSONALES -->
         <div class="section">
-            <div class="section-title">Datos del Trabajador</div>
+            <div class="section-title">Datos Personales</div>
             <table class="data-table">
                 <tr>
-                    <td class="label">Nombres</td>
-                    <td class="value" colspan="3">{{NOMBRES_COMPLETOS}}</td>
-                    <td class="label">Documento</td>
-                    <td class="value">{{NUMERO_ID}}</td>
+                    <td class="label">Fecha Atención</td>
+                    <td class="value">{{FECHA_ATENCION}}</td>
+                    <td class="label">Ciudad</td>
+                    <td class="value">{{CIUDAD}}</td>
+                    <td class="label">Vigencia</td>
+                    <td class="value">{{VIGENCIA}}</td>
                 </tr>
                 <tr>
+                    <td class="label">IPS/Sede</td>
+                    <td class="value" colspan="5">{{IPS_SEDE}}</td>
+                </tr>
+                <tr>
+                    <td class="label">Nombres</td>
+                    <td class="value" colspan="5">{{NOMBRES_COMPLETOS}}</td>
+                </tr>
+                <tr>
+                    <td class="label">Documento</td>
+                    <td class="value">{{NUMERO_ID}}</td>
                     <td class="label">Empresa</td>
                     <td class="value" colspan="3">{{EMPRESA}}</td>
-                    <td class="label">Código</td>
-                    <td class="value">{{COD_EMPRESA}}</td>
                 </tr>
                 <tr>
                     <td class="label">Cargo</td>
                     <td class="value" colspan="3">{{CARGO}}</td>
-                    <td class="label">Ciudad</td>
-                    <td class="value">{{CIUDAD}}</td>
+                    <td class="label">Código Emp.</td>
+                    <td class="value">{{COD_EMPRESA}}</td>
+                </tr>
+                <tr>
+                    <td class="label">Género</td>
+                    <td class="value">{{GENERO}}</td>
+                    <td class="label">Edad</td>
+                    <td class="value">{{EDAD}}</td>
+                    <td class="label">Fecha Nac.</td>
+                    <td class="value">{{FECHA_NACIMIENTO}}</td>
+                </tr>
+                <tr>
+                    <td class="label">Estado Civil</td>
+                    <td class="value">{{ESTADO_CIVIL}}</td>
+                    <td class="label">Hijos</td>
+                    <td class="value">{{HIJOS}}</td>
+                    <td class="label">Profesión</td>
+                    <td class="value">{{PROFESION}}</td>
+                </tr>
+                <tr>
+                    <td class="label">Email</td>
+                    <td class="value" colspan="3">{{EMAIL}}</td>
+                    <td class="label">Tipo Examen</td>
+                    <td class="value">{{TIPO_EXAMEN}}</td>
+                </tr>
+                <tr>
+                    <td class="label">EPS</td>
+                    <td class="value">{{EPS}}</td>
+                    <td class="label">ARL</td>
+                    <td class="value">{{ARL}}</td>
+                    <td class="label">Pensiones</td>
+                    <td class="value">{{PENSIONES}}</td>
+                </tr>
+                <tr>
+                    <td class="label">Nivel Educativo</td>
+                    <td class="value" colspan="5">{{NIVEL_EDUCATIVO}}</td>
                 </tr>
             </table>
         </div>
@@ -416,10 +505,16 @@
 
         <!-- CONCEPTO MÉDICO -->
         <div class="section">
-            <div class="section-title">Concepto de Aptitud Médica Ocupacional</div>
+            <div class="section-title">Concepto de Evaluación Médica</div>
             <div class="concept-box">
                 <div class="concept-label">Resultado de la Evaluación</div>
                 <div class="concept-value {{CONCEPTO_CLASS}}">{{CONCEPTO_FINAL}}</div>
+                <div class="concept-description">
+                    De acuerdo al examen ocupacional realizado a <strong>{{NOMBRES_COMPLETOS}}</strong>
+                    con documento de identificación No. <strong>{{NUMERO_ID}}</strong>,
+                    se considera que es <strong>{{CONCEPTO_FINAL}}</strong> para desempeñar
+                    la ocupación del cargo descrito.
+                </div>
             </div>
 
             {{#if RECOMENDACIONES}}
@@ -442,23 +537,28 @@
             <div class="section-title">Firmas</div>
             <div class="signatures-container">
                 <div class="signature-box">
-                    {{#if FIRMA_MEDICO}}
-                    <img src="{{FIRMA_MEDICO}}" alt="Firma del médico" class="signature-img">
-                    {{/if}}
+                    <div class="signature-line">
+                        {{#if FIRMA_MEDICO}}
+                        <img src="{{FIRMA_MEDICO}}" alt="Firma del médico" class="signature-img">
+                        {{/if}}
+                    </div>
                     <div class="signature-name">{{MEDICO_NOMBRE}}</div>
                     <div class="signature-details">
-                        Médico Ocupacional<br>
-                        {{MEDICO_LICENCIA}}
+                        {{MEDICO_REGISTRO}}<br>
+                        {{MEDICO_LICENCIA}}<br>
+                        Médico Ocupacional
                     </div>
                 </div>
                 <div class="signature-box">
-                    {{#if FIRMA_PACIENTE}}
-                    <img src="{{FIRMA_PACIENTE}}" alt="Firma del paciente" class="signature-img">
-                    {{/if}}
+                    <div class="signature-line">
+                        {{#if FIRMA_PACIENTE}}
+                        <img src="{{FIRMA_PACIENTE}}" alt="Firma del paciente" class="signature-img">
+                        {{/if}}
+                    </div>
                     <div class="signature-name">{{NOMBRES_COMPLETOS}}</div>
                     <div class="signature-details">
-                        Trabajador<br>
-                        C.C. {{NUMERO_ID}}
+                        C.C. {{NUMERO_ID}}<br>
+                        Trabajador
                     </div>
                 </div>
             </div>
@@ -466,8 +566,8 @@
 
         <!-- FOOTER -->
         <div class="footer">
-            BSL - Bienestar, Salud & Laboral SAS | Calle 34 No. 43-31 Oficina 301, Bucaramanga |
-            Tel: (607) 697 1000 | <a href="https://www.bsl.com.co">www.bsl.com.co</a><br>
+            BSL - Bienestar, Salud & Laboral SAS | Calle 134 # 7-83 cons 233, Bogotá D.C. |
+            Tel: (601) 697 1000 | <a href="https://www.bsl.com.co">www.bsl.com.co</a><br>
             Este certificado fue generado electrónicamente y tiene plena validez legal.
         </div>
     </div>
