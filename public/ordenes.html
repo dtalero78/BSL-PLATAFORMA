@@ -204,6 +204,21 @@
             flex-shrink: 0;
         }
 
+        /* Sub-items del menú */
+        .nav-item.sub-item {
+            padding-left: 44px;
+            font-size: 13px;
+        }
+
+        .nav-item.sub-item i {
+            width: 16px;
+            height: 16px;
+        }
+
+        .sidebar.collapsed .nav-item.sub-item {
+            padding-left: 10px;
+        }
+
         /* Tooltip para sidebar colapsado */
         .sidebar.collapsed .nav-item {
             position: relative;
@@ -1800,9 +1815,9 @@
                     <i data-feather="users"></i>
                     <span>Médicos</span>
                 </a>
-                <a href="/fijar-tiempo.html" class="nav-item" data-tooltip="Fijar Tiempo Consulta">
+                <a href="/fijar-tiempo.html" class="nav-item sub-item" data-tooltip="Fijar Tiempo">
                     <i data-feather="clock"></i>
-                    <span>Fijar Tiempo Consulta</span>
+                    <span>Fijar Tiempo</span>
                 </a>
                 <a href="/examenes.html" class="nav-item" data-tooltip="Exámenes">
                     <i data-feather="activity"></i>
