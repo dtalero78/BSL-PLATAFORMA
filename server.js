@@ -5695,6 +5695,101 @@ async function generarPDFConPuppeteer(html, baseUrl) {
     }
 }
 
+// Genera PDF navegando directamente a una URL
+async function generarPDFDesdeURL(url) {
+    let browser = null;
+
+    try {
+        console.log('🎭 Iniciando Puppeteer para generar PDF desde URL...');
+        console.log('📍 URL:', url);
+
+        // Configuración de Puppeteer
+        const launchOptions = {
+            headless: 'new',
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--disable-software-rasterizer',
+                '--single-process',
+                '--no-zygote'
+            ]
+        };
+
+        // Solo usar executablePath si está explícitamente configurado
+        if (process.env.PUPPETEER_EXECUTABLE_PATH && fs.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
+            launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+            console.log('📍 Usando Chromium del sistema:', process.env.PUPPETEER_EXECUTABLE_PATH);
+        } else {
+            console.log('📍 Usando Chrome de Puppeteer (cache)');
+        }
+
+        browser = await puppeteer.launch(launchOptions);
+        const page = await browser.newPage();
+
+        // Navegar a la URL
+        await page.goto(url, {
+            waitUntil: ['load', 'networkidle0'],
+            timeout: 30000
+        });
+
+        // Esperar a que las imágenes se carguen
+        await page.evaluate(() => {
+            return Promise.all(
+                Array.from(document.images).map(img => {
+                    return new Promise((resolve) => {
+                        if (img.complete) {
+                            resolve();
+                            return;
+                        }
+                        img.addEventListener('load', resolve);
+                        img.addEventListener('error', resolve);
+                        setTimeout(resolve, 5000);
+                    });
+                })
+            );
+        });
+
+        // Esperar un momento adicional para renderizado completo
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Generar PDF
+        const pdfData = await page.pdf({
+            format: 'Letter',
+            printBackground: true,
+            margin: {
+                top: '0.5cm',
+                right: '0.5cm',
+                bottom: '0.5cm',
+                left: '0.5cm'
+            }
+        });
+
+        // Asegurar que sea un Buffer (Puppeteer v24+ devuelve Uint8Array)
+        const pdfBuffer = Buffer.from(pdfData);
+
+        // Verificar que el PDF es válido (debe empezar con %PDF-)
+        const pdfHeader = pdfBuffer.slice(0, 5).toString();
+        console.log('📄 PDF Header:', pdfHeader, '| Size:', pdfBuffer.length, 'bytes');
+
+        if (!pdfHeader.startsWith('%PDF-')) {
+            throw new Error('El PDF generado no es válido');
+        }
+
+        console.log('✅ PDF generado exitosamente desde URL');
+        return pdfBuffer;
+
+    } catch (error) {
+        console.error('❌ Error generando PDF desde URL:', error);
+        throw error;
+    } finally {
+        if (browser) {
+            await browser.close();
+        }
+    }
+}
+
 // GET /preview-certificado/:id - Preview HTML del certificado médico
 app.get('/preview-certificado/:id', async (req, res) => {
     try {
@@ -5768,13 +5863,11 @@ app.get('/preview-certificado/:id', async (req, res) => {
 app.get('/api/certificado-pdf/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        // Parámetro download ya no es necesario, siempre forzamos descarga
-
         console.log(`📄 Generando PDF de certificado para orden: ${id}`);
 
-        // 1. Obtener datos de HistoriaClinica
+        // 1. Verificar que la orden existe y obtener numeroId para el nombre del archivo
         const historiaResult = await pool.query(
-            'SELECT * FROM "HistoriaClinica" WHERE "_id" = $1',
+            'SELECT "numeroId" FROM "HistoriaClinica" WHERE "_id" = $1',
             [id]
         );
 
@@ -5785,64 +5878,22 @@ app.get('/api/certificado-pdf/:id', async (req, res) => {
             });
         }
 
-        const historia = historiaResult.rows[0];
+        const numeroId = historiaResult.rows[0].numeroId;
 
-        // 2. Obtener foto del paciente desde formularios
-        let fotoUrl = null;
-        const fotoResult = await pool.query(`
-            SELECT foto_url FROM formularios
-            WHERE (wix_id = $1 OR numero_id = $2) AND foto_url IS NOT NULL
-            ORDER BY fecha_registro DESC LIMIT 1
-        `, [id, historia.numeroId]);
-
-        if (fotoResult.rows.length > 0) {
-            fotoUrl = fotoResult.rows[0].foto_url;
-        }
-
-        // 3. Obtener firma del paciente desde formularios
-        let firmaPaciente = null;
-        const firmaResult = await pool.query(`
-            SELECT firma FROM formularios
-            WHERE (wix_id = $1 OR numero_id = $2) AND firma IS NOT NULL
-            ORDER BY fecha_registro DESC LIMIT 1
-        `, [id, historia.numeroId]);
-
-        if (firmaResult.rows.length > 0) {
-            firmaPaciente = firmaResult.rows[0].firma;
-        }
-
-        // 4. Obtener datos del médico (si está registrado)
-        let medico = null;
-        if (historia.medico) {
-            const medicoResult = await pool.query(`
-                SELECT * FROM medicos
-                WHERE CONCAT(primer_nombre, ' ', primer_apellido) ILIKE $1
-                   OR CONCAT(primer_nombre, ' ', segundo_nombre, ' ', primer_apellido) ILIKE $1
-                LIMIT 1
-            `, [`%${historia.medico}%`]);
-
-            if (medicoResult.rows.length > 0) {
-                medico = medicoResult.rows[0];
-            }
-        }
-
-        // 5. Generar HTML
-        const html = generarHTMLCertificado(historia, medico, fotoUrl, firmaPaciente);
-
-        // 6. Determinar base URL para recursos estáticos
+        // 2. Construir URL del preview (el preview tiene toda la lógica de datos)
         const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
         const host = req.headers['x-forwarded-host'] || req.headers.host;
-        const baseUrl = `${protocol}://${host}`;
+        const previewUrl = `${protocol}://${host}/preview-certificado/${id}`;
+        console.log('📍 Preview URL:', previewUrl);
 
-        // 7. Generar PDF
-        const pdfBuffer = await generarPDFConPuppeteer(html, baseUrl);
+        // 3. Generar PDF navegando a la URL del preview
+        const pdfBuffer = await generarPDFDesdeURL(previewUrl);
 
-        // 8. Nombre del archivo
-        const nombreArchivo = `certificado_${historia.numeroId || id}_${Date.now()}.pdf`;
+        // 4. Nombre del archivo
+        const nombreArchivo = `certificado_${numeroId || id}_${Date.now()}.pdf`;
 
-        // 9. Configurar headers de respuesta
+        // 5. Configurar headers de respuesta
         res.setHeader('Content-Type', 'application/pdf');
-        // Siempre forzar descarga para evitar problemas de visualización
         res.setHeader('Content-Disposition', `attachment; filename="${nombreArchivo}"`);
         res.setHeader('Content-Length', pdfBuffer.length);
 
