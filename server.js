@@ -1079,17 +1079,36 @@ app.get('/api/formularios/search', async (req, res) => {
     }
 });
 
-// Buscar formulario por numeroId (cédula)
+// Buscar formulario por numeroId (cédula) o por _id de HistoriaClinica
 app.get('/api/formularios/buscar/:numeroId', async (req, res) => {
     try {
         const { numeroId } = req.params;
 
         console.log(`🔍 Buscando formulario por numeroId: ${numeroId}`);
 
-        const result = await pool.query(
+        // Primero buscar por cédula directa
+        let result = await pool.query(
             'SELECT * FROM formularios WHERE numero_id = $1 ORDER BY fecha_registro DESC LIMIT 1',
             [numeroId]
         );
+
+        // Si no encuentra, buscar el _id de HistoriaClinica y luego buscar formulario
+        if (result.rows.length === 0) {
+            // Obtener el _id de HistoriaClinica que tiene esta cédula
+            const hcResult = await pool.query(
+                'SELECT "_id" FROM "HistoriaClinica" WHERE "numeroId" = $1 LIMIT 1',
+                [numeroId]
+            );
+
+            if (hcResult.rows.length > 0) {
+                const hcId = hcResult.rows[0]._id;
+                console.log(`🔍 Buscando formulario por _id de HC: ${hcId}`);
+                result = await pool.query(
+                    'SELECT * FROM formularios WHERE numero_id = $1 ORDER BY fecha_registro DESC LIMIT 1',
+                    [hcId]
+                );
+            }
+        }
 
         if (result.rows.length === 0) {
             return res.json({
