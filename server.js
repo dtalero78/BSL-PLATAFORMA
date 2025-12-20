@@ -4696,7 +4696,8 @@ async function procesarRegistroNubia(registro) {
             // Actualizar el registro en HistoriaClinica
             await pool.query(`
                 UPDATE "HistoriaClinica"
-                SET "atendido" = 'ATENDIDO'
+                SET "atendido" = 'ATENDIDO',
+                    "fechaConsulta" = COALESCE("fechaConsulta", NOW())
                 WHERE "_id" = $1
             `, [historiaId]);
 
