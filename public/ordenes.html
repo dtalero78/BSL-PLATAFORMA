@@ -2985,7 +2985,8 @@
             // Update stats - show pagination info
             const inicio = ((paginaActual - 1) * registrosPorPagina) + 1;
             const fin = Math.min(paginaActual * registrosPorPagina, totalRegistros);
-            document.getElementById('statsCounter').innerHTML = `<strong>${inicio}-${fin}</strong> de ${totalRegistros.toLocaleString()} registros`;
+            const searchSuffix = busquedaActual && busquedaActual.length >= 2 ? ' (búsqueda)' : '';
+            document.getElementById('statsCounter').innerHTML = `<strong>${inicio}-${fin}</strong> de ${totalRegistros.toLocaleString()} registros${searchSuffix}`;
 
             // Show/hide states
             const tableContainer = document.getElementById('tableContainer');
@@ -3011,7 +3012,13 @@
                 document.getElementById('tableContainer').style.display = 'none';
                 document.getElementById('paginationContainer').style.display = 'none';
 
-                const response = await fetch(`/api/historia-clinica/list?page=${page}&limit=${registrosPorPagina}`);
+                // Incluir búsqueda si hay término activo
+                let url = `/api/historia-clinica/list?page=${page}&limit=${registrosPorPagina}`;
+                if (busquedaActual && busquedaActual.length >= 2) {
+                    url += `&buscar=${encodeURIComponent(busquedaActual)}`;
+                }
+
+                const response = await fetch(url);
                 if (!response.ok) throw new Error('Error del servidor');
 
                 const result = await response.json();
@@ -3877,60 +3884,26 @@
             cargarFormularios();
             cargarExamenesDisponibles();
 
-            // Search - Búsqueda server-side con debounce
+            // Search - Búsqueda server-side con debounce (usa índice GIN pg_trgm)
             document.getElementById('searchInput').addEventListener('input', async function(e) {
                 busquedaActual = e.target.value.trim();
 
                 // Cancelar búsqueda anterior
                 clearTimeout(searchTimeout);
 
-                // Si tiene menos de 2 caracteres, filtrar localmente
+                // Si tiene menos de 2 caracteres, volver a cargar sin filtro
                 if (busquedaActual.length < 2) {
-                    buscandoEnServidor = false;
-                    actualizarVista();
+                    if (busquedaActual.length === 0) {
+                        buscandoEnServidor = false;
+                        cargarFormularios(1);
+                    }
                     return;
                 }
 
                 // Búsqueda server-side con debounce de 300ms
                 searchTimeout = setTimeout(async () => {
-                    try {
-                        buscandoEnServidor = true;
-                        document.getElementById('statsCounter').innerHTML = '<strong>Buscando...</strong>';
-
-                        const response = await fetch(`/api/historia-clinica/buscar?q=${encodeURIComponent(busquedaActual)}`);
-                        const result = await response.json();
-
-                        if (result.success) {
-                            formulariosFiltrados = result.data;
-
-                            // Aplicar filtro de estado si está activo
-                            if (filtroActual === 'atendido') {
-                                formulariosFiltrados = formulariosFiltrados.filter(f => f.atendido && f.atendido.toUpperCase() === 'ATENDIDO');
-                            } else if (filtroActual === 'pendiente') {
-                                formulariosFiltrados = formulariosFiltrados.filter(f => !f.atendido || f.atendido.toUpperCase() !== 'ATENDIDO');
-                            }
-
-                            // Actualizar UI
-                            const tableContainer = document.getElementById('tableContainer');
-                            const emptyState = document.getElementById('emptyState');
-
-                            if (formulariosFiltrados.length === 0) {
-                                tableContainer.style.display = 'none';
-                                emptyState.style.display = 'block';
-                            } else {
-                                tableContainer.style.display = 'block';
-                                emptyState.style.display = 'none';
-                            }
-
-                            renderTable(formulariosFiltrados);
-                            renderMobileCards(formulariosFiltrados);
-                            document.getElementById('statsCounter').innerHTML =
-                                `<strong>${formulariosFiltrados.length}</strong> resultados (búsqueda global)`;
-                        }
-                    } catch (error) {
-                        console.error('Error en búsqueda:', error);
-                        document.getElementById('statsCounter').innerHTML = '<strong>Error en búsqueda</strong>';
-                    }
+                    buscandoEnServidor = true;
+                    cargarFormularios(1); // Reiniciar a página 1 con búsqueda
                 }, 300);
             });
 

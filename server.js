@@ -2797,16 +2797,46 @@ app.get('/api/historia-clinica/list', async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         const offset = (page - 1) * limit;
+        const buscar = req.query.buscar?.trim();
 
-        console.log(`📋 Listando órdenes de HistoriaClinica (página ${page}, limit ${limit})...`);
+        console.log(`📋 Listando órdenes de HistoriaClinica (página ${page}, limit ${limit}${buscar ? `, búsqueda: "${buscar}"` : ''})...`);
 
-        // Contar total de registros
-        const countResult = await pool.query('SELECT COUNT(*) FROM "HistoriaClinica"');
-        const totalRegistros = parseInt(countResult.rows[0].count);
+        let totalRegistros;
+        let whereClause = '';
+        const params = [];
+
+        if (buscar && buscar.length >= 2) {
+            // Búsqueda con índice GIN pg_trgm
+            whereClause = `WHERE (
+                COALESCE(h."numeroId", '') || ' ' ||
+                COALESCE(h."primerNombre", '') || ' ' ||
+                COALESCE(h."primerApellido", '') || ' ' ||
+                COALESCE(h."codEmpresa", '') || ' ' ||
+                COALESCE(h."celular", '') || ' ' ||
+                COALESCE(h."empresa", '')
+            ) ILIKE $1`;
+            params.push(`%${buscar}%`);
+
+            // COUNT exacto cuando hay búsqueda
+            const countResult = await pool.query(`
+                SELECT COUNT(*) FROM "HistoriaClinica" h ${whereClause}
+            `, params);
+            totalRegistros = parseInt(countResult.rows[0].count);
+        } else {
+            // Sin búsqueda: usar estimación rápida de PostgreSQL (<1ms vs 522ms)
+            const countResult = await pool.query(`
+                SELECT reltuples::bigint as estimate FROM pg_class WHERE relname = 'HistoriaClinica'
+            `);
+            totalRegistros = parseInt(countResult.rows[0].estimate) || 0;
+        }
+
         const totalPaginas = Math.ceil(totalRegistros / limit);
 
-        // Obtener registros de HistoriaClinica con foto_url del formulario vinculado por orden_id
-        // Prioriza match exacto por wix_id = _id, fallback a numero_id para registros antiguos
+        // Obtener registros de HistoriaClinica con foto_url del formulario vinculado
+        const queryParams = buscar ? [...params, limit, offset] : [limit, offset];
+        const limitParam = buscar ? '$2' : '$1';
+        const offsetParam = buscar ? '$3' : '$2';
+
         const historiaResult = await pool.query(`
             SELECT h."_id", h."numeroId", h."primerNombre", h."segundoNombre", h."primerApellido", h."segundoApellido",
                    h."celular", h."cargo", h."ciudad", h."tipoExamen", h."codEmpresa", h."empresa", h."medico",
@@ -2821,9 +2851,10 @@ app.get('/api/historia-clinica/list', async (req, res) => {
                 WHERE numero_id = h."numeroId" AND foto_url IS NOT NULL
                 ORDER BY fecha_registro DESC LIMIT 1
             ) f_fallback ON f_exact.id IS NULL
+            ${whereClause}
             ORDER BY h."_createdDate" DESC
-            LIMIT $1 OFFSET $2
-        `, [limit, offset]);
+            LIMIT ${limitParam} OFFSET ${offsetParam}
+        `, queryParams);
 
         console.log(`✅ HistoriaClinica: ${historiaResult.rows.length} registros (página ${page}/${totalPaginas})`);
 
