@@ -2895,3 +2895,138 @@ export function options_formulariosPorIds(request) {
         body: {}
     };
 }
+
+/**
+ * ════════════════════════════════════════════════════════════════════════════
+ * ENDPOINTS DE MIGRACIÓN - EXPORTAR BASES DE DATOS COMPLETAS
+ * ════════════════════════════════════════════════════════════════════════════
+ */
+
+import { exportarTodaHistoriaClinica } from 'backend/exposeDataBase';
+
+/**
+ * GET: Exportar toda la tabla HistoriaClinica con paginación
+ * URL: /_functions/exportarHistoriaClinica?skip=0&limit=1000
+ *
+ * Uso para migración:
+ * 1. Primera llamada: ?skip=0&limit=1000
+ * 2. Si hasMore=true, siguiente llamada: ?skip=1000&limit=1000
+ * 3. Repetir hasta hasMore=false
+ */
+export async function get_exportarHistoriaClinica(request) {
+    const { skip = '0', limit = '1000' } = request.query;
+
+    try {
+        const skipNum = parseInt(skip, 10);
+        const limitNum = parseInt(limit, 10);
+
+        if (isNaN(skipNum) || isNaN(limitNum)) {
+            return badRequest({
+                headers: {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                body: { success: false, error: "Los parámetros 'skip' y 'limit' deben ser números" }
+            });
+        }
+
+        console.log(`[exportarHistoriaClinica] skip=${skipNum}, limit=${limitNum}`);
+        const resultado = await exportarTodaHistoriaClinica(skipNum, limitNum);
+
+        return ok({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: resultado
+        });
+    } catch (error) {
+        console.error("[exportarHistoriaClinica] Error:", error);
+        return serverError({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: { success: false, error: error.message }
+        });
+    }
+}
+
+/**
+ * OPTIONS: CORS preflight para exportarHistoriaClinica
+ */
+export function options_exportarHistoriaClinica(request) {
+    return {
+        status: 204,
+        headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
+        },
+        body: {}
+    };
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// ENDPOINT PARA MIGRACIÓN DE FORMULARIO
+// ════════════════════════════════════════════════════════════════════════════
+
+import { exportarTodoFormulario } from 'backend/exposeDataBase';
+
+/**
+ * GET: Exportar FORMULARIO con paginación para migración
+ * URL: /_functions/exportarFormulario?skip=0&limit=1000
+ */
+export async function get_exportarFormulario(request) {
+    const { skip = '0', limit = '1000' } = request.query;
+
+    try {
+        const skipNum = parseInt(skip, 10);
+        const limitNum = parseInt(limit, 10);
+
+        if (isNaN(skipNum) || isNaN(limitNum)) {
+            return badRequest({
+                headers: {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                body: { success: false, error: "Los parámetros 'skip' y 'limit' deben ser números" }
+            });
+        }
+
+        console.log(`[exportarFormulario] skip=${skipNum}, limit=${limitNum}`);
+        const resultado = await exportarTodoFormulario(skipNum, limitNum);
+
+        return ok({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: resultado
+        });
+    } catch (error) {
+        console.error("[exportarFormulario] Error:", error);
+        return serverError({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: { success: false, error: error.message }
+        });
+    }
+}
+
+/**
+ * OPTIONS: CORS preflight para exportarFormulario
+ */
+export function options_exportarFormulario(request) {
+    return {
+        status: 204,
+        headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
+        },
+        body: {}
+    };
+}

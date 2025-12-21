@@ -814,3 +814,105 @@ export async function obtenerFormulariosPorIds(ids) {
         };
     }
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// FUNCIONES DE MIGRACIÓN - EXPORTAR TODA LA BASE DE DATOS
+// ════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Exporta todos los registros de HistoriaClinica con paginación
+ * @param {number} skip - Número de registros a saltar
+ * @param {number} limit - Número de registros a obtener (máx 1000)
+ * @returns {Promise<Object>} - items, totalCount, hasMore
+ */
+export async function exportarTodaHistoriaClinica(skip = 0, limit = 1000) {
+    try {
+        console.log(`📤 Exportando HistoriaClinica - skip: ${skip}, limit: ${limit}`);
+
+        // Limitar a máximo 1000 por restricción de Wix
+        const pageSize = Math.min(limit, 1000);
+
+        // Primero obtenemos el total count
+        const countResult = await wixData.query("HistoriaClinica")
+            .limit(1)
+            .find();
+
+        const totalCount = countResult.totalCount;
+
+        // Luego obtenemos los items con paginación
+        const result = await wixData.query("HistoriaClinica")
+            .ascending("_createdDate") // Ordenar para consistencia
+            .skip(skip)
+            .limit(pageSize)
+            .find();
+
+        const hasMore = (skip + result.items.length) < totalCount;
+
+        console.log(`✅ Exportados ${result.items.length} registros. Total: ${totalCount}. HasMore: ${hasMore}`);
+
+        return {
+            success: true,
+            items: result.items,
+            count: result.items.length,
+            totalCount: totalCount,
+            skip: skip,
+            hasMore: hasMore,
+            nextSkip: hasMore ? skip + result.items.length : null
+        };
+    } catch (error) {
+        console.error("❌ Error exportando HistoriaClinica:", error);
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
+
+/**
+ * Exporta todos los registros de FORMULARIO con paginación
+ * @param {number} skip - Número de registros a saltar
+ * @param {number} limit - Número de registros a obtener (máx 1000)
+ * @returns {Promise<Object>} - items, totalCount, hasMore
+ */
+export async function exportarTodoFormulario(skip = 0, limit = 1000) {
+    try {
+        console.log(`📤 Exportando FORMULARIO - skip: ${skip}, limit: ${limit}`);
+
+        // Limitar a máximo 1000 por restricción de Wix
+        const pageSize = Math.min(limit, 1000);
+
+        // Primero obtenemos el total count
+        const countResult = await wixData.query("FORMULARIO")
+            .limit(1)
+            .find();
+
+        const totalCount = countResult.totalCount;
+
+        // Luego obtenemos los items con paginación
+        const result = await wixData.query("FORMULARIO")
+            .ascending("_createdDate") // Ordenar para consistencia
+            .skip(skip)
+            .limit(pageSize)
+            .find();
+
+        const hasMore = (skip + result.items.length) < totalCount;
+
+        console.log(`✅ Exportados ${result.items.length} registros FORMULARIO. Total: ${totalCount}. HasMore: ${hasMore}`);
+
+        return {
+            success: true,
+            items: result.items,
+            count: result.items.length,
+            totalCount: totalCount,
+            skip: skip,
+            hasMore: hasMore,
+            nextSkip: hasMore ? skip + result.items.length : null
+        };
+    } catch (error) {
+        console.error("❌ Error exportando FORMULARIO:", error);
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
