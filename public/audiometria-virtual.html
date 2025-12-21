@@ -103,20 +103,6 @@
             flex-direction: column;
         }
 
-        .video-container {
-            background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-            aspect-ratio: 16/9;
-            margin-bottom: 16px;
-        }
-
-        .video-container video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
         .instructions-card {
             background: white;
             border-radius: 12px;
@@ -522,15 +508,135 @@
             z-index: 100;
         }
 
+        /* ========== MODAL DE VIDEO INTRODUCTORIO ========== */
+        .video-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2147483647;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+            isolation: isolate;
+        }
+
+        .video-modal.hidden {
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .video-modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2147483647;
+        }
+
+        .video-modal-content video {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .play-video-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: rgba(0, 153, 178, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .play-video-btn svg {
+            width: 40px;
+            height: 40px;
+            color: white;
+            margin-left: 5px;
+        }
+
+        .play-video-btn:hover {
+            background: rgba(0, 153, 178, 1);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .play-video-btn.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .skip-video-btn {
+            margin-top: 20px;
+            padding: 12px 32px;
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.7);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .skip-video-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.8);
+            color: #fff;
+        }
+
         /* Responsive */
         @media (max-width: 380px) {
             .keypad-btn {
                 font-size: 24px;
             }
+
+            .play-video-btn {
+                width: 60px;
+                height: 60px;
+            }
+
+            .play-video-btn svg {
+                width: 30px;
+                height: 30px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Modal de Video Introductorio -->
+    <div id="videoModal" class="video-modal">
+        <div class="video-modal-content">
+            <video id="modalVideo" playsinline>
+                <source src="audiometriaVirtual.mp4" type="video/mp4">
+                Tu navegador no soporta el video.
+            </video>
+            <button id="playVideoBtn" class="play-video-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+            </button>
+            <button id="skipVideoBtn" class="skip-video-btn">Omitir video</button>
+        </div>
+    </div>
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -555,13 +661,6 @@
 
         <!-- ========== PANTALLA DE BIENVENIDA ========== -->
         <div class="welcome-screen" id="welcomeScreen">
-            <div class="video-container">
-                <video id="introVideo" playsinline controls poster="https://static.wixstatic.com/media/cb6469_86c5c3de4e0f4bc794c1ea8d498db106~mv2.png">
-                    <source src="https://video.wixstatic.com/video/cb6469_8b33f0f3d98847b89c1f3f6b8e2c5b1e/1080p/mp4/file.mp4" type="video/mp4">
-                    Tu navegador no soporta videos HTML5.
-                </video>
-            </div>
-
             <div class="instructions-card">
                 <h2>Instrucciones</h2>
                 <ul class="instruction-list">
@@ -728,6 +827,54 @@
         const loadingOverlay = document.getElementById('loadingOverlay');
         const errorCard = document.getElementById('errorCard');
         const audioPlayer = document.getElementById('audioPlayer');
+
+        // Elementos del modal de video
+        const videoModal = document.getElementById('videoModal');
+        const modalVideo = document.getElementById('modalVideo');
+        const playVideoBtn = document.getElementById('playVideoBtn');
+        const skipVideoBtn = document.getElementById('skipVideoBtn');
+
+        // ==========================================
+        // MODAL DE VIDEO INTRODUCTORIO
+        // ==========================================
+        function closeVideoModal() {
+            videoModal.classList.add('hidden');
+            modalVideo.pause();
+            document.body.style.overflow = '';
+            setTimeout(() => {
+                videoModal.style.display = 'none';
+            }, 500);
+        }
+
+        // Configurar eventos del video modal
+        if (playVideoBtn && modalVideo) {
+            playVideoBtn.addEventListener('click', function() {
+                modalVideo.play();
+                playVideoBtn.classList.add('hidden');
+            });
+
+            modalVideo.addEventListener('pause', function() {
+                if (!videoModal.classList.contains('hidden')) {
+                    playVideoBtn.classList.remove('hidden');
+                }
+            });
+
+            modalVideo.addEventListener('play', function() {
+                playVideoBtn.classList.add('hidden');
+            });
+
+            modalVideo.addEventListener('ended', closeVideoModal);
+        }
+
+        if (skipVideoBtn) {
+            skipVideoBtn.addEventListener('click', closeVideoModal);
+        }
+
+        // Prevenir scroll mientras el modal está visible
+        if (videoModal && !videoModal.classList.contains('hidden')) {
+            document.activeElement?.blur();
+            document.body.style.overflow = 'hidden';
+        }
 
         // ==========================================
         // INICIALIZACIÓN
