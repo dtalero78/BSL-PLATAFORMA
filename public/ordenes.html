@@ -1532,32 +1532,92 @@
             }
         }
 
+        /* ========== MOBILE APP STYLE ========== */
         @media (max-width: 768px) {
+            body {
+                background: #F2F2F7;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .top-bar {
+                left: 0;
+                padding: 0 16px;
+                height: 56px;
+            }
+
+            .top-bar-search {
+                max-width: 100%;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+                padding-top: 72px;
+            }
+
+            .page-header {
+                margin-bottom: 16px;
+            }
+
             .page-title {
-                font-size: 20px;
+                font-size: 28px;
+                font-weight: 700;
+                letter-spacing: -0.5px;
             }
 
             .filters-bar {
                 flex-direction: column;
-                align-items: stretch;
                 gap: 12px;
+                background: white;
+                padding: 16px;
+                border-radius: 12px;
+                margin-bottom: 16px;
             }
 
             .tabs {
                 order: 1;
                 justify-content: center;
+                background: #E5E5EA;
+                border-radius: 8px;
+                padding: 2px;
+            }
+
+            .tab-btn {
+                flex: 1;
+                border-radius: 6px;
+                font-size: 13px;
+                padding: 8px 12px;
+            }
+
+            .tab-btn.active {
+                background: white;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             }
 
             .date-filter {
                 order: 2;
                 flex-wrap: wrap;
-                justify-content: center;
+                justify-content: space-between;
                 margin-left: 0;
+                gap: 8px;
             }
 
             .date-filter input[type="date"] {
                 flex: 1;
-                min-width: 120px;
+                min-width: 100px;
+                background: #F2F2F7;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 12px;
+                font-size: 15px;
+            }
+
+            .date-filter .btn {
+                padding: 10px 16px;
+                border-radius: 8px;
             }
 
             .search-box {
@@ -1565,48 +1625,63 @@
                 max-width: 100%;
             }
 
+            .search-box input {
+                background: #E5E5EA;
+                border: none;
+                border-radius: 10px;
+                font-size: 17px;
+                padding: 12px 16px 12px 44px;
+            }
+
             .stats-badge {
                 order: 4;
                 text-align: center;
+                font-size: 13px;
             }
 
             /* Hide table on mobile */
             .table-container {
-                display: none;
+                display: none !important;
             }
 
-            /* Mobile Cards */
+            /* Lista estilo iOS */
             .mobile-cards {
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
+                display: block;
+                background: white;
+                border-radius: 12px;
+                overflow: hidden;
             }
 
             .mobile-card {
-                background: var(--bg-secondary);
-                border: 1px solid var(--border-color);
-                border-radius: 12px;
-                padding: 16px;
-            }
-
-            .mobile-card-header {
                 display: flex;
                 align-items: center;
+                padding: 12px 16px;
+                border-bottom: 0.5px solid #C6C6C8;
+                background: white;
+                cursor: pointer;
+                transition: background 0.15s ease;
                 gap: 12px;
-                margin-bottom: 12px;
+            }
+
+            .mobile-card:last-child {
+                border-bottom: none;
+            }
+
+            .mobile-card:active {
+                background: #E5E5EA;
             }
 
             .mobile-card-avatar {
-                width: 48px;
-                height: 48px;
-                border-radius: 50%;
-                background: var(--bg-tertiary);
+                width: 50px;
+                height: 50px;
+                border-radius: 8px;
+                background: linear-gradient(135deg, #0099B2, #007A8C);
+                color: white;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-size: 18px;
                 font-weight: 600;
-                color: var(--text-secondary);
                 flex-shrink: 0;
                 overflow: hidden;
             }
@@ -1617,102 +1692,125 @@
                 object-fit: cover;
             }
 
-            .mobile-card-name {
+            .mobile-card-content {
                 flex: 1;
+                min-width: 0;
             }
 
-            .mobile-card-name h3 {
-                font-size: 16px;
+            .mobile-card-title {
+                font-size: 17px;
                 font-weight: 600;
-                color: var(--text-primary);
+                color: #000;
                 margin-bottom: 2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
-            .mobile-card-name span {
-                font-size: 13px;
-                color: var(--text-secondary);
-            }
-
-            .mobile-card-info {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-                margin-bottom: 12px;
-            }
-
-            .mobile-card-info-item {
-                background: var(--bg-tertiary);
-                padding: 8px 10px;
-                border-radius: 6px;
-            }
-
-            .mobile-card-info-label {
-                font-size: 11px;
-                color: var(--text-tertiary);
-                text-transform: uppercase;
-                letter-spacing: 0.3px;
-            }
-
-            .mobile-card-info-value {
-                font-size: 13px;
-                color: var(--text-primary);
-                font-weight: 500;
-            }
-
-            .mobile-card-status {
-                margin-bottom: 12px;
-            }
-
-            .mobile-card-actions {
-                display: flex;
-                gap: 8px;
-            }
-
-            .mobile-card-btn {
-                flex: 1;
-                padding: 10px;
-                border: 1px solid var(--border-color);
-                background: var(--bg-secondary);
-                border-radius: 8px;
-                font-size: 13px;
-                font-weight: 500;
-                color: var(--text-primary);
-                cursor: pointer;
+            .mobile-card-subtitle {
+                font-size: 15px;
+                color: #8E8E93;
                 display: flex;
                 align-items: center;
-                justify-content: center;
                 gap: 6px;
-                transition: all 0.15s ease;
-                text-decoration: none;
             }
 
-            .mobile-card-btn:hover {
-                background: var(--bg-tertiary);
+            .mobile-card-subtitle .dot {
+                width: 3px;
+                height: 3px;
+                background: #8E8E93;
+                border-radius: 50%;
             }
 
-            .mobile-card-btn.primary {
-                background: #0099B2;
-                border-color: #0099B2;
+            .mobile-card-right {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 6px;
+                flex-shrink: 0;
+            }
+
+            .mobile-card-time {
+                font-size: 13px;
+                color: #8E8E93;
+            }
+
+            .mobile-card-action-btn {
+                padding: 6px 14px;
+                border-radius: 16px;
+                font-size: 14px;
+                font-weight: 600;
+                border: none;
+                cursor: pointer;
+                background: #007AFF;
                 color: white;
             }
 
-            .mobile-card-btn.primary:hover {
-                background: #4338CA;
+            .mobile-status-indicator {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                font-size: 13px;
+                font-weight: 500;
             }
 
-            .mobile-card-btn.disabled {
-                opacity: 0.4;
-                pointer-events: none;
+            .mobile-status-indicator.atendido {
+                color: #34C759;
             }
 
-            /* Modal drawer - full width on mobile */
+            .mobile-status-indicator.pendiente {
+                color: #FF9500;
+            }
+
+            .mobile-status-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: currentColor;
+            }
+
+            /* Ocultar elementos viejos */
+            .mobile-card-header,
+            .mobile-card-info,
+            .mobile-card-status,
+            .mobile-card-actions,
+            .mobile-card-name {
+                display: none !important;
+            }
+
+            /* Estados vacío y cargando */
+            .loading-state, .empty-state {
+                background: white;
+                border-radius: 12px;
+                padding: 40px 20px;
+            }
+
+            /* Modal estilo iOS */
             .modal-overlay {
                 padding: 0;
+                align-items: flex-end;
             }
 
             .modal {
                 max-width: 100%;
-                border-radius: 0;
+                border-radius: 12px 12px 0 0;
+                max-height: 90vh;
+                animation: modalSlideUp 0.3s ease-out;
+            }
+
+            @keyframes modalSlideUp {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+            }
+
+            .modal-header {
+                padding: 16px;
+                border-bottom: 0.5px solid #C6C6C8;
+            }
+
+            .modal-body {
+                padding: 16px;
+                max-height: calc(90vh - 120px);
             }
 
             .detail-grid, .form-grid {
@@ -1720,7 +1818,23 @@
             }
 
             .modal-footer {
-                flex-direction: column;
+                padding: 16px;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .modal-footer .btn {
+                flex: 1 1 calc(50% - 4px);
+                min-width: 0;
+                font-size: 14px;
+                padding: 12px 8px;
+            }
+
+            .console-message {
+                bottom: 90px;
+                left: 16px;
+                right: 16px;
+                border-radius: 12px;
             }
         }
 
@@ -2870,54 +2984,40 @@
             }
 
             container.innerHTML = ordenes.map(orden => {
-                const wixId = orden._id || '';
-                const hasWixId = wixId && wixId.trim() !== '';
-                const statusClass = getStatusClass(orden.atendido);
+                const isAtendido = orden.atendido && orden.atendido.toUpperCase() === 'ATENDIDO';
+                const initials = getInitials(orden.primerNombre, orden.primerApellido);
+
+                // Formatear fecha
+                let fechaStr = '';
+                if (orden._createdDate) {
+                    const fecha = new Date(orden._createdDate);
+                    fechaStr = fecha.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
+                }
+
+                // Status indicator
+                const statusIndicator = isAtendido
+                    ? `<span class="mobile-status-indicator atendido"><span class="mobile-status-dot"></span>Atendido</span>`
+                    : `<span class="mobile-status-indicator pendiente"><span class="mobile-status-dot"></span>Pendiente</span>`;
+
+                // Avatar con foto o iniciales
+                const avatarContent = orden.foto_url
+                    ? `<img src="${orden.foto_url}" alt="">`
+                    : initials;
 
                 return `
-                    <div class="mobile-card">
-                        <div class="mobile-card-header">
-                            <div class="mobile-card-avatar ${orden.foto_url ? 'has-photo' : ''}">${orden.foto_url ? `<img src="${orden.foto_url}" alt="">` : getInitials(orden.primerNombre, orden.primerApellido)}</div>
-                            <div class="mobile-card-name">
-                                <h3>${orden.primerNombre || ''} ${orden.primerApellido || ''}</h3>
+                    <div class="mobile-card" onclick="abrirModalDetalles('${orden._id}')">
+                        <div class="mobile-card-avatar">${avatarContent}</div>
+                        <div class="mobile-card-content">
+                            <div class="mobile-card-title">${orden.primerNombre || ''} ${orden.primerApellido || ''}</div>
+                            <div class="mobile-card-subtitle">
+                                <span>${orden.codEmpresa || 'Sin empresa'}</span>
+                                <span class="dot"></span>
                                 <span>${orden.numeroId || '—'}</span>
                             </div>
                         </div>
-                        <div class="mobile-card-info">
-                            <div class="mobile-card-info-item">
-                                <div class="mobile-card-info-label">Celular</div>
-                                <div class="mobile-card-info-value">${orden.celular || '—'}</div>
-                            </div>
-                            <div class="mobile-card-info-item">
-                                <div class="mobile-card-info-label">Empresa</div>
-                                <div class="mobile-card-info-value">${orden.codEmpresa || '—'}</div>
-                            </div>
-                            <div class="mobile-card-info-item">
-                                <div class="mobile-card-info-label">Tipo Examen</div>
-                                <div class="mobile-card-info-value">${orden.tipoExamen || '—'}</div>
-                            </div>
-                            <div class="mobile-card-info-item">
-                                <div class="mobile-card-info-label">Cargo</div>
-                                <div class="mobile-card-info-value">${orden.cargo || '—'}</div>
-                            </div>
-                        </div>
-                        <div class="mobile-card-status">
-                            <span class="status-badge ${statusClass}">
-                                <span class="status-dot"></span>
-                                ${getStatusText(orden.atendido)}
-                            </span>
-                        </div>
-                        <div class="mobile-card-actions">
-                            <a href="/visiometria.html?orden=${wixId}"
-                               target="_blank"
-                               class="mobile-card-btn ${!hasWixId ? 'disabled' : ''}">👁️ Visión</a>
-                            <a href="/audiometria.html?orden=${wixId}"
-                               target="_blank"
-                               class="mobile-card-btn ${!hasWixId ? 'disabled' : ''}">🎧 Audio</a>
-                            <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/generar-certificado-desde-wix/${wixId}"
-                               target="_blank"
-                               class="mobile-card-btn ${!hasWixId ? 'disabled' : ''}">📄 PDF</a>
-                            <button class="mobile-card-btn primary" onclick="abrirModalDetalles('${orden._id}')">Ver</button>
+                        <div class="mobile-card-right">
+                            <div class="mobile-card-time">${fechaStr}</div>
+                            ${statusIndicator}
                         </div>
                     </div>
                 `;

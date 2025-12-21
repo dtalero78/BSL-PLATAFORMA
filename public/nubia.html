@@ -704,126 +704,367 @@
             }
         }
 
-        /* ========== MOBILE ========== */
-        @media (max-width: 768px) {
-            .app-container {
-                padding: 12px;
-            }
-
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .stats-container {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .stat-badge {
-                flex: 1;
-                padding: 10px;
-            }
-
-            .stat-badge .number {
-                font-size: 20px;
-            }
-
-            .search-bar {
-                flex-direction: column;
-            }
-
-            .data-table {
-                display: block;
-                overflow-x: auto;
-            }
-
-            .data-table th, .data-table td {
-                padding: 12px 10px;
-                font-size: 13px;
-            }
-
-            .actions-cell {
-                flex-direction: column;
-            }
-        }
-
-        /* ========== MOBILE CARDS ========== */
+        /* ========== MOBILE APP STYLE ========== */
         .mobile-cards {
             display: none;
         }
 
         @media (max-width: 768px) {
-            .table-container {
+            body {
+                background: #F2F2F7;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+
+            .app-container {
+                padding: 0;
+                max-width: 100%;
+            }
+
+            /* Header estilo app */
+            .page-header {
+                background: #F2F2F7;
+                border: none;
+                border-radius: 0;
+                padding: 16px 16px 8px;
+                margin-bottom: 0;
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+
+            .page-header-left h1 {
+                font-size: 28px;
+                font-weight: 700;
+                letter-spacing: -0.5px;
+            }
+
+            .page-header-left p {
                 display: none;
             }
 
-            .mobile-cards {
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            .mobile-card {
-                background: white;
-                border: 1px solid #E5E7EB;
-                border-radius: 12px;
-                padding: 16px;
-            }
-
-            .mobile-card-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                margin-bottom: 12px;
-            }
-
-            .mobile-card-name {
-                font-weight: 600;
-                color: #111827;
-                margin-bottom: 4px;
-            }
-
-            .mobile-card-meta {
-                font-size: 13px;
-                color: #6B7280;
-            }
-
-            .mobile-card-info {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
+            /* Stats como pills horizontales */
+            .stats-container {
+                width: 100%;
                 gap: 8px;
-                margin-bottom: 12px;
+                margin-top: 12px;
             }
 
-            .mobile-card-info-item {
-                background: #F9FAFB;
-                padding: 8px 10px;
-                border-radius: 6px;
+            .stat-badge {
+                flex: 1;
+                padding: 8px 12px;
+                border-radius: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                border: none;
             }
 
-            .mobile-card-info-label {
-                font-size: 11px;
-                color: #9CA3AF;
-                text-transform: uppercase;
+            .stat-badge .number {
+                font-size: 17px;
+                font-weight: 600;
             }
 
-            .mobile-card-info-value {
+            .stat-badge .label {
                 font-size: 13px;
-                color: #111827;
                 font-weight: 500;
             }
 
-            .mobile-card-actions {
+            /* Search bar estilo iOS */
+            .search-bar {
+                flex-direction: column;
+                padding: 8px 16px 16px;
+                margin-bottom: 0;
+                gap: 10px;
+                background: #F2F2F7;
+            }
+
+            .search-input-container {
+                width: 100%;
+            }
+
+            .search-input {
+                background: #E5E5EA;
+                border: none;
+                border-radius: 10px;
+                padding: 10px 16px 10px 40px;
+                font-size: 17px;
+                -webkit-appearance: none;
+            }
+
+            .search-input:focus {
+                box-shadow: none;
+                background: #D1D1D6;
+            }
+
+            .search-icon {
+                left: 12px;
+                font-size: 16px;
+                color: #8E8E93;
+            }
+
+            .date-filter {
+                width: 100%;
+                justify-content: space-between;
+                background: white;
+                padding: 12px;
+                border-radius: 12px;
+            }
+
+            .date-filter input[type="date"] {
+                flex: 1;
+                border: none;
+                background: #F2F2F7;
+                border-radius: 8px;
+                font-size: 15px;
+                padding: 8px 10px;
+            }
+
+            .date-filter .btn {
+                padding: 8px 16px;
+                font-size: 15px;
+                border-radius: 8px;
+            }
+
+            .search-bar > .btn-secondary {
+                display: none;
+            }
+
+            /* Ocultar tabla en móvil */
+            .table-container {
+                display: none !important;
+            }
+
+            /* Lista estilo iOS */
+            .mobile-cards {
+                display: block;
+                background: white;
+                border-radius: 12px;
+                margin: 0 16px 100px;
+                overflow: hidden;
+            }
+
+            .mobile-card {
                 display: flex;
+                align-items: center;
+                padding: 12px 16px;
+                border-bottom: 0.5px solid #C6C6C8;
+                background: white;
+                cursor: pointer;
+                transition: background 0.15s ease;
+                gap: 12px;
+            }
+
+            .mobile-card:last-child {
+                border-bottom: none;
+            }
+
+            .mobile-card:active {
+                background: #E5E5EA;
+            }
+
+            /* Avatar circular */
+            .mobile-card-avatar {
+                width: 50px;
+                height: 50px;
+                border-radius: 8px;
+                background: linear-gradient(135deg, #0099B2, #007A8C);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                font-weight: 600;
+                flex-shrink: 0;
+                overflow: hidden;
+            }
+
+            .mobile-card-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            /* Contenido principal */
+            .mobile-card-content {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .mobile-card-title {
+                font-size: 17px;
+                font-weight: 600;
+                color: #000;
+                margin-bottom: 2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .mobile-card-subtitle {
+                font-size: 15px;
+                color: #8E8E93;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .mobile-card-subtitle .dot {
+                width: 3px;
+                height: 3px;
+                background: #8E8E93;
+                border-radius: 50%;
+            }
+
+            /* Acciones a la derecha */
+            .mobile-card-right {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 6px;
+                flex-shrink: 0;
+            }
+
+            .mobile-card-time {
+                font-size: 15px;
+                color: #8E8E93;
+            }
+
+            /* Botón de acción principal estilo iOS */
+            .mobile-card-action-btn {
+                padding: 6px 14px;
+                border-radius: 16px;
+                font-size: 14px;
+                font-weight: 600;
+                border: none;
+                cursor: pointer;
+                transition: all 0.15s ease;
+            }
+
+            .mobile-card-action-btn.atender {
+                background: #007AFF;
+                color: white;
+            }
+
+            .mobile-card-action-btn.cobrar {
+                background: #FF9500;
+                color: white;
+            }
+
+            .mobile-card-action-btn.pagado {
+                background: #E5E5EA;
+                color: #8E8E93;
+            }
+
+            .mobile-card-action-btn:disabled {
+                background: #E5E5EA;
+                color: #8E8E93;
+            }
+
+            /* Status badge pequeño */
+            .mobile-status-indicator {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                font-size: 13px;
+                font-weight: 500;
+            }
+
+            .mobile-status-indicator.atendido {
+                color: #34C759;
+            }
+
+            .mobile-status-indicator.pendiente {
+                color: #FF9500;
+            }
+
+            .mobile-status-indicator.pagado {
+                color: #007AFF;
+            }
+
+            .mobile-status-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: currentColor;
+            }
+
+            /* Estados vacío y cargando */
+            .loading-state, .empty-state {
+                background: white;
+                margin: 0 16px;
+                border-radius: 12px;
+                padding: 40px 20px;
+            }
+
+            /* Ocultar elementos no necesarios en móvil */
+            .mobile-card-header,
+            .mobile-card-info,
+            .mobile-card-actions {
+                display: none !important;
+            }
+
+            /* Modal fullscreen en móvil */
+            .modal-overlay {
+                padding: 0;
+                align-items: flex-end;
+            }
+
+            .modal {
+                border-radius: 12px 12px 0 0;
+                max-height: 90vh;
+                animation: modalSlideUp 0.3s ease-out;
+            }
+
+            @keyframes modalSlideUp {
+                from {
+                    transform: translateY(100%);
+                }
+                to {
+                    transform: translateY(0);
+                }
+            }
+
+            .modal-header {
+                padding: 16px;
+                border-bottom: 0.5px solid #C6C6C8;
+            }
+
+            .modal-body {
+                padding: 16px;
+                max-height: calc(90vh - 120px);
+            }
+
+            .modal-footer {
+                padding: 16px;
                 gap: 8px;
                 flex-wrap: wrap;
             }
 
-            .mobile-card-actions .btn-action {
-                flex: 1;
-                min-width: 80px;
-                justify-content: center;
+            .modal-footer .btn {
+                flex: 1 1 calc(50% - 4px);
+                min-width: 0;
+                font-size: 14px;
+                padding: 12px 8px;
+            }
+
+            /* Console message */
+            .console-message {
+                bottom: 90px;
+                left: 16px;
+                right: 16px;
+                border-radius: 12px;
+            }
+
+            /* Sección de título estilo iOS */
+            .mobile-section-title {
+                font-size: 13px;
+                font-weight: 600;
+                color: #6D6D72;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                padding: 24px 16px 8px;
+                background: #F2F2F7;
             }
         }
     </style>
@@ -1178,44 +1419,39 @@
             }
 
             container.innerHTML = data.map(p => {
-                const status = getStatusInfo(p);
                 const isAtendido = p.atendido === 'ATENDIDO';
                 const isPagado = p.pvEstado === 'Pagado' || p.pagado === true;
+                const initials = ((p.primerNombre || '')[0] || '') + ((p.primerApellido || '')[0] || '');
+
+                // Determinar qué botón mostrar y su estado
+                let actionBtn = '';
+                if (isPagado) {
+                    actionBtn = `<span class="mobile-status-indicator pagado"><span class="mobile-status-dot"></span>Pagado</span>`;
+                } else if (isAtendido) {
+                    actionBtn = `<button class="mobile-card-action-btn cobrar" onclick="event.stopPropagation(); marcarCobrar('${p._id}')">Cobrar</button>`;
+                } else {
+                    actionBtn = `<button class="mobile-card-action-btn atender" onclick="event.stopPropagation(); marcarAtendido('${p._id}')">Atender</button>`;
+                }
+
+                // Avatar con foto o iniciales
+                const avatarContent = p.foto
+                    ? `<img src="${p.foto}" alt="">`
+                    : initials.toUpperCase();
 
                 return `
-                    <div class="mobile-card" onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">
-                        <div class="mobile-card-header">
-                            <div>
-                                <div class="mobile-card-name">${p.primerNombre || ''} ${p.primerApellido || ''}</div>
-                                <div class="mobile-card-meta">${p.numeroId || '—'}</div>
-                            </div>
-                            <span class="status-badge ${status.class}">
-                                <span class="status-dot"></span>
-                                ${status.text}
-                            </span>
-                        </div>
-                        <div class="mobile-card-info">
-                            <div class="mobile-card-info-item">
-                                <div class="mobile-card-info-label">Celular</div>
-                                <div class="mobile-card-info-value">${p.celular || '—'}</div>
-                            </div>
-                            <div class="mobile-card-info-item">
-                                <div class="mobile-card-info-label">Empresa</div>
-                                <div class="mobile-card-info-value">${p.codEmpresa || '—'}</div>
-                            </div>
-                            <div class="mobile-card-info-item">
-                                <div class="mobile-card-info-label">Hora Cita</div>
-                                <div class="mobile-card-info-value">${formatHora(p.fechaAtencion)}</div>
-                            </div>
-                            <div class="mobile-card-info-item">
-                                <div class="mobile-card-info-label">Tipo</div>
-                                <div class="mobile-card-info-value">${p.tipoExamen || '—'}</div>
+                    <div class="mobile-card" onclick="abrirModalDetalles('${p._id}')">
+                        <div class="mobile-card-avatar">${avatarContent}</div>
+                        <div class="mobile-card-content">
+                            <div class="mobile-card-title">${p.primerNombre || ''} ${p.primerApellido || ''}</div>
+                            <div class="mobile-card-subtitle">
+                                <span>${p.codEmpresa || 'Sin empresa'}</span>
+                                <span class="dot"></span>
+                                <span>${p.numeroId || '—'}</span>
                             </div>
                         </div>
-                        <div class="mobile-card-actions" onclick="event.stopPropagation()">
-                            <button class="btn-action whatsapp" onclick="enviarMensaje('${p._id}')">📩 Mensaje</button>
-                            <button class="btn-action atender" onclick="marcarAtendido('${p._id}')" ${isAtendido ? 'disabled' : ''}>✓ Atender</button>
-                            <button class="btn-action cobrar" onclick="marcarCobrar('${p._id}')" ${isPagado || !isAtendido ? 'disabled' : ''}>💰 Cobrar</button>
+                        <div class="mobile-card-right">
+                            <div class="mobile-card-time">${formatHora(p.fechaAtencion)}</div>
+                            ${actionBtn}
                         </div>
                     </div>
                 `;
@@ -1796,8 +2032,14 @@
         });
 
         // ========== INIT ==========
-        // Establecer fecha de hoy por defecto
-        const hoy = new Date().toISOString().split('T')[0];
+        // Establecer fecha de hoy por defecto (en zona horaria de Colombia)
+        function obtenerFechaColombia() {
+            const ahora = new Date();
+            // Usar toLocaleDateString con zona horaria Colombia para obtener la fecha correcta
+            const fechaColombia = ahora.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+            return fechaColombia; // Formato: YYYY-MM-DD
+        }
+        const hoy = obtenerFechaColombia();
         document.getElementById('fechaDesde').value = hoy;
         document.getElementById('fechaHasta').value = hoy;
 

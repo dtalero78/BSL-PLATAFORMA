@@ -1362,41 +1362,262 @@
             }
         }
 
+        /* ========== MOBILE APP STYLE ========== */
+        .mobile-cards {
+            display: none;
+        }
+
         @media (max-width: 768px) {
-            .page-header {
-                flex-direction: column;
-                align-items: stretch;
+            body {
+                background: #F2F2F7;
             }
 
-            .header-actions {
-                justify-content: center;
+            .sidebar {
+                display: none;
+            }
+
+            .top-bar {
+                left: 0;
+                padding: 0 16px;
+                height: 56px;
+            }
+
+            .top-bar-search {
+                max-width: 100%;
+            }
+
+            .top-bar-actions {
+                gap: 8px;
+            }
+
+            .empresa-name-topbar {
+                display: none;
+            }
+
+            .theme-toggle span {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+                padding-top: 72px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                margin-bottom: 16px;
+            }
+
+            .page-header-left h1 {
+                font-size: 28px;
+                font-weight: 700;
+                letter-spacing: -0.5px;
+            }
+
+            .page-header-left p {
+                display: none;
             }
 
             .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                margin-bottom: 16px;
+            }
+
+            .stat-card {
+                padding: 12px;
+                border-radius: 12px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .stat-label {
+                font-size: 11px;
             }
 
             .filters-bar {
                 flex-direction: column;
-                align-items: stretch;
+                gap: 12px;
+                background: white;
+                padding: 16px;
+                border-radius: 12px;
+                margin-bottom: 16px;
+            }
+
+            .tabs {
+                background: #E5E5EA;
+                border-radius: 8px;
+                padding: 2px;
+                width: 100%;
+            }
+
+            .tab {
+                flex: 1;
+                border-radius: 6px;
+                font-size: 13px;
+                padding: 8px 12px;
+            }
+
+            .tab.active {
+                background: white;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             }
 
             .stats-badge {
                 text-align: center;
                 margin-left: 0;
+                font-size: 13px;
             }
 
+            /* Hide table on mobile */
             .table-container {
-                overflow-x: auto;
+                display: none !important;
             }
 
-            .data-table {
-                min-width: 600px;
+            /* Mobile Cards estilo iOS */
+            .mobile-cards {
+                display: block;
+                background: white;
+                border-radius: 12px;
+                overflow: hidden;
+            }
+
+            .mobile-card {
+                display: flex;
+                align-items: center;
+                padding: 12px 16px;
+                border-bottom: 0.5px solid #C6C6C8;
+                background: white;
+                cursor: pointer;
+                transition: background 0.15s ease;
+                gap: 12px;
+            }
+
+            .mobile-card:last-child {
+                border-bottom: none;
+            }
+
+            .mobile-card:active {
+                background: #E5E5EA;
+            }
+
+            .mobile-card-avatar {
+                width: 50px;
+                height: 50px;
+                border-radius: 8px;
+                background: linear-gradient(135deg, #0099B2, #007A8C);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                font-weight: 600;
+                flex-shrink: 0;
+            }
+
+            .mobile-card-content {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .mobile-card-title {
+                font-size: 17px;
+                font-weight: 600;
+                color: #000;
+                margin-bottom: 2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .mobile-card-subtitle {
+                font-size: 15px;
+                color: #8E8E93;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .mobile-card-subtitle .dot {
+                width: 3px;
+                height: 3px;
+                background: #8E8E93;
+                border-radius: 50%;
+            }
+
+            .mobile-card-right {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 6px;
+                flex-shrink: 0;
+            }
+
+            .mobile-card-time {
+                font-size: 13px;
+                color: #8E8E93;
+            }
+
+            .mobile-status-indicator {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                font-size: 13px;
+                font-weight: 500;
+            }
+
+            .mobile-status-indicator.atendido {
+                color: #34C759;
+            }
+
+            .mobile-status-indicator.pendiente {
+                color: #FF9500;
+            }
+
+            .mobile-status-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: currentColor;
+            }
+
+            /* Estados vacío y cargando */
+            .loading-state, .empty-state {
+                background: white;
+                border-radius: 12px;
+                padding: 40px 20px;
+            }
+
+            /* Modal estilo iOS */
+            .modal-overlay {
+                padding: 0;
+                align-items: flex-end;
             }
 
             .modal {
                 max-width: 100%;
-                border-radius: 0;
+                border-radius: 12px 12px 0 0;
+                max-height: 90vh;
+                animation: modalSlideUp 0.3s ease-out;
+            }
+
+            @keyframes modalSlideUp {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+            }
+
+            .modal-header {
+                padding: 16px;
+                border-bottom: 0.5px solid #C6C6C8;
+            }
+
+            .modal-body {
+                padding: 16px;
+                max-height: calc(90vh - 120px);
             }
 
             .detail-grid {
@@ -1406,15 +1627,25 @@
             .form-row {
                 grid-template-columns: 1fr;
             }
-        }
 
-        @media (max-width: 600px) {
-            .form-row {
-                grid-template-columns: 1fr;
+            .modal-footer {
+                padding: 16px;
+                gap: 8px;
+                flex-wrap: wrap;
             }
 
-            .modal-content {
-                max-height: 95vh;
+            .modal-footer .btn {
+                flex: 1;
+                min-width: 0;
+                font-size: 14px;
+                padding: 12px 8px;
+            }
+        }
+
+        /* Desktop: hide mobile cards */
+        @media (min-width: 769px) {
+            .mobile-cards {
+                display: none !important;
             }
         }
     </style>
@@ -1584,6 +1815,9 @@
                     <p class="empty-state-title">No hay órdenes</p>
                     <p class="empty-state-text">No se encontraron órdenes para esta empresa</p>
                 </div>
+
+                <!-- Mobile Cards Container -->
+                <div class="mobile-cards" id="mobileCards"></div>
 
                 <!-- Table Container -->
                 <div class="table-container" id="tableContainer" style="display: none;">
@@ -2472,6 +2706,9 @@
                 `;
             }).join('');
 
+            // Render mobile cards
+            renderMobileCards(pageData);
+
             // Actualizar paginación
             if (totalPages > 1) {
                 pagination.style.display = 'flex';
@@ -2481,6 +2718,53 @@
             } else {
                 pagination.style.display = 'none';
             }
+        }
+
+        // ========== MOBILE CARDS ==========
+        function renderMobileCards(ordenes) {
+            const container = document.getElementById('mobileCards');
+            if (!container) return;
+
+            if (ordenes.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = ordenes.map(orden => {
+                const nombre = `${orden.primerNombre || ''} ${orden.primerApellido || ''}`.trim();
+                const isAtendido = orden.atendido === 'ATENDIDO';
+                const initials = nombre.split(' ').slice(0, 2).map(n => n.charAt(0)).join('').toUpperCase() || '?';
+
+                // Formatear fecha
+                let fechaStr = '';
+                if (orden.fechaAtencion) {
+                    const fecha = new Date(orden.fechaAtencion);
+                    fechaStr = fecha.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
+                }
+
+                // Status indicator
+                const statusIndicator = isAtendido
+                    ? `<span class="mobile-status-indicator atendido"><span class="mobile-status-dot"></span>Atendido</span>`
+                    : `<span class="mobile-status-indicator pendiente"><span class="mobile-status-dot"></span>Pendiente</span>`;
+
+                return `
+                    <div class="mobile-card" onclick="abrirModalDetalles('${orden._id}')">
+                        <div class="mobile-card-avatar">${initials}</div>
+                        <div class="mobile-card-content">
+                            <div class="mobile-card-title">${nombre || 'Sin nombre'}</div>
+                            <div class="mobile-card-subtitle">
+                                <span>${orden.cargo || 'Sin cargo'}</span>
+                                <span class="dot"></span>
+                                <span>${orden.numeroId || '—'}</span>
+                            </div>
+                        </div>
+                        <div class="mobile-card-right">
+                            <div class="mobile-card-time">${fechaStr}</div>
+                            ${statusIndicator}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // ========== MODAL DETALLES ==========
