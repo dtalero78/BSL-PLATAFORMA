@@ -409,69 +409,125 @@
             color: white;
         }
 
-        /* ========== PANTALLA DE RESULTADOS ========== */
-        .results-card {
+        /* ========== PANTALLA DE CONFIRMACIÓN ========== */
+        .confirmation-card {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
+            border-radius: 16px;
+            padding: 32px 24px;
             text-align: center;
         }
 
-        .results-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
+        .success-icon-container {
+            width: 80px;
+            height: 80px;
+            background: #D1FAE5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
         }
 
-        .results-title {
-            font-size: 24px;
+        .success-icon-svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .confirmation-title {
+            font-size: 26px;
             font-weight: 700;
+            color: #1F2937;
             margin-bottom: 8px;
         }
 
-        .results-subtitle {
+        .confirmation-subtitle {
             font-size: 15px;
-            color: #8E8E93;
-            margin-bottom: 24px;
+            color: #6B7280;
+            margin-bottom: 28px;
         }
 
-        .results-summary {
-            background: #F2F2F7;
+        .resumen-container {
+            background: #F9FAFB;
             border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 24px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
         }
 
-        .result-item {
+        .resumen-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .resumen-item {
             display: flex;
             justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #E5E5EA;
+            align-items: flex-start;
+            padding: 10px 0;
+            border-bottom: 1px solid #E5E7EB;
         }
 
-        .result-item:last-child {
+        .resumen-item:last-child {
             border-bottom: none;
         }
 
-        .result-label {
-            font-size: 15px;
-            color: #8E8E93;
+        .resumen-label {
+            color: #6B7280;
+            font-size: 14px;
+            flex-shrink: 0;
         }
 
-        .result-value {
-            font-size: 15px;
-            font-weight: 600;
+        .resumen-value {
+            color: #1F2937;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-word;
         }
 
-        .result-value.good {
-            color: #34C759;
+        .status-completed {
+            color: #059669 !important;
+            background: #D1FAE5;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
         }
 
-        .result-value.warning {
-            color: #FF9500;
+        .next-steps-card {
+            background: #EFF6FF;
+            border: 1px solid #BFDBFE;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            text-align: left;
         }
 
-        .result-value.bad {
-            color: #FF3B30;
+        .next-steps-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .next-steps-content strong {
+            display: block;
+            color: #1E40AF;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .next-steps-content p {
+            color: #3B82F6;
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 0;
         }
 
         /* Loading overlay */
@@ -718,33 +774,59 @@
             </div>
         </div>
 
-        <!-- ========== PANTALLA DE RESULTADOS ========== -->
+        <!-- ========== PANTALLA DE CONFIRMACIÓN FINAL ========== -->
         <div class="screen" id="resultsScreen">
-            <div class="results-card">
-                <div class="results-icon">✅</div>
-                <div class="results-title">Prueba Completada</div>
-                <div class="results-subtitle">Tus resultados han sido guardados</div>
+            <div class="confirmation-card">
+                <div class="success-icon-container">
+                    <svg class="success-icon-svg" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="11" stroke="#10B981" stroke-width="2"/>
+                        <polyline points="7 13 10 16 17 9" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h2 class="confirmation-title">¡Pruebas Completadas!</h2>
+                <p class="confirmation-subtitle">Has finalizado todas las pruebas virtuales exitosamente.</p>
 
-                <div class="results-summary">
-                    <div class="result-item">
-                        <span class="result-label">Agudeza Visual (Letras)</span>
-                        <span class="result-value" id="resultSnellen">-</span>
+                <div class="resumen-container">
+                    <div class="resumen-header">Resumen de tu Consulta</div>
+                    <div class="resumen-item">
+                        <span class="resumen-label">Paciente</span>
+                        <span class="resumen-value" id="confirmNombre">-</span>
                     </div>
-                    <div class="result-item">
-                        <span class="result-label">Sensibilidad al Contraste</span>
-                        <span class="result-value" id="resultLandolt">-</span>
+                    <div class="resumen-item">
+                        <span class="resumen-label">Cédula</span>
+                        <span class="resumen-value" id="confirmCedula">-</span>
                     </div>
-                    <div class="result-item">
-                        <span class="result-label">Visión Cromática</span>
-                        <span class="result-value" id="resultIshihara">-</span>
+                    <div class="resumen-item">
+                        <span class="resumen-label">Empresa</span>
+                        <span class="resumen-value" id="confirmEmpresa">-</span>
                     </div>
-                    <div class="result-item">
-                        <span class="result-label">Concepto General</span>
-                        <span class="result-value" id="resultConcepto">-</span>
+                    <div class="resumen-item">
+                        <span class="resumen-label">Tipo de Examen</span>
+                        <span class="resumen-value" id="confirmTipoExamen">-</span>
+                    </div>
+                    <div class="resumen-item">
+                        <span class="resumen-label">Exámenes</span>
+                        <span class="resumen-value" id="confirmExamenes">-</span>
+                    </div>
+                    <div class="resumen-item">
+                        <span class="resumen-label">Fecha de Consulta</span>
+                        <span class="resumen-value" id="confirmFecha">-</span>
+                    </div>
+                    <div class="resumen-item">
+                        <span class="resumen-label">Estado</span>
+                        <span class="resumen-value status-completed" id="confirmEstado">Pruebas Virtuales Completadas</span>
                     </div>
                 </div>
 
-                <button class="btn-primary" id="continueBtn">Continuar</button>
+                <div class="next-steps-card">
+                    <div class="next-steps-icon">📋</div>
+                    <div class="next-steps-content">
+                        <strong>¿Qué sigue?</strong>
+                        <p>Un profesional de BSL revisará tus resultados y te contactará para coordinar los siguientes pasos de tu evaluación médica ocupacional.</p>
+                    </div>
+                </div>
+
+                <a href="/" class="btn-primary" style="text-decoration: none; display: block; text-align: center;">Volver al Inicio</a>
             </div>
         </div>
     </div>
@@ -858,10 +940,6 @@
         function setupEventListeners() {
             document.getElementById('startBtn').addEventListener('click', startTest);
             document.getElementById('snellenNextBtn').addEventListener('click', checkSnellenAnswer);
-            document.getElementById('continueBtn').addEventListener('click', () => {
-                // Redirigir al final del flujo
-                window.location.href = `https://www.bsl.com.co/foto2/${ordenId}`;
-            });
 
             // Enter para avanzar en test Snellen
             document.getElementById('snellenInput').addEventListener('keypress', (e) => {
@@ -1117,35 +1195,49 @@
 
             document.getElementById('loadingOverlay').style.display = 'none';
 
-            // Mostrar resultados
-            showResults(snellenScore, landoltScore, ishiharaScore, concepto);
+            // Mostrar pantalla de confirmación
+            showResults();
         }
 
-        function showResults(snellen, landolt, ishihara, concepto) {
-            // Actualizar UI de resultados
-            const snellenEl = document.getElementById('resultSnellen');
-            snellenEl.textContent = `${snellenCorrect}/${snellenTests.length} (${snellen}%)`;
-            snellenEl.className = 'result-value ' + getScoreClass(snellen);
+        function showResults() {
+            // Llenar datos de confirmación con información del paciente
+            if (patientData) {
+                const nombreCompleto = `${patientData.primerNombre || ''} ${patientData.segundoNombre || ''} ${patientData.primerApellido || ''} ${patientData.segundoApellido || ''}`.replace(/\s+/g, ' ').trim();
+                document.getElementById('confirmNombre').textContent = nombreCompleto || '-';
+                document.getElementById('confirmCedula').textContent = patientData.numeroId || '-';
+                document.getElementById('confirmEmpresa').textContent = patientData.empresa || '-';
+                document.getElementById('confirmTipoExamen').textContent = patientData.tipoExamen || '-';
+                document.getElementById('confirmExamenes').textContent = patientData.examenes || '-';
 
-            const landoltEl = document.getElementById('resultLandolt');
-            landoltEl.textContent = `${landoltCorrect}/${landoltTests.length} (${landolt}%)`;
-            landoltEl.className = 'result-value ' + getScoreClass(landolt);
-
-            const ishiharaEl = document.getElementById('resultIshihara');
-            ishiharaEl.textContent = `${ishiharaCorrect}/${ishiharaTests.length} (${ishihara}%)`;
-            ishiharaEl.className = 'result-value ' + getScoreClass(ishihara);
-
-            const conceptoEl = document.getElementById('resultConcepto');
-            conceptoEl.textContent = concepto;
-            conceptoEl.className = 'result-value ' + (concepto === 'Normal' ? 'good' : concepto === 'Aceptable' ? 'warning' : 'bad');
+                // Formatear fecha de consulta
+                if (patientData.fechaConsulta) {
+                    const fecha = new Date(patientData.fechaConsulta);
+                    const opciones = {
+                        timeZone: 'America/Bogota',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    };
+                    document.getElementById('confirmFecha').textContent = fecha.toLocaleString('es-CO', opciones);
+                } else if (patientData.fechaAtencion) {
+                    const fecha = new Date(patientData.fechaAtencion);
+                    const opciones = {
+                        timeZone: 'America/Bogota',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    };
+                    document.getElementById('confirmFecha').textContent = fecha.toLocaleString('es-CO', opciones);
+                }
+            }
 
             showScreen('resultsScreen');
-        }
-
-        function getScoreClass(score) {
-            if (score >= 80) return 'good';
-            if (score >= 50) return 'warning';
-            return 'bad';
         }
 
         // ==========================================
