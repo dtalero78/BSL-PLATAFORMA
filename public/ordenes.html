@@ -2406,9 +2406,13 @@
                         <div class="form-section-title">Datos del Formulario del Paciente</div>
 
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label">Wix ID</label>
-                                <input type="text" class="form-input" id="edit-wix_id" name="wix_id" readonly style="background: #f5f5f5;">
+                            <div class="form-group full">
+                                <label class="form-label">Wix ID (Orden enlazada)</label>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <input type="text" class="form-input" id="edit-wix_id" name="wix_id" style="flex: 1;" placeholder="ID de la orden a enlazar">
+                                    <button type="button" id="btnEnlazarOrden" class="btn btn-primary" style="white-space: nowrap; padding: 8px 16px;" onclick="enlazarOrdenConFormulario()">Enlazar</button>
+                                </div>
+                                <small style="color: #6B7280; font-size: 11px; margin-top: 4px; display: block;">Ingresa el _id de la orden de HistoriaClinica para enlazar este formulario</small>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Género</label>
@@ -4067,6 +4071,59 @@
         function cerrarModalEdicion() {
             document.getElementById('modalEdicion').classList.remove('active');
             formularioActual = null;
+        }
+
+        // Función para enlazar orden con formulario
+        async function enlazarOrdenConFormulario() {
+            const nuevoWixId = document.getElementById('edit-wix_id').value.trim();
+            const formId = document.getElementById('edit-id').value;
+            const numeroId = document.getElementById('edit-hc_numeroId')?.value || document.querySelector('[name="hc_numeroId"]')?.value;
+
+            if (!nuevoWixId) {
+                alert('Por favor ingresa el ID de la orden a enlazar');
+                return;
+            }
+
+            if (!formId && !numeroId) {
+                alert('No hay formulario para enlazar. El paciente debe completar el formulario primero.');
+                return;
+            }
+
+            const btnEnlazar = document.getElementById('btnEnlazarOrden');
+            btnEnlazar.disabled = true;
+            btnEnlazar.textContent = 'Enlazando...';
+
+            try {
+                const response = await fetch('/api/formularios/enlazar-orden', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        formId: formId || null,
+                        numeroId: numeroId,
+                        nuevoWixId: nuevoWixId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✓ Orden enlazada correctamente');
+                    // Limpiar cache y recargar
+                    if (ordenActual) {
+                        delete detallesCache[ordenActual._id];
+                    }
+                    cerrarModalEdicion();
+                    cargarFormularios();
+                } else {
+                    alert('Error: ' + (result.error || 'No se pudo enlazar la orden'));
+                }
+            } catch (error) {
+                console.error('Error enlazando orden:', error);
+                alert('Error: ' + error.message);
+            } finally {
+                btnEnlazar.disabled = false;
+                btnEnlazar.textContent = 'Enlazar';
+            }
         }
 
         async function guardarCambios(event) {

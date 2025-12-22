@@ -1378,6 +1378,70 @@ app.get('/api/formularios/:id', async (req, res) => {
     }
 });
 
+// Ruta para enlazar una orden con un formulario existente
+app.post('/api/formularios/enlazar-orden', async (req, res) => {
+    try {
+        const { formId, numeroId, nuevoWixId } = req.body;
+
+        if (!nuevoWixId) {
+            return res.status(400).json({ success: false, error: 'nuevoWixId es requerido' });
+        }
+
+        // Verificar que la orden existe en HistoriaClinica
+        const ordenExiste = await pool.query(
+            'SELECT "_id" FROM "HistoriaClinica" WHERE "_id" = $1',
+            [nuevoWixId]
+        );
+
+        if (ordenExiste.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'La orden especificada no existe en HistoriaClinica'
+            });
+        }
+
+        let result;
+
+        if (formId) {
+            // Actualizar por ID del formulario
+            result = await pool.query(
+                'UPDATE formularios SET wix_id = $1 WHERE id = $2 RETURNING id, wix_id, numero_id',
+                [nuevoWixId, formId]
+            );
+        } else if (numeroId) {
+            // Actualizar por número de identificación
+            result = await pool.query(
+                'UPDATE formularios SET wix_id = $1 WHERE numero_id = $2 RETURNING id, wix_id, numero_id',
+                [nuevoWixId, numeroId]
+            );
+        } else {
+            return res.status(400).json({
+                success: false,
+                error: 'Se requiere formId o numeroId para identificar el formulario'
+            });
+        }
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'No se encontró el formulario para actualizar'
+            });
+        }
+
+        console.log('✅ Orden enlazada correctamente:', result.rows[0]);
+
+        res.json({
+            success: true,
+            data: result.rows[0],
+            message: 'Orden enlazada correctamente'
+        });
+
+    } catch (error) {
+        console.error('❌ Error enlazando orden:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Ruta para actualizar un formulario
 app.put('/api/formularios/:id', async (req, res) => {
     try {
