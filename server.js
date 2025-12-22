@@ -854,58 +854,117 @@ app.post('/api/formulario', async (req, res) => {
             fotoUrl = await subirFotoASpaces(datos.foto, datos.numeroId, 'new');
         }
 
-        // Insertar en PostgreSQL
-        const query = `
-            INSERT INTO formularios (
-                wix_id, primer_nombre, primer_apellido, numero_id, celular,
-                empresa, cod_empresa, fecha_atencion,
-                genero, edad, fecha_nacimiento, lugar_nacimiento, ciudad_residencia,
-                hijos, profesion_oficio, empresa1, empresa2, estado_civil,
-                nivel_educativo, email, eps, arl, pensiones, estatura, peso, ejercicio,
-                cirugia_ocular, consumo_licor, cirugia_programada, condicion_medica,
-                dolor_cabeza, dolor_espalda, ruido_jaqueca, embarazo,
-                enfermedad_higado, enfermedad_pulmonar, fuma, hernias,
-                hormigueos, presion_alta, problemas_azucar, problemas_cardiacos,
-                problemas_sueno, usa_anteojos, usa_lentes_contacto, varices,
-                hepatitis, familia_hereditarias, familia_geneticas, familia_diabetes,
-                familia_hipertension, familia_infartos, familia_cancer,
-                familia_trastornos, familia_infecciosas,
-                trastorno_psicologico, sintomas_psicologicos, diagnostico_cancer,
-                enfermedades_laborales, enfermedad_osteomuscular, enfermedad_autoinmune,
-                firma, inscripcion_boletin, foto_url
-            ) VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-                $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-                $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
-                $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
-                $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
-                $51, $52, $53, $54, $55, $56, $57, $58, $59, $60,
-                $61, $62, $63, $64
-            ) RETURNING id
-        `;
+        // Verificar si ya existe un formulario con este wix_id
+        let existeFormulario = false;
+        if (datos.wixId) {
+            const checkResult = await pool.query(
+                'SELECT id FROM formularios WHERE wix_id = $1',
+                [datos.wixId]
+            );
+            existeFormulario = checkResult.rows.length > 0;
+        }
 
-        const values = [
-            datos.wixId, datos.primerNombre, datos.primerApellido, datos.numeroId, datos.celular,
-            datos.empresa, datos.codEmpresa, datos.fechaAtencion,
-            datos.genero, datos.edad, datos.fechaNacimiento, datos.lugarDeNacimiento, datos.ciudadDeResidencia,
-            datos.hijos, datos.profesionUOficio, datos.empresa1, datos.empresa2, datos.estadoCivil,
-            datos.nivelEducativo, datos.email, datos.eps, datos.arl, datos.pensiones, datos.estatura, datos.peso, datos.ejercicio,
-            datos.cirugiaOcular, datos.consumoLicor, datos.cirugiaProgramada, datos.condicionMedica,
-            datos.dolorCabeza, datos.dolorEspalda, datos.ruidoJaqueca, datos.embarazo,
-            datos.enfermedadHigado, datos.enfermedadPulmonar, datos.fuma, datos.hernias,
-            datos.hormigueos, datos.presionAlta, datos.problemasAzucar, datos.problemasCardiacos,
-            datos.problemasSueno, datos.usaAnteojos, datos.usaLentesContacto, datos.varices,
-            datos.hepatitis, datos.familiaHereditarias, datos.familiaGeneticas, datos.familiaDiabetes,
-            datos.familiaHipertension, datos.familiaInfartos, datos.familiaCancer,
-            datos.familiaTrastornos, datos.familiaInfecciosas,
-            datos.trastornoPsicologico, datos.sintomasPsicologicos, datos.diagnosticoCancer,
-            datos.enfermedadesLaborales, datos.enfermedadOsteomuscular, datos.enfermedadAutoinmune,
-            datos.firma, datos.inscripcionBoletin, fotoUrl
-        ];
+        let result;
 
-        const result = await pool.query(query, values);
+        if (existeFormulario) {
+            // UPDATE si ya existe
+            const updateQuery = `
+                UPDATE formularios SET
+                    primer_nombre = $2, primer_apellido = $3, numero_id = $4, celular = $5,
+                    empresa = $6, cod_empresa = $7, fecha_atencion = $8,
+                    genero = $9, edad = $10, fecha_nacimiento = $11, lugar_nacimiento = $12, ciudad_residencia = $13,
+                    hijos = $14, profesion_oficio = $15, empresa1 = $16, empresa2 = $17, estado_civil = $18,
+                    nivel_educativo = $19, email = $20, eps = $21, arl = $22, pensiones = $23, estatura = $24, peso = $25, ejercicio = $26,
+                    cirugia_ocular = $27, consumo_licor = $28, cirugia_programada = $29, condicion_medica = $30,
+                    dolor_cabeza = $31, dolor_espalda = $32, ruido_jaqueca = $33, embarazo = $34,
+                    enfermedad_higado = $35, enfermedad_pulmonar = $36, fuma = $37, hernias = $38,
+                    hormigueos = $39, presion_alta = $40, problemas_azucar = $41, problemas_cardiacos = $42,
+                    problemas_sueno = $43, usa_anteojos = $44, usa_lentes_contacto = $45, varices = $46,
+                    hepatitis = $47, familia_hereditarias = $48, familia_geneticas = $49, familia_diabetes = $50,
+                    familia_hipertension = $51, familia_infartos = $52, familia_cancer = $53,
+                    familia_trastornos = $54, familia_infecciosas = $55,
+                    trastorno_psicologico = $56, sintomas_psicologicos = $57, diagnostico_cancer = $58,
+                    enfermedades_laborales = $59, enfermedad_osteomuscular = $60, enfermedad_autoinmune = $61,
+                    firma = $62, inscripcion_boletin = $63, foto_url = COALESCE($64, foto_url),
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE wix_id = $1
+                RETURNING id
+            `;
 
-        console.log('✅ Formulario guardado en PostgreSQL:', result.rows[0].id);
+            const updateValues = [
+                datos.wixId, datos.primerNombre, datos.primerApellido, datos.numeroId, datos.celular,
+                datos.empresa, datos.codEmpresa, datos.fechaAtencion,
+                datos.genero, datos.edad, datos.fechaNacimiento, datos.lugarDeNacimiento, datos.ciudadDeResidencia,
+                datos.hijos, datos.profesionUOficio, datos.empresa1, datos.empresa2, datos.estadoCivil,
+                datos.nivelEducativo, datos.email, datos.eps, datos.arl, datos.pensiones, datos.estatura, datos.peso, datos.ejercicio,
+                datos.cirugiaOcular, datos.consumoLicor, datos.cirugiaProgramada, datos.condicionMedica,
+                datos.dolorCabeza, datos.dolorEspalda, datos.ruidoJaqueca, datos.embarazo,
+                datos.enfermedadHigado, datos.enfermedadPulmonar, datos.fuma, datos.hernias,
+                datos.hormigueos, datos.presionAlta, datos.problemasAzucar, datos.problemasCardiacos,
+                datos.problemasSueno, datos.usaAnteojos, datos.usaLentesContacto, datos.varices,
+                datos.hepatitis, datos.familiaHereditarias, datos.familiaGeneticas, datos.familiaDiabetes,
+                datos.familiaHipertension, datos.familiaInfartos, datos.familiaCancer,
+                datos.familiaTrastornos, datos.familiaInfecciosas,
+                datos.trastornoPsicologico, datos.sintomasPsicologicos, datos.diagnosticoCancer,
+                datos.enfermedadesLaborales, datos.enfermedadOsteomuscular, datos.enfermedadAutoinmune,
+                datos.firma, datos.inscripcionBoletin, fotoUrl
+            ];
+
+            result = await pool.query(updateQuery, updateValues);
+            console.log('✅ Formulario actualizado en PostgreSQL:', result.rows[0].id);
+        } else {
+            // INSERT si no existe
+            const insertQuery = `
+                INSERT INTO formularios (
+                    wix_id, primer_nombre, primer_apellido, numero_id, celular,
+                    empresa, cod_empresa, fecha_atencion,
+                    genero, edad, fecha_nacimiento, lugar_nacimiento, ciudad_residencia,
+                    hijos, profesion_oficio, empresa1, empresa2, estado_civil,
+                    nivel_educativo, email, eps, arl, pensiones, estatura, peso, ejercicio,
+                    cirugia_ocular, consumo_licor, cirugia_programada, condicion_medica,
+                    dolor_cabeza, dolor_espalda, ruido_jaqueca, embarazo,
+                    enfermedad_higado, enfermedad_pulmonar, fuma, hernias,
+                    hormigueos, presion_alta, problemas_azucar, problemas_cardiacos,
+                    problemas_sueno, usa_anteojos, usa_lentes_contacto, varices,
+                    hepatitis, familia_hereditarias, familia_geneticas, familia_diabetes,
+                    familia_hipertension, familia_infartos, familia_cancer,
+                    familia_trastornos, familia_infecciosas,
+                    trastorno_psicologico, sintomas_psicologicos, diagnostico_cancer,
+                    enfermedades_laborales, enfermedad_osteomuscular, enfermedad_autoinmune,
+                    firma, inscripcion_boletin, foto_url
+                ) VALUES (
+                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+                    $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+                    $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
+                    $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
+                    $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
+                    $51, $52, $53, $54, $55, $56, $57, $58, $59, $60,
+                    $61, $62, $63, $64
+                ) RETURNING id
+            `;
+
+            const insertValues = [
+                datos.wixId, datos.primerNombre, datos.primerApellido, datos.numeroId, datos.celular,
+                datos.empresa, datos.codEmpresa, datos.fechaAtencion,
+                datos.genero, datos.edad, datos.fechaNacimiento, datos.lugarDeNacimiento, datos.ciudadDeResidencia,
+                datos.hijos, datos.profesionUOficio, datos.empresa1, datos.empresa2, datos.estadoCivil,
+                datos.nivelEducativo, datos.email, datos.eps, datos.arl, datos.pensiones, datos.estatura, datos.peso, datos.ejercicio,
+                datos.cirugiaOcular, datos.consumoLicor, datos.cirugiaProgramada, datos.condicionMedica,
+                datos.dolorCabeza, datos.dolorEspalda, datos.ruidoJaqueca, datos.embarazo,
+                datos.enfermedadHigado, datos.enfermedadPulmonar, datos.fuma, datos.hernias,
+                datos.hormigueos, datos.presionAlta, datos.problemasAzucar, datos.problemasCardiacos,
+                datos.problemasSueno, datos.usaAnteojos, datos.usaLentesContacto, datos.varices,
+                datos.hepatitis, datos.familiaHereditarias, datos.familiaGeneticas, datos.familiaDiabetes,
+                datos.familiaHipertension, datos.familiaInfartos, datos.familiaCancer,
+                datos.familiaTrastornos, datos.familiaInfecciosas,
+                datos.trastornoPsicologico, datos.sintomasPsicologicos, datos.diagnosticoCancer,
+                datos.enfermedadesLaborales, datos.enfermedadOsteomuscular, datos.enfermedadAutoinmune,
+                datos.firma, datos.inscripcionBoletin, fotoUrl
+            ];
+
+            result = await pool.query(insertQuery, insertValues);
+            console.log('✅ Formulario guardado en PostgreSQL:', result.rows[0].id);
+        }
 
         // Enviar alertas por WhatsApp si hay respuestas afirmativas en preguntas críticas
         try {
