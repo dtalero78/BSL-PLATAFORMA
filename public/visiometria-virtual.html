@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Visiometría Virtual - BSL</title>
+    <title>Prueba Visual - BSL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -44,6 +44,13 @@
         .header-logo {
             height: 50px;
             width: auto;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1C1C1E;
+            letter-spacing: -0.3px;
         }
 
         /* Paciente info card */
@@ -625,6 +632,7 @@
         <!-- Header -->
         <div class="header">
             <img src="bsl-logo.png" alt="BSL Logo" class="header-logo">
+            <span class="header-title">Prueba Visual</span>
         </div>
 
         <!-- Patient card -->
@@ -644,7 +652,7 @@
         <!-- ========== PANTALLA DE BIENVENIDA ========== -->
         <div class="screen active" id="welcomeScreen">
             <div class="instructions-card">
-                <h2>👁️ Visiometría Virtual</h2>
+                <h2>Prueba Visual</h2>
                 <p style="color: #8E8E93; margin-bottom: 16px;">Esta prueba evalúa tu agudeza visual a través de 3 ejercicios sencillos.</p>
                 <ul class="instruction-list">
                     <li>
@@ -663,7 +671,7 @@
             </div>
 
             <div class="instructions-card">
-                <h2>📋 Recomendaciones</h2>
+                <h2>Recomendaciones</h2>
                 <ul class="instruction-list">
                     <li>
                         <span class="instruction-number">✓</span>
@@ -819,7 +827,15 @@
                 </div>
 
                 <div class="next-steps-card">
-                    <div class="next-steps-icon">📋</div>
+                    <div class="next-steps-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </div>
                     <div class="next-steps-content">
                         <strong>¿Qué sigue?</strong>
                         <p>Un profesional de BSL revisará tus resultados y te contactará para coordinar los siguientes pasos de tu evaluación médica ocupacional.</p>
@@ -861,13 +877,16 @@
             { letters: 'EDFCZP', size: 14, correctAnswer: 'EDFCZP' }
         ];
 
-        // Test Landolt C - Direcciones
+        // Test Landolt C - Direcciones (8 pruebas, tamaño decreciente)
         const landoltTests = [
-            { direction: 'top', cssClass: 'gap-top' },
-            { direction: 'right', cssClass: 'gap-right' },
-            { direction: 'bottom', cssClass: 'gap-bottom' },
-            { direction: 'left', cssClass: 'gap-left' },
-            { direction: 'top', cssClass: 'gap-top' }
+            { direction: 'top', cssClass: 'gap-top', size: 120, borderWidth: 16 },
+            { direction: 'right', cssClass: 'gap-right', size: 105, borderWidth: 14 },
+            { direction: 'left', cssClass: 'gap-left', size: 90, borderWidth: 12 },
+            { direction: 'bottom', cssClass: 'gap-bottom', size: 78, borderWidth: 11 },
+            { direction: 'top', cssClass: 'gap-top', size: 66, borderWidth: 9 },
+            { direction: 'left', cssClass: 'gap-left', size: 54, borderWidth: 8 },
+            { direction: 'right', cssClass: 'gap-right', size: 44, borderWidth: 6 },
+            { direction: 'bottom', cssClass: 'gap-bottom', size: 36, borderWidth: 5 }
         ];
 
         // Test Ishihara - Placas de colores (simuladas con SVG)
@@ -1013,6 +1032,11 @@
             // Limpiar clases anteriores
             cElement.className = 'landolt-c';
             cElement.classList.add(test.cssClass);
+
+            // Aplicar tamaño dinámico
+            cElement.style.width = test.size + 'px';
+            cElement.style.height = test.size + 'px';
+            cElement.style.borderWidth = test.borderWidth + 'px';
 
             // Actualizar progreso
             document.getElementById('landoltCurrent').textContent = index + 1;
