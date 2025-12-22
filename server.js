@@ -3,10 +3,13 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { Pool } = require('pg');
 const cron = require('node-cron');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const puppeteer = require('puppeteer');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -774,6 +777,57 @@ const initDB = async () => {
             )
         `);
 
+        // Crear tabla de usuarios para autenticación
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                numero_documento VARCHAR(50) UNIQUE NOT NULL,
+                celular_whatsapp VARCHAR(20) NOT NULL,
+                nombre_completo VARCHAR(200),
+                rol VARCHAR(20) DEFAULT 'empresa' CHECK (rol IN ('empresa', 'admin')),
+                cod_empresa VARCHAR(50),
+                estado VARCHAR(20) DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'aprobado', 'rechazado', 'suspendido')),
+                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                fecha_aprobacion TIMESTAMP,
+                aprobado_por INTEGER REFERENCES usuarios(id),
+                ultimo_login TIMESTAMP,
+                activo BOOLEAN DEFAULT true
+            )
+        `);
+
+        // Crear índices para usuarios
+        try {
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_usuarios_documento ON usuarios(numero_documento)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_usuarios_estado ON usuarios(estado)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_usuarios_rol ON usuarios(rol)`);
+        } catch (err) {
+            // Índices ya existen
+        }
+
+        // Crear tabla de sesiones
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS sesiones (
+                id SERIAL PRIMARY KEY,
+                usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+                token_hash VARCHAR(255) UNIQUE NOT NULL,
+                fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                fecha_expiracion TIMESTAMP NOT NULL,
+                activa BOOLEAN DEFAULT true
+            )
+        `);
+
+        // Crear índices para sesiones
+        try {
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_sesiones_usuario ON sesiones(usuario_id)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_sesiones_token ON sesiones(token_hash)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_sesiones_expiracion ON sesiones(fecha_expiracion)`);
+        } catch (err) {
+            // Índices ya existen
+        }
+
         console.log('✅ Base de datos inicializada correctamente');
     } catch (error) {
         console.error('❌ Error al inicializar la base de datos:', error);
@@ -798,6 +852,755 @@ app.use((req, res, next) => {
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
+
+// ========== AUTENTICACIÓN JWT ==========
+const JWT_SECRET = process.env.JWT_SECRET || 'bsl-secret-default-cambiar';
+const JWT_EXPIRES_IN = '24h';
+
+// Función para hashear token
+function hashToken(token) {
+    return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+// Función para generar token JWT
+function generarToken(userId, extra = {}) {
+    return jwt.sign({ userId, ...extra }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+}
+
+// Función para hashear password
+async function hashPassword(password) {
+    const salt = await bcrypt.genSalt(12);
+    return bcrypt.hash(password, salt);
+}
+
+// Función para verificar password
+async function verificarPassword(password, hash) {
+    return bcrypt.compare(password, hash);
+}
+
+// Middleware de autenticación
+const authMiddleware = async (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({
+                success: false,
+                message: 'Token de autenticación requerido'
+            });
+        }
+
+        const token = authHeader.split(' ')[1];
+
+        // Verificar el token JWT
+        let decoded;
+        try {
+            decoded = jwt.verify(token, JWT_SECRET);
+        } catch (jwtError) {
+            if (jwtError.name === 'TokenExpiredError') {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Token expirado',
+                    code: 'TOKEN_EXPIRED'
+                });
+            }
+            return res.status(401).json({
+                success: false,
+                message: 'Token inválido'
+            });
+        }
+
+        // Verificar que la sesión siga activa en la base de datos
+        const sesionResult = await pool.query(`
+            SELECT s.*, u.estado, u.rol, u.cod_empresa, u.nombre_completo, u.email, u.numero_documento
+            FROM sesiones s
+            JOIN usuarios u ON s.usuario_id = u.id
+            WHERE s.token_hash = $1
+              AND s.activa = true
+              AND s.fecha_expiracion > NOW()
+              AND u.activo = true
+        `, [hashToken(token)]);
+
+        if (sesionResult.rows.length === 0) {
+            return res.status(401).json({
+                success: false,
+                message: 'Sesión no válida o expirada'
+            });
+        }
+
+        const sesion = sesionResult.rows[0];
+
+        // Verificar estado del usuario
+        if (sesion.estado !== 'aprobado') {
+            return res.status(403).json({
+                success: false,
+                message: `Acceso denegado: cuenta ${sesion.estado}`,
+                estado: sesion.estado
+            });
+        }
+
+        // Adjuntar usuario al request
+        req.usuario = {
+            id: decoded.userId,
+            email: sesion.email,
+            rol: sesion.rol,
+            nombreCompleto: sesion.nombre_completo,
+            codEmpresa: sesion.cod_empresa,
+            numeroDocumento: sesion.numero_documento,
+            sesionId: sesion.id
+        };
+
+        next();
+
+    } catch (error) {
+        console.error('Error en authMiddleware:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error interno de autenticación'
+        });
+    }
+};
+
+// Middleware para requerir rol de administrador
+const requireAdmin = (req, res, next) => {
+    if (!req.usuario || req.usuario.rol !== 'admin') {
+        return res.status(403).json({
+            success: false,
+            message: 'Acceso denegado: se requiere rol de administrador'
+        });
+    }
+    next();
+};
+
+// ========== ENDPOINTS DE AUTENTICACIÓN ==========
+
+// POST /api/auth/registro - Registro de nuevo usuario
+app.post('/api/auth/registro', async (req, res) => {
+    try {
+        const { email, password, numeroDocumento, celularWhatsapp, nombreCompleto, codEmpresa } = req.body;
+
+        // Validaciones
+        if (!email || !password || !numeroDocumento || !celularWhatsapp) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email, contraseña, número de documento y celular son requeridos'
+            });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: 'La contraseña debe tener al menos 8 caracteres'
+            });
+        }
+
+        // Verificar si el email ya existe
+        const emailExiste = await pool.query(
+            'SELECT id FROM usuarios WHERE email = $1',
+            [email.toLowerCase()]
+        );
+
+        if (emailExiste.rows.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Este email ya está registrado'
+            });
+        }
+
+        // Verificar si el documento ya existe
+        const docExiste = await pool.query(
+            'SELECT id FROM usuarios WHERE numero_documento = $1',
+            [numeroDocumento]
+        );
+
+        if (docExiste.rows.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Este número de documento ya está registrado'
+            });
+        }
+
+        // Hashear password
+        const passwordHash = await hashPassword(password);
+
+        // Insertar usuario
+        const result = await pool.query(`
+            INSERT INTO usuarios (email, password_hash, numero_documento, celular_whatsapp, nombre_completo, cod_empresa, rol, estado)
+            VALUES ($1, $2, $3, $4, $5, $6, 'empresa', 'pendiente')
+            RETURNING id, email, nombre_completo, rol, estado, fecha_registro
+        `, [email.toLowerCase(), passwordHash, numeroDocumento, celularWhatsapp, nombreCompleto || null, codEmpresa?.toUpperCase() || null]);
+
+        console.log(`📝 Nuevo usuario registrado: ${email} (pendiente de aprobación)`);
+
+        res.status(201).json({
+            success: true,
+            message: 'Registro exitoso. Tu cuenta está pendiente de aprobación por un administrador.',
+            usuario: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error en registro:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al registrar usuario'
+        });
+    }
+});
+
+// POST /api/auth/login - Iniciar sesión
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email y contraseña son requeridos'
+            });
+        }
+
+        // Buscar usuario
+        const result = await pool.query(
+            'SELECT * FROM usuarios WHERE email = $1 AND activo = true',
+            [email.toLowerCase()]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({
+                success: false,
+                message: 'Credenciales inválidas'
+            });
+        }
+
+        const usuario = result.rows[0];
+
+        // Verificar password
+        const passwordValido = await verificarPassword(password, usuario.password_hash);
+
+        if (!passwordValido) {
+            return res.status(401).json({
+                success: false,
+                message: 'Credenciales inválidas'
+            });
+        }
+
+        // Verificar estado
+        if (usuario.estado === 'pendiente') {
+            return res.status(403).json({
+                success: false,
+                message: 'Tu cuenta está pendiente de aprobación',
+                estado: 'pendiente'
+            });
+        }
+
+        if (usuario.estado === 'rechazado') {
+            return res.status(403).json({
+                success: false,
+                message: 'Tu solicitud de cuenta fue rechazada',
+                estado: 'rechazado'
+            });
+        }
+
+        if (usuario.estado === 'suspendido') {
+            return res.status(403).json({
+                success: false,
+                message: 'Tu cuenta ha sido suspendida',
+                estado: 'suspendido'
+            });
+        }
+
+        // Generar token
+        const token = generarToken(usuario.id, { email: usuario.email, rol: usuario.rol });
+        const tokenHash = hashToken(token);
+
+        // Calcular fecha de expiración (24 horas)
+        const fechaExpiracion = new Date();
+        fechaExpiracion.setHours(fechaExpiracion.getHours() + 24);
+
+        // Guardar sesión
+        await pool.query(`
+            INSERT INTO sesiones (usuario_id, token_hash, fecha_expiracion)
+            VALUES ($1, $2, $3)
+        `, [usuario.id, tokenHash, fechaExpiracion]);
+
+        // Actualizar último login
+        await pool.query(
+            'UPDATE usuarios SET ultimo_login = NOW() WHERE id = $1',
+            [usuario.id]
+        );
+
+        console.log(`🔐 Login exitoso: ${email} (${usuario.rol})`);
+
+        res.json({
+            success: true,
+            token,
+            usuario: {
+                id: usuario.id,
+                email: usuario.email,
+                nombreCompleto: usuario.nombre_completo,
+                rol: usuario.rol,
+                codEmpresa: usuario.cod_empresa,
+                numeroDocumento: usuario.numero_documento
+            },
+            expiresIn: 86400 // 24 horas en segundos
+        });
+
+    } catch (error) {
+        console.error('Error en login:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al iniciar sesión'
+        });
+    }
+});
+
+// POST /api/auth/logout - Cerrar sesión
+app.post('/api/auth/logout', authMiddleware, async (req, res) => {
+    try {
+        const token = req.headers.authorization.split(' ')[1];
+        const tokenHash = hashToken(token);
+
+        // Desactivar la sesión
+        await pool.query(
+            'UPDATE sesiones SET activa = false WHERE token_hash = $1',
+            [tokenHash]
+        );
+
+        console.log(`🔓 Logout: ${req.usuario.email}`);
+
+        res.json({
+            success: true,
+            message: 'Sesión cerrada correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error en logout:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al cerrar sesión'
+        });
+    }
+});
+
+// POST /api/auth/verificar-token - Verificar si un token es válido
+app.post('/api/auth/verificar-token', async (req, res) => {
+    try {
+        const { token } = req.body;
+
+        if (!token) {
+            return res.status(400).json({
+                success: false,
+                message: 'Token requerido'
+            });
+        }
+
+        // Verificar JWT
+        let decoded;
+        try {
+            decoded = jwt.verify(token, JWT_SECRET);
+        } catch (e) {
+            return res.json({
+                success: false,
+                message: 'Token inválido o expirado'
+            });
+        }
+
+        // Verificar sesión en BD
+        const sesionResult = await pool.query(`
+            SELECT u.id, u.email, u.nombre_completo, u.rol, u.cod_empresa, u.numero_documento, u.estado
+            FROM sesiones s
+            JOIN usuarios u ON s.usuario_id = u.id
+            WHERE s.token_hash = $1
+              AND s.activa = true
+              AND s.fecha_expiracion > NOW()
+              AND u.activo = true
+              AND u.estado = 'aprobado'
+        `, [hashToken(token)]);
+
+        if (sesionResult.rows.length === 0) {
+            return res.json({
+                success: false,
+                message: 'Sesión no válida'
+            });
+        }
+
+        const usuario = sesionResult.rows[0];
+
+        res.json({
+            success: true,
+            usuario: {
+                id: usuario.id,
+                email: usuario.email,
+                nombreCompleto: usuario.nombre_completo,
+                rol: usuario.rol,
+                codEmpresa: usuario.cod_empresa,
+                numeroDocumento: usuario.numero_documento
+            }
+        });
+
+    } catch (error) {
+        console.error('Error verificando token:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al verificar token'
+        });
+    }
+});
+
+// GET /api/auth/perfil - Obtener perfil del usuario actual
+app.get('/api/auth/perfil', authMiddleware, async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT id, email, nombre_completo, numero_documento, celular_whatsapp, rol, cod_empresa, estado, fecha_registro, ultimo_login
+            FROM usuarios WHERE id = $1
+        `, [req.usuario.id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+
+        res.json({
+            success: true,
+            usuario: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error obteniendo perfil:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener perfil'
+        });
+    }
+});
+
+// ========== ENDPOINTS DE ADMINISTRACIÓN DE USUARIOS ==========
+
+// GET /api/admin/usuarios - Listar todos los usuarios
+app.get('/api/admin/usuarios', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { estado, rol, buscar, limit = 50, offset = 0 } = req.query;
+
+        let query = `
+            SELECT id, email, nombre_completo, numero_documento, celular_whatsapp, rol, cod_empresa,
+                   estado, fecha_registro, fecha_aprobacion, ultimo_login, activo
+            FROM usuarios
+            WHERE 1=1
+        `;
+        const params = [];
+        let paramIndex = 1;
+
+        if (estado) {
+            query += ` AND estado = $${paramIndex}`;
+            params.push(estado);
+            paramIndex++;
+        }
+
+        if (rol) {
+            query += ` AND rol = $${paramIndex}`;
+            params.push(rol);
+            paramIndex++;
+        }
+
+        if (buscar) {
+            query += ` AND (email ILIKE $${paramIndex} OR nombre_completo ILIKE $${paramIndex} OR numero_documento ILIKE $${paramIndex})`;
+            params.push(`%${buscar}%`);
+            paramIndex++;
+        }
+
+        query += ` ORDER BY fecha_registro DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+        params.push(parseInt(limit), parseInt(offset));
+
+        const result = await pool.query(query, params);
+
+        // Contar total
+        let countQuery = 'SELECT COUNT(*) FROM usuarios WHERE 1=1';
+        const countParams = [];
+        let countParamIndex = 1;
+
+        if (estado) {
+            countQuery += ` AND estado = $${countParamIndex}`;
+            countParams.push(estado);
+            countParamIndex++;
+        }
+        if (rol) {
+            countQuery += ` AND rol = $${countParamIndex}`;
+            countParams.push(rol);
+            countParamIndex++;
+        }
+        if (buscar) {
+            countQuery += ` AND (email ILIKE $${countParamIndex} OR nombre_completo ILIKE $${countParamIndex} OR numero_documento ILIKE $${countParamIndex})`;
+            countParams.push(`%${buscar}%`);
+        }
+
+        const countResult = await pool.query(countQuery, countParams);
+
+        res.json({
+            success: true,
+            data: result.rows,
+            total: parseInt(countResult.rows[0].count),
+            limit: parseInt(limit),
+            offset: parseInt(offset)
+        });
+
+    } catch (error) {
+        console.error('Error listando usuarios:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al listar usuarios'
+        });
+    }
+});
+
+// GET /api/admin/usuarios/pendientes - Listar usuarios pendientes de aprobación
+app.get('/api/admin/usuarios/pendientes', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT id, email, nombre_completo, numero_documento, celular_whatsapp, cod_empresa, fecha_registro
+            FROM usuarios
+            WHERE estado = 'pendiente' AND activo = true
+            ORDER BY fecha_registro ASC
+        `);
+
+        res.json({
+            success: true,
+            data: result.rows,
+            total: result.rows.length
+        });
+
+    } catch (error) {
+        console.error('Error listando usuarios pendientes:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al listar usuarios pendientes'
+        });
+    }
+});
+
+// PUT /api/admin/usuarios/:id/aprobar - Aprobar usuario
+app.put('/api/admin/usuarios/:id/aprobar', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(`
+            UPDATE usuarios
+            SET estado = 'aprobado', fecha_aprobacion = NOW(), aprobado_por = $1
+            WHERE id = $2 AND estado = 'pendiente'
+            RETURNING id, email, nombre_completo, estado
+        `, [req.usuario.id, id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado o ya fue procesado'
+            });
+        }
+
+        console.log(`✅ Usuario aprobado: ${result.rows[0].email} (por ${req.usuario.email})`);
+
+        res.json({
+            success: true,
+            message: 'Usuario aprobado exitosamente',
+            usuario: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error aprobando usuario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al aprobar usuario'
+        });
+    }
+});
+
+// PUT /api/admin/usuarios/:id/rechazar - Rechazar usuario
+app.put('/api/admin/usuarios/:id/rechazar', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { motivo } = req.body;
+
+        const result = await pool.query(`
+            UPDATE usuarios
+            SET estado = 'rechazado'
+            WHERE id = $1 AND estado = 'pendiente'
+            RETURNING id, email, nombre_completo, estado
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado o ya fue procesado'
+            });
+        }
+
+        console.log(`❌ Usuario rechazado: ${result.rows[0].email} (por ${req.usuario.email}) - Motivo: ${motivo || 'No especificado'}`);
+
+        res.json({
+            success: true,
+            message: 'Usuario rechazado',
+            usuario: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error rechazando usuario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al rechazar usuario'
+        });
+    }
+});
+
+// PUT /api/admin/usuarios/:id/suspender - Suspender usuario
+app.put('/api/admin/usuarios/:id/suspender', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // No permitir suspenderse a sí mismo
+        if (parseInt(id) === req.usuario.id) {
+            return res.status(400).json({
+                success: false,
+                message: 'No puedes suspender tu propia cuenta'
+            });
+        }
+
+        const result = await pool.query(`
+            UPDATE usuarios
+            SET estado = 'suspendido'
+            WHERE id = $1 AND estado = 'aprobado'
+            RETURNING id, email, nombre_completo, estado
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado o no está aprobado'
+            });
+        }
+
+        // Revocar todas las sesiones activas del usuario
+        await pool.query('UPDATE sesiones SET activa = false WHERE usuario_id = $1', [id]);
+
+        console.log(`⚠️ Usuario suspendido: ${result.rows[0].email} (por ${req.usuario.email})`);
+
+        res.json({
+            success: true,
+            message: 'Usuario suspendido',
+            usuario: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error suspendiendo usuario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al suspender usuario'
+        });
+    }
+});
+
+// PUT /api/admin/usuarios/:id/reactivar - Reactivar usuario suspendido o rechazado
+app.put('/api/admin/usuarios/:id/reactivar', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(`
+            UPDATE usuarios
+            SET estado = 'aprobado', fecha_aprobacion = NOW(), aprobado_por = $1
+            WHERE id = $2 AND estado IN ('suspendido', 'rechazado')
+            RETURNING id, email, nombre_completo, estado
+        `, [req.usuario.id, id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado o no está suspendido/rechazado'
+            });
+        }
+
+        console.log(`🔄 Usuario reactivado: ${result.rows[0].email} (por ${req.usuario.email})`);
+
+        res.json({
+            success: true,
+            message: 'Usuario reactivado',
+            usuario: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error reactivando usuario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al reactivar usuario'
+        });
+    }
+});
+
+// POST /api/admin/usuarios - Crear usuario directamente (ya aprobado)
+app.post('/api/admin/usuarios', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { email, password, numeroDocumento, celularWhatsapp, nombreCompleto, codEmpresa, rol = 'empresa' } = req.body;
+
+        // Validaciones
+        if (!email || !password || !numeroDocumento || !celularWhatsapp) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email, contraseña, número de documento y celular son requeridos'
+            });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: 'La contraseña debe tener al menos 8 caracteres'
+            });
+        }
+
+        if (!['empresa', 'admin'].includes(rol)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Rol inválido. Debe ser "empresa" o "admin"'
+            });
+        }
+
+        // Verificar duplicados
+        const existe = await pool.query(
+            'SELECT id FROM usuarios WHERE email = $1 OR numero_documento = $2',
+            [email.toLowerCase(), numeroDocumento]
+        );
+
+        if (existe.rows.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ya existe un usuario con ese email o número de documento'
+            });
+        }
+
+        // Hashear password
+        const passwordHash = await hashPassword(password);
+
+        // Insertar usuario ya aprobado
+        const result = await pool.query(`
+            INSERT INTO usuarios (email, password_hash, numero_documento, celular_whatsapp, nombre_completo, cod_empresa, rol, estado, fecha_aprobacion, aprobado_por)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, 'aprobado', NOW(), $8)
+            RETURNING id, email, nombre_completo, rol, estado, fecha_registro
+        `, [email.toLowerCase(), passwordHash, numeroDocumento, celularWhatsapp, nombreCompleto || null, codEmpresa?.toUpperCase() || null, rol, req.usuario.id]);
+
+        console.log(`👤 Usuario creado por admin: ${email} (${rol})`);
+
+        res.status(201).json({
+            success: true,
+            message: 'Usuario creado exitosamente',
+            usuario: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error creando usuario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al crear usuario'
+        });
+    }
+});
 
 // Ruta principal - servir el formulario
 app.get('/', (req, res) => {

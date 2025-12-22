@@ -1651,19 +1651,21 @@
     </style>
 </head>
 <body>
-    <!-- Login Screen -->
+    <!-- Login Screen (solo se muestra si no está autenticado) -->
     <div class="login-screen" id="loginScreen">
         <div class="login-card">
             <div class="login-logo">
                 <img src="/bsl-logo.png" alt="BSL">
             </div>
             <h1 class="login-title">Panel de Empresa</h1>
-            <p class="login-subtitle">Ingresa el código de tu empresa para continuar</p>
+            <p class="login-subtitle">Verificando sesion...</p>
 
-            <div class="login-error" id="loginError">Código de empresa incorrecto</div>
+            <div class="login-error" id="loginError"></div>
 
-            <input type="text" class="login-input" id="codEmpresaInput" placeholder="Código de empresa" autocomplete="off">
-            <button class="login-btn" id="btnEntrar">Ingresar</button>
+            <a href="/login.html" class="login-btn" style="display: inline-block; text-align: center; text-decoration: none;">Iniciar Sesion</a>
+            <p style="text-align: center; margin-top: 16px; font-size: 14px; color: var(--text-secondary);">
+                No tienes cuenta? <a href="/registro.html" style="color: var(--accent-color);">Registrate</a>
+            </p>
         </div>
     </div>
 
@@ -2344,8 +2346,10 @@
         </div>
     </div>
 
+    <script src="/js/auth.js"></script>
     <script>
         let codEmpresa = '';
+        let usuarioActual = null;
         let allData = [];
         let filteredData = [];
         let currentPage = 0;
@@ -2366,8 +2370,6 @@
         // Elementos del DOM
         const loginScreen = document.getElementById('loginScreen');
         const panelScreen = document.getElementById('panelScreen');
-        const codEmpresaInput = document.getElementById('codEmpresaInput');
-        const btnEntrar = document.getElementById('btnEntrar');
         const loginError = document.getElementById('loginError');
         const searchInput = document.getElementById('searchInput');
         const loadingState = document.getElementById('loadingState');
@@ -2407,12 +2409,25 @@
         document.documentElement.setAttribute('data-theme', savedTheme);
         updateThemeIcon(savedTheme);
 
-        // Verificar sesión guardada
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedEmpresa = sessionStorage.getItem('codEmpresa');
-            if (savedEmpresa) {
-                codEmpresa = savedEmpresa;
+        // Verificar sesión con JWT
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Verificar autenticación
+            usuarioActual = await Auth.verificarSesion();
+
+            if (usuarioActual) {
+                // Usuario autenticado
+                codEmpresa = usuarioActual.codEmpresa || '';
+
+                // Si es admin sin codEmpresa, redirigir al panel admin
+                if (usuarioActual.rol === 'admin' && !codEmpresa) {
+                    window.location.href = '/panel-admin.html';
+                    return;
+                }
+
                 mostrarPanel();
+            } else {
+                // No autenticado - mostrar pantalla de login con opciones
+                document.querySelector('.login-subtitle').textContent = 'Debes iniciar sesion para continuar';
             }
 
             // Tab filters
@@ -2444,51 +2459,11 @@
             aplicarFiltros();
         }
 
-        // Login
-        btnEntrar.addEventListener('click', iniciarSesion);
-        codEmpresaInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') iniciarSesion();
-        });
-
-        async function iniciarSesion() {
-            const codigo = codEmpresaInput.value.trim().toUpperCase();
-
-            if (!codigo) {
-                loginError.textContent = 'Por favor ingresa un código';
-                loginError.classList.add('show');
-                return;
-            }
-
-            btnEntrar.disabled = true;
-            btnEntrar.textContent = 'Verificando...';
-            loginError.classList.remove('show');
-
-            try {
-                const response = await fetch(`/api/ordenes?codEmpresa=${encodeURIComponent(codigo)}&limit=1`);
-                const result = await response.json();
-
-                if (result.success && result.data && result.data.length > 0) {
-                    codEmpresa = codigo;
-                    sessionStorage.setItem('codEmpresa', codEmpresa);
-                    mostrarPanel();
-                } else {
-                    loginError.textContent = 'Código de empresa incorrecto o sin órdenes';
-                    loginError.classList.add('show');
-                }
-            } catch (error) {
-                console.error('Error al verificar empresa:', error);
-                loginError.textContent = 'Error de conexión. Intenta de nuevo.';
-                loginError.classList.add('show');
-            } finally {
-                btnEntrar.disabled = false;
-                btnEntrar.textContent = 'Ingresar';
-            }
-        }
-
+        // Función para mostrar el panel (después de verificar autenticación)
         function mostrarPanel() {
             loginScreen.style.display = 'none';
             panelScreen.classList.add('active');
-            document.getElementById('empresaNameTopbar').textContent = codEmpresa;
+            document.getElementById('empresaNameTopbar').textContent = codEmpresa || usuarioActual?.email || 'Usuario';
 
             // Mostrar "Pregunta lo que quieras" solo para SANITHELP-JJ
             const navPregunta = document.getElementById('navPreguntaLoQueQuieras');
@@ -2499,16 +2474,11 @@
             actualizarDatos();
         }
 
+        // Cerrar sesión usando Auth.js
         function cerrarSesion() {
-            sessionStorage.removeItem('codEmpresa');
-            codEmpresa = '';
-            allData = [];
-            filteredData = [];
-            currentPage = 0;
-            panelScreen.classList.remove('active');
-            loginScreen.style.display = 'flex';
-            codEmpresaInput.value = '';
-            loginError.classList.remove('show');
+            if (confirm('¿Cerrar sesión?')) {
+                Auth.logout();
+            }
         }
 
         // Cargar datos con paginación del servidor
