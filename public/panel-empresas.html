@@ -1849,10 +1849,10 @@
                                 </th>
                                 <th>Paciente</th>
                                 <th>Cédula</th>
+                                <th>Fecha Programada</th>
                                 <th>Fecha Consulta</th>
-                                <th>Fecha Atención</th>
                                 <th>Estado</th>
-                                <th style="width: 50px; text-align: center;">Cert.</th>
+                                <th style="width: 50px; text-align: center;">Descargar</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">
@@ -2656,7 +2656,12 @@
                 });
             }
 
-            filteredData = data;
+            // Ordenar por fecha de atención (más reciente primero)
+            filteredData = data.sort((a, b) => {
+                const fechaA = a.fechaAtencion ? new Date(a.fechaAtencion) : new Date(0);
+                const fechaB = b.fechaAtencion ? new Date(b.fechaAtencion) : new Date(0);
+                return fechaB - fechaA;
+            });
             currentPage = 0;
             renderTabla();
         }
@@ -2740,8 +2745,8 @@
                             </div>
                         </td>
                         <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;">${cedula}</td>
-                        <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;">${fechaConsulta}</td>
                         <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;">${fechaAtencion}</td>
+                        <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;">${fechaConsulta}</td>
                         <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;"><span class="status-badge ${statusClass}"><span class="status-dot"></span>${estado}</span></td>
                         <td style="text-align: center;" onclick="event.stopPropagation();">
                             <button class="btn-icon-small" onclick="descargarCertificado('${orden._id}')" title="Descargar certificado" style="padding: 6px; border: none; background: #F3F4F6; border-radius: 6px; cursor: pointer;">
