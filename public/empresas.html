@@ -860,8 +860,9 @@
             try {
                 const response = await fetch('/api/examenes');
                 const result = await response.json();
-                if (result.success) {
-                    todosLosExamenes = result.data;
+                // El endpoint retorna un array directamente
+                if (Array.isArray(result)) {
+                    todosLosExamenes = result;
                     actualizarSelectExamenes();
                 }
             } catch (error) {
