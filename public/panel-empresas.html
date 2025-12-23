@@ -2350,6 +2350,7 @@
     <script>
         let codEmpresa = '';
         let usuarioActual = null;
+        let permisosUsuario = []; // Permisos cargados del servidor
         let allData = [];
         let filteredData = [];
         let currentPage = 0;
@@ -2409,6 +2410,48 @@
         document.documentElement.setAttribute('data-theme', savedTheme);
         updateThemeIcon(savedTheme);
 
+        // Función para verificar si tiene un permiso
+        function tienePermiso(permiso) {
+            return permisosUsuario.includes(permiso);
+        }
+
+        // Cargar permisos del usuario
+        async function cargarPermisos() {
+            try {
+                const response = await Auth.fetchAuth('/api/auth/mis-permisos');
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        permisosUsuario = data.permisos || [];
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando permisos:', error);
+                permisosUsuario = [];
+            }
+        }
+
+        // Aplicar permisos a la UI
+        function aplicarPermisosUI() {
+            // VER_ORDENES - Si no tiene permiso, ocultar toda la sección de órdenes
+            if (!tienePermiso('VER_ORDENES')) {
+                const dataSection = document.querySelector('.data-section');
+                if (dataSection) dataSection.style.display = 'none';
+            }
+
+            // CREAR_ORDEN - Ocultar botón de nueva orden en sidebar
+            if (!tienePermiso('CREAR_ORDEN')) {
+                const navNuevaOrden = document.querySelector('.nav-item[onclick*="abrirModalNuevaOrden"]');
+                if (navNuevaOrden) navNuevaOrden.style.display = 'none';
+            }
+
+            // VER_ESTADISTICAS - Ocultar tarjetas de estadísticas
+            if (!tienePermiso('VER_ESTADISTICAS')) {
+                const statsGrid = document.querySelector('.stats-grid');
+                if (statsGrid) statsGrid.style.display = 'none';
+            }
+        }
+
         // Verificar sesión con JWT
         document.addEventListener('DOMContentLoaded', async () => {
             // Verificar autenticación
@@ -2424,7 +2467,10 @@
                     return;
                 }
 
+                // Cargar permisos antes de mostrar el panel
+                await cargarPermisos();
                 mostrarPanel();
+                aplicarPermisosUI();
             } else {
                 // No autenticado - mostrar pantalla de login con opciones
                 document.querySelector('.login-subtitle').textContent = 'Debes iniciar sesion para continuar';
@@ -2844,16 +2890,26 @@
                 ` : ''}
             `;
 
-            // Configurar botón PDF
+            // Configurar botón PDF según permisos
             const btnPDF = document.getElementById('btnDescargarPDF');
-            if (estado === 'ATENDIDO') {
+            if (!tienePermiso('DESCARGAR_CERTIFICADO')) {
+                btnPDF.style.display = 'none';
+            } else if (estado === 'ATENDIDO') {
+                btnPDF.style.display = 'inline-flex';
                 btnPDF.href = `https://bsl-utilidades-yp78a.ondigitalocean.app/generar-certificado-desde-wix/${paciente._id}`;
                 btnPDF.style.opacity = '1';
                 btnPDF.style.pointerEvents = 'auto';
             } else {
+                btnPDF.style.display = 'inline-flex';
                 btnPDF.href = '#';
                 btnPDF.style.opacity = '0.5';
                 btnPDF.style.pointerEvents = 'none';
+            }
+
+            // Configurar botón Editar según permisos
+            const btnEditar = document.querySelector('.modal-footer .btn-secondary[onclick*="abrirModalEdicion"]');
+            if (btnEditar) {
+                btnEditar.style.display = tienePermiso('EDITAR_ORDEN') ? 'inline-flex' : 'none';
             }
 
             document.getElementById('modalDetalles').classList.add('active');
@@ -2874,6 +2930,10 @@
         // ========== MODAL EDICIÓN ==========
         function abrirModalEdicion() {
             if (!pacienteActual) return;
+            if (!tienePermiso('EDITAR_ORDEN')) {
+                alert('No tienes permiso para editar órdenes');
+                return;
+            }
 
             // Llenar el formulario con los datos del paciente
             document.getElementById('edit-id').value = pacienteActual._id || '';
@@ -3003,6 +3063,10 @@
         let ordenExistenteActual = null;
 
         function abrirModalNuevaOrden() {
+            if (!tienePermiso('CREAR_ORDEN')) {
+                alert('No tienes permiso para crear órdenes');
+                return;
+            }
             document.getElementById('modalNuevaOrden').classList.add('active');
             document.getElementById('modalEmpresa').value = codEmpresa;
             modalidadActual = 'presencial';

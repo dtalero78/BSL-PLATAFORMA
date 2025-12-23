@@ -294,6 +294,21 @@
             background: var(--bg-tertiary);
         }
 
+        tr[onclick]:hover {
+            background: #E0F2FE;
+        }
+
+        tr[onclick] td:first-child::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
         /* Status Badge */
         .status-badge {
             display: inline-flex;
@@ -840,6 +855,37 @@
         </div>
     </div>
 
+    <!-- Modal Permisos Usuario -->
+    <div class="modal-overlay" id="modalPermisos">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Gestionar Permisos</h3>
+                <button class="modal-close" onclick="cerrarModal('modalPermisos')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Usuario</label>
+                    <p id="permisosUsuarioInfo" style="font-size: 14px; color: var(--text-secondary); margin: 0;"></p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Permisos del Panel Empresas</label>
+                    <div id="listaPermisos" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="cerrarModal('modalPermisos')">Cancelar</button>
+                <button type="button" class="btn-primary" id="btnGuardarPermisos" onclick="guardarPermisos()">Guardar Permisos</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div class="alert-toast" id="toast"></div>
 
@@ -850,6 +896,8 @@
         let empresasCache = [];
         let usuarioAprobarId = null;
         let usuarioAprobarInfo = null;
+        let usuarioPermisosId = null;
+        let permisosDisponibles = [];
 
         // Inicializar
         document.addEventListener('DOMContentLoaded', async () => {
@@ -1001,8 +1049,13 @@
                 const tbody = document.getElementById('tablaTodos');
 
                 if (data.success && data.data.length > 0) {
-                    tbody.innerHTML = data.data.map(u => `
-                        <tr>
+                    tbody.innerHTML = data.data.map(u => {
+                        const nombreEscapado = (u.nombre_completo || '').replace(/'/g, "\\'");
+                        const esClickeable = u.estado === 'aprobado' && u.rol !== 'admin';
+                        const estiloFila = esClickeable ? 'cursor: pointer;' : '';
+                        const onclickFila = esClickeable ? `onclick="abrirModalPermisos(${u.id}, '${u.email}', '${nombreEscapado}')"` : '';
+                        return `
+                        <tr style="${estiloFila}" ${onclickFila} title="${esClickeable ? 'Clic para gestionar permisos' : ''}">
                             <td>${u.nombre_completo || '-'}</td>
                             <td>${u.email}</td>
                             <td>${u.numero_documento}</td>
@@ -1010,13 +1063,13 @@
                             <td><span class="role-badge ${u.rol}">${u.rol}</span></td>
                             <td><span class="status-badge ${u.estado}">${u.estado}</span></td>
                             <td>${u.ultimo_login ? formatearFecha(u.ultimo_login) : 'Nunca'}</td>
-                            <td>
+                            <td onclick="event.stopPropagation()">
                                 <div class="action-buttons">
                                     ${renderAcciones(u)}
                                 </div>
                             </td>
                         </tr>
-                    `).join('');
+                    `}).join('');
                 } else {
                     tbody.innerHTML = `
                         <tr>
@@ -1042,7 +1095,10 @@
                     <button class="btn-action reject" onclick="rechazarUsuario(${usuario.id})">Rechazar</button>
                 `;
             } else if (usuario.estado === 'aprobado') {
-                return `<button class="btn-action suspend" onclick="suspenderUsuario(${usuario.id})">Suspender</button>`;
+                return `
+                    <button class="btn-action" style="background: #F0F9FF; color: #0369A1;" onclick="abrirModalPermisos(${usuario.id}, '${usuario.email}', '${nombreEscapado}')">Permisos</button>
+                    <button class="btn-action suspend" onclick="suspenderUsuario(${usuario.id})">Suspender</button>
+                `;
             } else if (usuario.estado === 'suspendido' || usuario.estado === 'rechazado') {
                 return `<button class="btn-action reactivate" onclick="reactivarUsuario(${usuario.id})">Reactivar</button>`;
             }
@@ -1270,6 +1326,103 @@
                 Auth.logout();
             }
         }
+
+        // ========== GESTIÓN DE PERMISOS ==========
+
+        // Cargar permisos disponibles del servidor
+        async function cargarPermisosDisponibles() {
+            try {
+                const response = await Auth.fetchAuth('/api/admin/permisos/disponibles');
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        permisosDisponibles = data.permisos || [];
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando permisos disponibles:', error);
+            }
+        }
+
+        // Abrir modal de permisos
+        async function abrirModalPermisos(id, email, nombre) {
+            usuarioPermisosId = id;
+
+            // Mostrar info del usuario
+            document.getElementById('permisosUsuarioInfo').innerHTML = `
+                <strong>${nombre || 'Sin nombre'}</strong><br>
+                <span style="color: var(--text-tertiary);">${email}</span>
+            `;
+
+            // Cargar permisos disponibles si no están cargados
+            if (permisosDisponibles.length === 0) {
+                await cargarPermisosDisponibles();
+            }
+
+            // Cargar permisos actuales del usuario
+            let permisosActuales = [];
+            try {
+                const response = await Auth.fetchAuth(`/api/admin/usuarios/${id}/permisos`);
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        permisosActuales = data.permisos.filter(p => p.activo).map(p => p.permiso);
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando permisos del usuario:', error);
+            }
+
+            // Renderizar checkboxes
+            const container = document.getElementById('listaPermisos');
+            container.innerHTML = permisosDisponibles.map(p => `
+                <label style="display: flex; align-items: flex-start; gap: 10px; padding: 10px; background: var(--bg-tertiary); border-radius: 8px; cursor: pointer;">
+                    <input type="checkbox" name="permiso" value="${p.codigo}" ${permisosActuales.includes(p.codigo) ? 'checked' : ''}
+                        style="margin-top: 2px; width: 18px; height: 18px; cursor: pointer;">
+                    <div>
+                        <strong style="font-size: 14px;">${p.nombre}</strong>
+                        <p style="font-size: 12px; color: var(--text-tertiary); margin: 2px 0 0 0;">${p.descripcion}</p>
+                    </div>
+                </label>
+            `).join('');
+
+            document.getElementById('modalPermisos').classList.add('show');
+        }
+
+        // Guardar permisos
+        async function guardarPermisos() {
+            const btn = document.getElementById('btnGuardarPermisos');
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+
+            // Obtener permisos seleccionados
+            const checkboxes = document.querySelectorAll('#listaPermisos input[name="permiso"]:checked');
+            const permisos = Array.from(checkboxes).map(cb => cb.value);
+
+            try {
+                const response = await Auth.fetchAuth(`/api/admin/usuarios/${usuarioPermisosId}/permisos`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ permisos })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    mostrarToast('Permisos actualizados correctamente', 'success');
+                    cerrarModal('modalPermisos');
+                } else {
+                    mostrarToast(data.message || 'Error al guardar permisos', 'error');
+                }
+            } catch (error) {
+                console.error('Error guardando permisos:', error);
+                mostrarToast('Error de conexion', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Guardar Permisos';
+            }
+        }
+
+        // ========== FIN GESTIÓN DE PERMISOS ==========
 
         // Cerrar modal con Escape
         document.addEventListener('keydown', (e) => {

@@ -828,6 +828,27 @@ const initDB = async () => {
             // Índices ya existen
         }
 
+        // Crear tabla de permisos de usuario
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS permisos_usuario (
+                id SERIAL PRIMARY KEY,
+                usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+                permiso VARCHAR(50) NOT NULL,
+                activo BOOLEAN DEFAULT true,
+                fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                asignado_por INTEGER REFERENCES usuarios(id),
+                UNIQUE(usuario_id, permiso)
+            )
+        `);
+
+        // Crear índice para permisos
+        try {
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_permisos_usuario ON permisos_usuario(usuario_id)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_permisos_permiso ON permisos_usuario(permiso)`);
+        } catch (err) {
+            // Índices ya existen
+        }
+
         console.log('✅ Base de datos inicializada correctamente');
     } catch (error) {
         console.error('❌ Error al inicializar la base de datos:', error);
@@ -1556,6 +1577,136 @@ app.put('/api/admin/usuarios/:id/reactivar', authMiddleware, requireAdmin, async
         });
     }
 });
+
+// ============ ENDPOINTS DE PERMISOS ============
+
+// Lista de permisos disponibles para panel-empresas
+const PERMISOS_DISPONIBLES = [
+    { codigo: 'VER_ORDENES', nombre: 'Ver Órdenes', descripcion: 'Ver lista y detalles de órdenes médicas' },
+    { codigo: 'CREAR_ORDEN', nombre: 'Crear Orden', descripcion: 'Crear nuevas órdenes médicas' },
+    { codigo: 'EDITAR_ORDEN', nombre: 'Editar Orden', descripcion: 'Modificar órdenes existentes' },
+    { codigo: 'DUPLICAR_ORDEN', nombre: 'Duplicar Orden', descripcion: 'Duplicar órdenes existentes' },
+    { codigo: 'DESCARGAR_CERTIFICADO', nombre: 'Descargar Certificado', descripcion: 'Descargar certificados PDF' },
+    { codigo: 'VER_ESTADISTICAS', nombre: 'Ver Estadísticas', descripcion: 'Ver tarjetas de estadísticas' }
+];
+
+// GET /api/admin/permisos/disponibles - Obtener lista de permisos disponibles
+app.get('/api/admin/permisos/disponibles', authMiddleware, requireAdmin, (req, res) => {
+    res.json({
+        success: true,
+        permisos: PERMISOS_DISPONIBLES
+    });
+});
+
+// GET /api/admin/usuarios/:id/permisos - Obtener permisos de un usuario
+app.get('/api/admin/usuarios/:id/permisos', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const permisos = await pool.query(`
+            SELECT permiso, activo, fecha_asignacion
+            FROM permisos_usuario
+            WHERE usuario_id = $1
+        `, [id]);
+
+        res.json({
+            success: true,
+            permisos: permisos.rows
+        });
+
+    } catch (error) {
+        console.error('Error obteniendo permisos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener permisos'
+        });
+    }
+});
+
+// PUT /api/admin/usuarios/:id/permisos - Actualizar permisos de un usuario
+app.put('/api/admin/usuarios/:id/permisos', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { permisos } = req.body; // Array de códigos de permisos activos
+
+        if (!Array.isArray(permisos)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Permisos debe ser un array'
+            });
+        }
+
+        // Validar que los permisos existen
+        const permisosValidos = PERMISOS_DISPONIBLES.map(p => p.codigo);
+        const permisosInvalidos = permisos.filter(p => !permisosValidos.includes(p));
+        if (permisosInvalidos.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `Permisos inválidos: ${permisosInvalidos.join(', ')}`
+            });
+        }
+
+        // Eliminar permisos actuales del usuario
+        await pool.query('DELETE FROM permisos_usuario WHERE usuario_id = $1', [id]);
+
+        // Insertar nuevos permisos
+        if (permisos.length > 0) {
+            const values = permisos.map((p, i) => `($1, $${i + 2}, true, NOW(), $${permisos.length + 2})`).join(', ');
+            const params = [id, ...permisos, req.usuario.id];
+            await pool.query(`
+                INSERT INTO permisos_usuario (usuario_id, permiso, activo, fecha_asignacion, asignado_por)
+                VALUES ${values}
+            `, params);
+        }
+
+        console.log(`🔐 Permisos actualizados para usuario ${id}: [${permisos.join(', ')}] (por ${req.usuario.email})`);
+
+        res.json({
+            success: true,
+            message: 'Permisos actualizados correctamente',
+            permisos: permisos
+        });
+
+    } catch (error) {
+        console.error('Error actualizando permisos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al actualizar permisos'
+        });
+    }
+});
+
+// GET /api/auth/mis-permisos - Obtener permisos del usuario autenticado
+app.get('/api/auth/mis-permisos', authMiddleware, async (req, res) => {
+    try {
+        // Los admins tienen todos los permisos
+        if (req.usuario.rol === 'admin') {
+            return res.json({
+                success: true,
+                permisos: PERMISOS_DISPONIBLES.map(p => p.codigo)
+            });
+        }
+
+        const permisos = await pool.query(`
+            SELECT permiso FROM permisos_usuario
+            WHERE usuario_id = $1 AND activo = true
+        `, [req.usuario.id]);
+
+        res.json({
+            success: true,
+            permisos: permisos.rows.map(p => p.permiso)
+        });
+
+    } catch (error) {
+        console.error('Error obteniendo mis permisos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener permisos'
+        });
+    }
+});
+
+// ============ FIN ENDPOINTS DE PERMISOS ============
 
 // POST /api/admin/usuarios - Crear usuario directamente (ya aprobado)
 app.post('/api/admin/usuarios', authMiddleware, requireAdmin, async (req, res) => {
