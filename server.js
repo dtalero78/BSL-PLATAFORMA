@@ -3502,14 +3502,49 @@ app.post('/api/ordenes/importar-csv', upload.single('archivo'), async (req, res)
 
                 await pool.query(insertQuery, insertValues);
 
+                // Sincronizar con Wix
+                try {
+                    const wixPayload = {
+                        _id: ordenId,
+                        numeroId: row.numeroId,
+                        primerNombre: row.primerNombre,
+                        segundoNombre: '',
+                        primerApellido: row.primerApellido,
+                        segundoApellido: '',
+                        celular: row.celular || '',
+                        codEmpresa: row.codEmpresa,
+                        empresa: row.empresa || row.codEmpresa,
+                        cargo: row.cargo || '',
+                        ciudad: row.ciudad || '',
+                        tipoExamen: row.tipoExamen || '',
+                        medico: row.medico || '',
+                        fechaAtencion: fechaAtencion,
+                        horaAtencion: '',
+                        atendido: row.atendido || 'PENDIENTE',
+                        examenes: row.examenes || ''
+                    };
+
+                    const wixResponse = await fetch('https://www.bsl.com.co/_functions/crearHistoriaClinica', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(wixPayload)
+                    });
+
+                    if (wixResponse.ok) {
+                        console.log(`✅ Fila ${i + 1}: ${row.primerNombre} ${row.primerApellido} (${row.numeroId}) - Sincronizado con Wix`);
+                    } else {
+                        console.log(`⚠️ Fila ${i + 1}: ${row.primerNombre} ${row.primerApellido} - PostgreSQL OK, Wix falló`);
+                    }
+                } catch (wixError) {
+                    console.log(`⚠️ Fila ${i + 1}: ${row.primerNombre} ${row.primerApellido} - PostgreSQL OK, Wix error: ${wixError.message}`);
+                }
+
                 resultados.exitosos++;
                 resultados.ordenesCreadas.push({
                     _id: ordenId,
                     numeroId: row.numeroId,
                     nombre: `${row.primerNombre} ${row.primerApellido}`
                 });
-
-                console.log(`✅ Fila ${i + 1}: ${row.primerNombre} ${row.primerApellido} (${row.numeroId})`);
 
             } catch (error) {
                 console.error(`❌ Error en fila ${i + 1}:`, error.message);
