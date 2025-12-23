@@ -2867,7 +2867,7 @@
                     </div>
                 </div>
 
-                ${paciente.atendido === 'ATENDIDO' ? `
+                ${(paciente.atendido === 'ATENDIDO' && tienePermiso('VER_RESULTADOS_MEDICOS')) ? `
                 <div class="detail-card">
                     <div class="detail-card-title">Resultados Médicos</div>
                     <div class="detail-field">
