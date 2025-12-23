@@ -334,39 +334,6 @@
             text-transform: uppercase;
         }
 
-        .top-bar-search {
-            position: relative;
-            flex: 1;
-            max-width: 400px;
-            margin-left: 24px;
-        }
-
-        .top-bar-search input {
-            width: 100%;
-            padding: 10px 16px 10px 42px;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            font-size: 14px;
-            font-family: inherit;
-            background: var(--bg-input);
-            color: var(--text-primary);
-        }
-
-        .top-bar-search input:focus {
-            outline: none;
-            border-color: var(--accent-color);
-        }
-
-        .top-bar-search i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-tertiary);
-            width: 18px;
-            height: 18px;
-        }
-
         /* Main Content */
         .main-content {
             flex: 1;
@@ -905,17 +872,25 @@
             cursor: not-allowed;
         }
 
-        /* Database table selector */
+        /* Database filters */
+        .db-filters {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
         .db-selector {
             display: flex;
             align-items: center;
-            gap: 16px;
-            margin-bottom: 16px;
+            gap: 12px;
         }
 
         .db-selector label {
             font-weight: 500;
             color: var(--text-secondary);
+            font-size: 14px;
         }
 
         .db-selector select {
@@ -925,6 +900,48 @@
             font-size: 14px;
             min-width: 250px;
             background: var(--bg-secondary);
+            cursor: pointer;
+        }
+
+        .db-selector select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .db-search {
+            position: relative;
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .db-search input {
+            width: 100%;
+            padding: 10px 16px 10px 42px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--bg-secondary);
+        }
+
+        .db-search input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .db-search i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            width: 18px;
+            height: 18px;
+        }
+
+        .db-count {
+            font-size: 14px;
+            color: var(--text-tertiary);
         }
 
         /* Responsive */
@@ -1034,10 +1051,6 @@
             <div class="top-bar-left">
                 <span class="page-title-bar">Panel de Administracion</span>
                 <span class="header-badge">Admin</span>
-            </div>
-            <div class="top-bar-search" id="topBarSearch">
-                <i data-feather="search"></i>
-                <input type="text" id="globalSearchInput" placeholder="Buscar...">
             </div>
         </div>
 
@@ -1149,16 +1162,24 @@
 
             <!-- ========== SECCION BASE DE DATOS ========== -->
             <div id="seccionBaseDatos" style="display: none;">
+                <!-- Filtros de Base de Datos -->
+                <div class="db-filters">
+                    <div class="db-selector">
+                        <label>Tabla:</label>
+                        <select id="selectTabla" onchange="cargarDatosTabla()">
+                            <option value="">Selecciona una tabla...</option>
+                        </select>
+                    </div>
+                    <div class="db-search">
+                        <i data-feather="search"></i>
+                        <input type="text" id="searchTabla" placeholder="Buscar en la tabla..." onkeyup="debounceSearch()">
+                    </div>
+                </div>
+
                 <section class="section">
                     <div class="section-header">
-                        <h2 class="section-title">Explorar Base de Datos</h2>
-                        <div class="db-selector">
-                            <label>Tabla:</label>
-                            <select id="selectTabla" onchange="cargarDatosTabla()">
-                                <option value="">Selecciona una tabla...</option>
-                            </select>
-                            <input type="text" class="search-input" id="searchTabla" placeholder="Buscar en la tabla..." style="width: 200px;" onkeyup="debounceSearch()">
-                        </div>
+                        <h2 class="section-title" id="tituloTablaDB">Explorar Base de Datos</h2>
+                        <span class="db-count" id="dbCount"></span>
                     </div>
                     <div class="table-container" id="tablaDBContainer">
                         <div class="empty-state">
@@ -1376,11 +1397,9 @@
             document.getElementById('seccionUsuarios').style.display = seccion === 'usuarios' ? 'block' : 'none';
             document.getElementById('seccionBaseDatos').style.display = seccion === 'basedatos' ? 'block' : 'none';
 
-            // Actualizar placeholder de busqueda
+            // Refrescar iconos feather cuando se muestra la seccion de BD
             if (seccion === 'basedatos') {
-                document.getElementById('globalSearchInput').placeholder = 'Buscar en tabla...';
-            } else {
-                document.getElementById('globalSearchInput').placeholder = 'Buscar usuarios...';
+                setTimeout(() => feather.replace(), 50);
             }
         }
 
