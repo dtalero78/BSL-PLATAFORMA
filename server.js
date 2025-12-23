@@ -10,6 +10,10 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const puppeteer = require('puppeteer');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
+
+// Configuración de multer para uploads en memoria
+const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -3371,6 +3375,170 @@ app.post('/api/ordenes', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al crear la orden',
+            error: error.message
+        });
+    }
+});
+
+// POST /api/ordenes/importar-csv - Importar órdenes desde CSV
+app.post('/api/ordenes/importar-csv', upload.single('archivo'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No se ha subido ningún archivo'
+            });
+        }
+
+        console.log('');
+        console.log('═══════════════════════════════════════════════════════════');
+        console.log('📥 IMPORTACIÓN CSV DE ÓRDENES');
+        console.log('═══════════════════════════════════════════════════════════');
+
+        const resultados = {
+            total: 0,
+            exitosos: 0,
+            errores: [],
+            ordenesCreadas: []
+        };
+
+        // Parsear CSV desde buffer
+        const csvContent = req.file.buffer.toString('utf-8');
+        const lines = csvContent.split('\n').filter(line => line.trim());
+
+        if (lines.length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'El archivo CSV está vacío o solo tiene encabezados'
+            });
+        }
+
+        // Obtener encabezados (primera línea)
+        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+        console.log('📋 Encabezados encontrados:', headers);
+
+        // Campos requeridos
+        const camposRequeridos = ['numeroId', 'primerNombre', 'primerApellido', 'codEmpresa'];
+        const camposFaltantes = camposRequeridos.filter(c => !headers.includes(c));
+
+        if (camposFaltantes.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `Faltan campos requeridos en el CSV: ${camposFaltantes.join(', ')}`
+            });
+        }
+
+        // Procesar cada fila (desde la segunda línea)
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            resultados.total++;
+
+            try {
+                // Parsear línea CSV (manejando comillas)
+                const values = line.match(/("([^"]*)"|[^,]*)/g).map(v =>
+                    v.replace(/^"|"$/g, '').trim()
+                );
+
+                // Crear objeto con los valores
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || null;
+                });
+
+                // Validar campos requeridos
+                if (!row.numeroId || !row.primerNombre || !row.primerApellido || !row.codEmpresa) {
+                    resultados.errores.push({
+                        fila: i + 1,
+                        error: 'Faltan campos requeridos (numeroId, primerNombre, primerApellido, codEmpresa)',
+                        datos: row
+                    });
+                    continue;
+                }
+
+                // Generar ID único para la orden
+                const ordenId = `orden_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+                // Parsear fecha de atención si existe
+                let fechaAtencion = null;
+                if (row.fechaAtencion) {
+                    // Intentar parsear diferentes formatos de fecha
+                    const fecha = new Date(row.fechaAtencion);
+                    if (!isNaN(fecha.getTime())) {
+                        fechaAtencion = fecha.toISOString();
+                    }
+                }
+
+                // Insertar en PostgreSQL
+                const insertQuery = `
+                    INSERT INTO "HistoriaClinica" (
+                        "_id", "numeroId", "primerNombre", "primerApellido",
+                        "celular", "cargo", "ciudad", "fechaAtencion",
+                        "empresa", "tipoExamen", "medico", "atendido",
+                        "codEmpresa", "examenes", "_createdDate", "_updatedDate"
+                    ) VALUES (
+                        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW()
+                    )
+                    RETURNING "_id"
+                `;
+
+                const insertValues = [
+                    ordenId,
+                    row.numeroId,
+                    row.primerNombre,
+                    row.primerApellido,
+                    row.celular || null,
+                    row.cargo || null,
+                    row.ciudad || null,
+                    fechaAtencion,
+                    row.empresa || row.codEmpresa,
+                    row.tipoExamen || null,
+                    row.medico || null,
+                    row.atendido || 'PENDIENTE',
+                    row.codEmpresa,
+                    row.examenes || null
+                ];
+
+                await pool.query(insertQuery, insertValues);
+
+                resultados.exitosos++;
+                resultados.ordenesCreadas.push({
+                    _id: ordenId,
+                    numeroId: row.numeroId,
+                    nombre: `${row.primerNombre} ${row.primerApellido}`
+                });
+
+                console.log(`✅ Fila ${i + 1}: ${row.primerNombre} ${row.primerApellido} (${row.numeroId})`);
+
+            } catch (error) {
+                console.error(`❌ Error en fila ${i + 1}:`, error.message);
+                resultados.errores.push({
+                    fila: i + 1,
+                    error: error.message
+                });
+            }
+        }
+
+        console.log('');
+        console.log('═══════════════════════════════════════════════════════════');
+        console.log(`📊 RESUMEN: ${resultados.exitosos}/${resultados.total} órdenes importadas`);
+        if (resultados.errores.length > 0) {
+            console.log(`⚠️ Errores: ${resultados.errores.length}`);
+        }
+        console.log('═══════════════════════════════════════════════════════════');
+
+        res.json({
+            success: true,
+            message: `Se importaron ${resultados.exitosos} de ${resultados.total} órdenes`,
+            resultados
+        });
+
+    } catch (error) {
+        console.error('❌ Error al importar CSV:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al procesar el archivo CSV',
             error: error.message
         });
     }
