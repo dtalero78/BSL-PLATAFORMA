@@ -1804,6 +1804,148 @@ app.post('/api/admin/usuarios', authMiddleware, requireAdmin, async (req, res) =
     }
 });
 
+// ========== ENDPOINTS PARA EXPLORAR TABLAS DE BASE DE DATOS (Admin) ==========
+
+// GET - Listar todas las tablas de la base de datos
+app.get('/api/admin/tablas', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+            AND table_type = 'BASE TABLE'
+            ORDER BY table_name ASC
+        `);
+
+        res.json({
+            success: true,
+            tablas: result.rows.map(r => r.table_name)
+        });
+    } catch (error) {
+        console.error('Error al listar tablas:', error);
+        res.status(500).json({ success: false, message: 'Error al listar tablas' });
+    }
+});
+
+// GET - Obtener estructura de una tabla
+app.get('/api/admin/tablas/:nombre/estructura', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { nombre } = req.params;
+
+        // Validar nombre de tabla para evitar inyección SQL
+        const tablaValida = await pool.query(`
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_name = $1
+        `, [nombre]);
+
+        if (tablaValida.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Tabla no encontrada' });
+        }
+
+        const result = await pool.query(`
+            SELECT column_name, data_type, is_nullable, column_default
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = $1
+            ORDER BY ordinal_position
+        `, [nombre]);
+
+        res.json({
+            success: true,
+            tabla: nombre,
+            columnas: result.rows
+        });
+    } catch (error) {
+        console.error('Error al obtener estructura:', error);
+        res.status(500).json({ success: false, message: 'Error al obtener estructura' });
+    }
+});
+
+// GET - Obtener datos de una tabla con paginación
+app.get('/api/admin/tablas/:nombre/datos', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { nombre } = req.params;
+        const limit = parseInt(req.query.limit) || 50;
+        const offset = parseInt(req.query.offset) || 0;
+        const orderBy = req.query.orderBy || 'id';
+        const orderDir = req.query.orderDir === 'asc' ? 'ASC' : 'DESC';
+        const buscar = req.query.buscar || '';
+
+        // Validar nombre de tabla para evitar inyección SQL
+        const tablaValida = await pool.query(`
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_name = $1
+        `, [nombre]);
+
+        if (tablaValida.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Tabla no encontrada' });
+        }
+
+        // Obtener columnas de la tabla
+        const columnasResult = await pool.query(`
+            SELECT column_name, data_type
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = $1
+            ORDER BY ordinal_position
+        `, [nombre]);
+
+        const columnas = columnasResult.rows;
+        const columnasTexto = columnas.filter(c =>
+            ['character varying', 'text', 'varchar'].includes(c.data_type)
+        ).map(c => c.column_name);
+
+        // Verificar que orderBy sea una columna válida
+        const columnasValidas = columnas.map(c => c.column_name);
+        const orderColumn = columnasValidas.includes(orderBy) ? orderBy :
+            (columnasValidas.includes('id') ? 'id' : columnasValidas[0]);
+
+        // Construir query de búsqueda
+        let whereClause = '';
+        let queryParams = [];
+
+        if (buscar && columnasTexto.length > 0) {
+            const condiciones = columnasTexto.map((col, idx) =>
+                `CAST("${col}" AS TEXT) ILIKE $${idx + 1}`
+            );
+            whereClause = `WHERE ${condiciones.join(' OR ')}`;
+            queryParams = columnasTexto.map(() => `%${buscar}%`);
+        }
+
+        // Excluir columnas grandes como 'foto' para el listado
+        const columnasListado = columnas
+            .filter(c => !['foto', 'firma', 'imagen', 'base64'].some(x => c.column_name.toLowerCase().includes(x)))
+            .map(c => `"${c.column_name}"`)
+            .join(', ');
+
+        // Obtener total
+        const countQuery = `SELECT COUNT(*) FROM "${nombre}" ${whereClause}`;
+        const countResult = await pool.query(countQuery, queryParams);
+        const total = parseInt(countResult.rows[0].count);
+
+        // Obtener datos
+        const dataQuery = `
+            SELECT ${columnasListado || '*'}
+            FROM "${nombre}"
+            ${whereClause}
+            ORDER BY "${orderColumn}" ${orderDir}
+            LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
+        `;
+        const dataResult = await pool.query(dataQuery, [...queryParams, limit, offset]);
+
+        res.json({
+            success: true,
+            tabla: nombre,
+            columnas: columnas.filter(c => !['foto', 'firma', 'imagen', 'base64'].some(x => c.column_name.toLowerCase().includes(x))),
+            datos: dataResult.rows,
+            total,
+            limit,
+            offset
+        });
+    } catch (error) {
+        console.error('Error al obtener datos de tabla:', error);
+        res.status(500).json({ success: false, message: 'Error al obtener datos' });
+    }
+});
+
 // Ruta principal - servir el formulario
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));

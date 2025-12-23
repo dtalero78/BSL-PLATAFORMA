@@ -12,6 +12,7 @@
             --bg-primary: #F3F3F3;
             --bg-secondary: #FFFFFF;
             --bg-tertiary: #F9FAFB;
+            --bg-input: #FFFFFF;
             --text-primary: #181818;
             --text-secondary: #444444;
             --text-tertiary: #706E6B;
@@ -44,30 +45,280 @@
             min-height: 100vh;
         }
 
-        /* Header */
-        .header {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 16px 24px;
+        /* ========== LAYOUT ========== */
+        .app-container {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            min-height: 100vh;
         }
 
-        .header-left {
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 24px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: visible;
+            transition: width 0.3s ease;
+            z-index: 150;
+        }
+
+        .sidebar.collapsed {
+            width: 68px;
+        }
+
+        .sidebar-logo {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .sidebar.collapsed .sidebar-logo {
+            padding: 0 10px 24px;
+        }
+
+        .sidebar-logo img {
+            max-width: 140px;
+            height: auto;
+            transition: max-width 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-logo img {
+            max-width: 44px;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            top: 50%;
+            right: -14px;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 200;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .sidebar-toggle i {
+            width: 16px;
+            height: 16px;
+            color: var(--text-secondary);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-toggle i {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-nav {
+            padding: 0 12px;
+        }
+
+        .sidebar.collapsed .sidebar-nav {
+            padding: 0 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .sidebar.collapsed .nav-item {
+            padding: 10px;
+            justify-content: center;
+        }
+
+        .nav-item span {
+            opacity: 1;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar.collapsed .nav-item span {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: #EFF6FF;
+            color: #2563EB;
+        }
+
+        .nav-item i {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2;
+            flex-shrink: 0;
+        }
+
+        /* Sidebar tooltip */
+        .sidebar.collapsed .nav-item {
+            position: relative;
+        }
+
+        .sidebar.collapsed .nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            margin-left: 10px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            z-index: 200;
+        }
+
+        .sidebar.collapsed .nav-item:hover::after {
+            opacity: 1;
+        }
+
+        /* User info at bottom */
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .sidebar.collapsed .sidebar-footer {
+            padding: 12px 8px;
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar.collapsed .user-card {
+            justify-content: center;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .user-details {
+            overflow: hidden;
+        }
+
+        .sidebar.collapsed .user-details {
+            display: none;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .btn-logout-small {
+            margin-left: auto;
+            padding: 6px;
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        .btn-logout-small:hover {
+            background: var(--error-bg);
+            color: var(--error-color);
+        }
+
+        .sidebar.collapsed .btn-logout-small {
+            display: none;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 240px;
+            right: 0;
+            height: 64px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+            transition: left 0.3s ease;
+        }
+
+        body.sidebar-collapsed .top-bar {
+            left: 68px;
+        }
+
+        .top-bar-left {
             display: flex;
             align-items: center;
             gap: 16px;
         }
 
-        .header-logo img {
-            height: 36px;
-        }
-
-        .header-title {
+        .page-title-bar {
             font-size: 18px;
             font-weight: 600;
             color: var(--text-primary);
@@ -83,48 +334,50 @@
             text-transform: uppercase;
         }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
+        .top-bar-search {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+            margin-left: 24px;
         }
 
-        .user-info {
-            text-align: right;
-        }
-
-        .user-name {
+        .top-bar-search input {
+            width: 100%;
+            padding: 10px 16px 10px 42px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
             font-size: 14px;
-            font-weight: 500;
+            font-family: inherit;
+            background: var(--bg-input);
             color: var(--text-primary);
         }
 
-        .user-role {
-            font-size: 12px;
+        .top-bar-search input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .top-bar-search i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
             color: var(--text-tertiary);
+            width: 18px;
+            height: 18px;
         }
 
-        .btn-logout {
-            padding: 8px 16px;
-            background: transparent;
-            color: var(--error-color);
-            border: 1px solid var(--error-color);
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 32px 40px;
+            padding-top: 96px;
+            transition: margin-left 0.3s ease;
         }
 
-        .btn-logout:hover {
-            background: var(--error-bg);
-        }
-
-        /* Main Container */
-        .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 24px;
+        body.sidebar-collapsed .main-content {
+            margin-left: 68px;
         }
 
         /* Stats Cards */
@@ -213,6 +466,7 @@
             border-radius: 12px;
             border: 1px solid var(--border-color);
             overflow: hidden;
+            margin-bottom: 24px;
         }
 
         .section-header {
@@ -221,6 +475,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .section-title {
@@ -234,6 +490,7 @@
             display: flex;
             gap: 12px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .search-input {
@@ -283,11 +540,16 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             background: var(--bg-tertiary);
+            white-space: nowrap;
         }
 
         td {
             font-size: 14px;
             color: var(--text-primary);
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         tr:hover {
@@ -296,17 +558,7 @@
 
         tr[onclick]:hover {
             background: #E0F2FE;
-        }
-
-        tr[onclick] td:first-child::before {
-            content: '';
-            display: inline-block;
-            width: 4px;
-            height: 4px;
-            background: var(--accent-color);
-            border-radius: 50%;
-            margin-right: 8px;
-            vertical-align: middle;
+            cursor: pointer;
         }
 
         /* Status Badge */
@@ -613,11 +865,93 @@
             }
         }
 
+        /* Pagination */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pagination-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-color);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Database table selector */
+        .db-selector {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .db-selector label {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .db-selector select {
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 250px;
+            background: var(--bg-secondary);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 12px;
+            .sidebar {
+                width: 68px;
+            }
+
+            .sidebar .nav-item span,
+            .sidebar .user-details,
+            .sidebar .btn-logout-small {
+                display: none;
+            }
+
+            .sidebar .nav-item {
+                justify-content: center;
+            }
+
+            .main-content {
+                margin-left: 68px;
+                padding: 24px 16px;
+                padding-top: 80px;
+            }
+
+            .top-bar {
+                left: 68px;
+                padding: 0 16px;
             }
 
             .stats-grid {
@@ -626,12 +960,11 @@
 
             .section-header {
                 flex-direction: column;
-                gap: 12px;
+                align-items: flex-start;
             }
 
             .search-box {
                 width: 100%;
-                flex-direction: column;
             }
 
             .search-input {
@@ -643,129 +976,212 @@
             }
         }
     </style>
+    <script src="https://unpkg.com/feather-icons"></script>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <div class="header-logo">
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+                <i data-feather="chevron-left"></i>
+            </button>
+            <div class="sidebar-logo">
                 <img src="/bsl-logo.png" alt="BSL">
             </div>
-            <h1 class="header-title">Panel de Administracion</h1>
-            <span class="header-badge">Admin</span>
-        </div>
-        <div class="header-right">
-            <div class="user-info">
-                <div class="user-name" id="userName">Administrador</div>
-                <div class="user-role" id="userEmail">admin@bsl.com</div>
-            </div>
-            <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesion</button>
-        </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="main-container">
-        <!-- Stats -->
-        <div class="stats-grid">
-            <div class="stat-card pending">
-                <div class="stat-label">Pendientes de aprobacion</div>
-                <div class="stat-value" id="statPendientes">0</div>
-            </div>
-            <div class="stat-card approved">
-                <div class="stat-label">Usuarios aprobados</div>
-                <div class="stat-value" id="statAprobados">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total usuarios</div>
-                <div class="stat-value" id="statTotal">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Administradores</div>
-                <div class="stat-value" id="statAdmins">0</div>
-            </div>
-        </div>
-
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab-btn active" onclick="cambiarTab('pendientes')">
-                Pendientes <span class="badge" id="badgePendientes">0</span>
-            </button>
-            <button class="tab-btn" onclick="cambiarTab('todos')">
-                Todos los usuarios
-            </button>
-        </div>
-
-        <!-- Usuarios Pendientes Section -->
-        <section class="section" id="seccionPendientes">
-            <div class="section-header">
-                <h2 class="section-title">Solicitudes pendientes</h2>
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Email</th>
-                            <th>Documento</th>
-                            <th>Celular</th>
-                            <th>Empresa</th>
-                            <th>Fecha solicitud</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaPendientes">
-                        <tr>
-                            <td colspan="7" class="loading">Cargando...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Todos los Usuarios Section -->
-        <section class="section" id="seccionTodos" style="display: none;">
-            <div class="section-header">
-                <h2 class="section-title">Todos los usuarios</h2>
-                <div class="search-box">
-                    <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nombre, email o documento...">
-                    <select class="filter-select" id="filterEstado" onchange="filtrarUsuarios()">
-                        <option value="">Todos los estados</option>
-                        <option value="aprobado">Aprobados</option>
-                        <option value="pendiente">Pendientes</option>
-                        <option value="rechazado">Rechazados</option>
-                        <option value="suspendido">Suspendidos</option>
-                    </select>
-                    <select class="filter-select" id="filterRol" onchange="filtrarUsuarios()">
-                        <option value="">Todos los roles</option>
-                        <option value="empresa">Empresa</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                    <button class="btn-primary" onclick="abrirModalCrear()">+ Nuevo Usuario</button>
+            <nav class="sidebar-nav">
+                <a href="#usuarios" class="nav-item active" data-tooltip="Usuarios" onclick="mostrarSeccion('usuarios')">
+                    <i data-feather="users"></i>
+                    <span>Usuarios</span>
+                </a>
+                <a href="#base-datos" class="nav-item" data-tooltip="Base de Datos" onclick="mostrarSeccion('basedatos')">
+                    <i data-feather="database"></i>
+                    <span>Base de Datos</span>
+                </a>
+                <div style="height: 1px; background: var(--border-color); margin: 16px 12px;"></div>
+                <a href="/ordenes.html" class="nav-item" data-tooltip="Ordenes">
+                    <i data-feather="clipboard-list"></i>
+                    <span>Ordenes</span>
+                </a>
+                <a href="/empresas.html" class="nav-item" data-tooltip="Empresas">
+                    <i data-feather="briefcase"></i>
+                    <span>Empresas</span>
+                </a>
+                <a href="/examenes.html" class="nav-item" data-tooltip="Examenes">
+                    <i data-feather="activity"></i>
+                    <span>Examenes</span>
+                </a>
+                <a href="/medicos.html" class="nav-item" data-tooltip="Medicos">
+                    <i data-feather="user-plus"></i>
+                    <span>Medicos</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-card">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">Administrador</div>
+                        <div class="user-role">Admin</div>
+                    </div>
+                    <button class="btn-logout-small" onclick="cerrarSesion()" title="Cerrar sesion">
+                        <i data-feather="log-out"></i>
+                    </button>
                 </div>
             </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Email</th>
-                            <th>Documento</th>
-                            <th>Empresa</th>
-                            <th>Rol</th>
-                            <th>Estado</th>
-                            <th>Ultimo acceso</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaTodos">
-                        <tr>
-                            <td colspan="8" class="loading">Cargando...</td>
-                        </tr>
-                    </tbody>
-                </table>
+        </aside>
+
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <span class="page-title-bar">Panel de Administracion</span>
+                <span class="header-badge">Admin</span>
             </div>
-        </section>
-    </main>
+            <div class="top-bar-search" id="topBarSearch">
+                <i data-feather="search"></i>
+                <input type="text" id="globalSearchInput" placeholder="Buscar...">
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- ========== SECCION USUARIOS ========== -->
+            <div id="seccionUsuarios">
+                <!-- Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card pending">
+                        <div class="stat-label">Pendientes de aprobacion</div>
+                        <div class="stat-value" id="statPendientes">0</div>
+                    </div>
+                    <div class="stat-card approved">
+                        <div class="stat-label">Usuarios aprobados</div>
+                        <div class="stat-value" id="statAprobados">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total usuarios</div>
+                        <div class="stat-value" id="statTotal">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Administradores</div>
+                        <div class="stat-value" id="statAdmins">0</div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="cambiarTab('pendientes')">
+                        Pendientes <span class="badge" id="badgePendientes">0</span>
+                    </button>
+                    <button class="tab-btn" onclick="cambiarTab('todos')">
+                        Todos los usuarios
+                    </button>
+                </div>
+
+                <!-- Usuarios Pendientes Section -->
+                <section class="section" id="seccionPendientes">
+                    <div class="section-header">
+                        <h2 class="section-title">Solicitudes pendientes</h2>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Documento</th>
+                                    <th>Celular</th>
+                                    <th>Empresa</th>
+                                    <th>Fecha solicitud</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaPendientes">
+                                <tr>
+                                    <td colspan="7" class="loading">Cargando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Todos los Usuarios Section -->
+                <section class="section" id="seccionTodos" style="display: none;">
+                    <div class="section-header">
+                        <h2 class="section-title">Todos los usuarios</h2>
+                        <div class="search-box">
+                            <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nombre, email o documento...">
+                            <select class="filter-select" id="filterEstado" onchange="filtrarUsuarios()">
+                                <option value="">Todos los estados</option>
+                                <option value="aprobado">Aprobados</option>
+                                <option value="pendiente">Pendientes</option>
+                                <option value="rechazado">Rechazados</option>
+                                <option value="suspendido">Suspendidos</option>
+                            </select>
+                            <select class="filter-select" id="filterRol" onchange="filtrarUsuarios()">
+                                <option value="">Todos los roles</option>
+                                <option value="empresa">Empresa</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <button class="btn-primary" onclick="abrirModalCrear()">+ Nuevo Usuario</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Documento</th>
+                                    <th>Empresa</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                    <th>Ultimo acceso</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaTodos">
+                                <tr>
+                                    <td colspan="8" class="loading">Cargando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ========== SECCION BASE DE DATOS ========== -->
+            <div id="seccionBaseDatos" style="display: none;">
+                <section class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">Explorar Base de Datos</h2>
+                        <div class="db-selector">
+                            <label>Tabla:</label>
+                            <select id="selectTabla" onchange="cargarDatosTabla()">
+                                <option value="">Selecciona una tabla...</option>
+                            </select>
+                            <input type="text" class="search-input" id="searchTabla" placeholder="Buscar en la tabla..." style="width: 200px;" onkeyup="debounceSearch()">
+                        </div>
+                    </div>
+                    <div class="table-container" id="tablaDBContainer">
+                        <div class="empty-state">
+                            <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                            </svg>
+                            <div class="empty-state-title">Selecciona una tabla</div>
+                            <div class="empty-state-text">Elige una tabla del dropdown para ver sus datos</div>
+                        </div>
+                    </div>
+                    <div class="pagination" id="paginationDB" style="display: none;">
+                        <div class="pagination-info" id="paginationInfo">Mostrando 0-0 de 0</div>
+                        <div class="pagination-controls">
+                            <button class="pagination-btn" id="btnPrevPage" onclick="cambiarPagina(-1)">Anterior</button>
+                            <button class="pagination-btn" id="btnNextPage" onclick="cambiarPagina(1)">Siguiente</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
 
     <!-- Modal Crear Usuario -->
     <div class="modal-overlay" id="modalCrear">
@@ -875,7 +1291,6 @@
                 <div class="form-group">
                     <label class="form-label">Permisos del Panel Empresas</label>
                     <div id="listaPermisos" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
-                        <!-- Se llena dinámicamente -->
                     </div>
                 </div>
             </div>
@@ -893,32 +1308,83 @@
     <script>
         let usuarioActual = null;
         let tabActual = 'pendientes';
+        let seccionActual = 'usuarios';
         let empresasCache = [];
         let usuarioAprobarId = null;
         let usuarioAprobarInfo = null;
         let usuarioPermisosId = null;
         let permisosDisponibles = [];
 
+        // Variables para base de datos
+        let tablasDisponibles = [];
+        let tablaActual = '';
+        let datosTablaActual = [];
+        let columnasTablaActual = [];
+        let paginaActual = 0;
+        let totalRegistros = 0;
+        let limitePorPagina = 50;
+        let searchTimeout = null;
+
         // Inicializar
         document.addEventListener('DOMContentLoaded', async () => {
+            feather.replace();
+
             usuarioActual = await Auth.protegerPagina(['admin']);
             if (!usuarioActual) return;
 
             // Actualizar UI con datos del usuario
             document.getElementById('userName').textContent = usuarioActual.nombreCompleto || 'Administrador';
-            document.getElementById('userEmail').textContent = usuarioActual.email;
+            document.getElementById('userAvatar').textContent = (usuarioActual.nombreCompleto || 'A').charAt(0).toUpperCase();
 
             // Cargar empresas para el selector
             await cargarEmpresas();
 
-            // Cargar datos
+            // Cargar datos iniciales
             cargarEstadisticas();
             cargarPendientes();
 
+            // Cargar lista de tablas
+            await cargarListaTablas();
+
             // Configurar busqueda
             document.getElementById('searchInput').addEventListener('input', debounce(filtrarUsuarios, 300));
+
+            // Restaurar sidebar state
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (sidebarCollapsed) {
+                document.getElementById('sidebar').classList.add('collapsed');
+                document.body.classList.add('sidebar-collapsed');
+            }
         });
 
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+            document.body.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            feather.replace();
+        }
+
+        function mostrarSeccion(seccion) {
+            seccionActual = seccion;
+
+            // Actualizar navegacion
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.target.closest('.nav-item').classList.add('active');
+
+            // Mostrar/ocultar secciones
+            document.getElementById('seccionUsuarios').style.display = seccion === 'usuarios' ? 'block' : 'none';
+            document.getElementById('seccionBaseDatos').style.display = seccion === 'basedatos' ? 'block' : 'none';
+
+            // Actualizar placeholder de busqueda
+            if (seccion === 'basedatos') {
+                document.getElementById('globalSearchInput').placeholder = 'Buscar en tabla...';
+            } else {
+                document.getElementById('globalSearchInput').placeholder = 'Buscar usuarios...';
+            }
+        }
+
+        // ========== FUNCIONES DE USUARIOS ==========
         async function cargarEmpresas() {
             try {
                 const response = await Auth.fetchAuth('/api/empresas');
@@ -927,7 +1393,6 @@
 
                 if (data.success) {
                     empresasCache = data.data;
-                    // Actualizar selector en modal de crear usuario
                     actualizarSelectoresEmpresa();
                 }
             } catch (error) {
@@ -945,7 +1410,6 @@
 
             selectAprobar.innerHTML = '<option value="">Selecciona una empresa...</option>' + options;
 
-            // Convertir el input de codigo empresa a select en modal crear
             if (selectCrear && selectCrear.tagName === 'INPUT') {
                 const newSelect = document.createElement('select');
                 newSelect.className = 'form-select';
@@ -1108,11 +1572,9 @@
         function cambiarTab(tab) {
             tabActual = tab;
 
-            // Actualizar botones
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
-            // Mostrar seccion
             if (tab === 'pendientes') {
                 document.getElementById('seccionPendientes').style.display = 'block';
                 document.getElementById('seccionTodos').style.display = 'none';
@@ -1130,25 +1592,19 @@
             }
         }
 
-        // Abrir modal para aprobar usuario con selección de empresa
         function aprobarUsuario(id, email, nombre) {
             usuarioAprobarId = id;
             usuarioAprobarInfo = { email, nombre };
 
-            // Mostrar info del usuario
             document.getElementById('aprobarUsuarioInfo').innerHTML = `
                 <strong>${nombre || 'Sin nombre'}</strong><br>
                 ${email}
             `;
 
-            // Resetear selector
             document.getElementById('aprobarEmpresaSelect').value = '';
-
-            // Abrir modal
             document.getElementById('modalAprobar').classList.add('show');
         }
 
-        // Confirmar aprobación con empresa seleccionada
         async function confirmarAprobacion() {
             const codEmpresa = document.getElementById('aprobarEmpresaSelect').value;
 
@@ -1300,36 +1756,7 @@
             }
         }
 
-        function formatearFecha(fecha) {
-            if (!fecha) return '-';
-            const d = new Date(fecha);
-            return d.toLocaleDateString('es-CO', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
-
-        function mostrarToast(mensaje, tipo = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = mensaje;
-            toast.className = `alert-toast show ${tipo}`;
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        function cerrarSesion() {
-            if (confirm('Cerrar sesion?')) {
-                Auth.logout();
-            }
-        }
-
-        // ========== GESTIÓN DE PERMISOS ==========
-
-        // Cargar permisos disponibles del servidor
+        // ========== FUNCIONES DE PERMISOS ==========
         async function cargarPermisosDisponibles() {
             try {
                 const response = await Auth.fetchAuth('/api/admin/permisos/disponibles');
@@ -1344,22 +1771,18 @@
             }
         }
 
-        // Abrir modal de permisos
         async function abrirModalPermisos(id, email, nombre) {
             usuarioPermisosId = id;
 
-            // Mostrar info del usuario
             document.getElementById('permisosUsuarioInfo').innerHTML = `
                 <strong>${nombre || 'Sin nombre'}</strong><br>
                 <span style="color: var(--text-tertiary);">${email}</span>
             `;
 
-            // Cargar permisos disponibles si no están cargados
             if (permisosDisponibles.length === 0) {
                 await cargarPermisosDisponibles();
             }
 
-            // Cargar permisos actuales del usuario
             let permisosActuales = [];
             try {
                 const response = await Auth.fetchAuth(`/api/admin/usuarios/${id}/permisos`);
@@ -1373,7 +1796,6 @@
                 console.error('Error cargando permisos del usuario:', error);
             }
 
-            // Renderizar checkboxes
             const container = document.getElementById('listaPermisos');
             container.innerHTML = permisosDisponibles.map(p => `
                 <label style="display: flex; align-items: flex-start; gap: 10px; padding: 10px; background: var(--bg-tertiary); border-radius: 8px; cursor: pointer;">
@@ -1389,13 +1811,11 @@
             document.getElementById('modalPermisos').classList.add('show');
         }
 
-        // Guardar permisos
         async function guardarPermisos() {
             const btn = document.getElementById('btnGuardarPermisos');
             btn.disabled = true;
             btn.textContent = 'Guardando...';
 
-            // Obtener permisos seleccionados
             const checkboxes = document.querySelectorAll('#listaPermisos input[name="permiso"]:checked');
             const permisos = Array.from(checkboxes).map(cb => cb.value);
 
@@ -1422,7 +1842,165 @@
             }
         }
 
-        // ========== FIN GESTIÓN DE PERMISOS ==========
+        // ========== FUNCIONES DE BASE DE DATOS ==========
+        async function cargarListaTablas() {
+            try {
+                const response = await Auth.fetchAuth('/api/admin/tablas');
+                if (!response) return;
+                const data = await response.json();
+
+                if (data.success) {
+                    tablasDisponibles = data.tablas;
+                    const select = document.getElementById('selectTabla');
+                    select.innerHTML = '<option value="">Selecciona una tabla...</option>' +
+                        tablasDisponibles.map(t => `<option value="${t}">${t}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error cargando tablas:', error);
+            }
+        }
+
+        function debounceSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                paginaActual = 0;
+                cargarDatosTabla();
+            }, 300);
+        }
+
+        async function cargarDatosTabla() {
+            const tabla = document.getElementById('selectTabla').value;
+            if (!tabla) {
+                document.getElementById('tablaDBContainer').innerHTML = `
+                    <div class="empty-state">
+                        <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                        </svg>
+                        <div class="empty-state-title">Selecciona una tabla</div>
+                        <div class="empty-state-text">Elige una tabla del dropdown para ver sus datos</div>
+                    </div>
+                `;
+                document.getElementById('paginationDB').style.display = 'none';
+                return;
+            }
+
+            tablaActual = tabla;
+            const buscar = document.getElementById('searchTabla').value;
+            const offset = paginaActual * limitePorPagina;
+
+            try {
+                document.getElementById('tablaDBContainer').innerHTML = '<div class="loading">Cargando datos...</div>';
+
+                const response = await Auth.fetchAuth(`/api/admin/tablas/${tabla}/datos?limit=${limitePorPagina}&offset=${offset}&buscar=${encodeURIComponent(buscar)}`);
+                if (!response) return;
+                const data = await response.json();
+
+                if (data.success) {
+                    columnasTablaActual = data.columnas;
+                    datosTablaActual = data.datos;
+                    totalRegistros = data.total;
+
+                    renderizarTablaDB();
+                    actualizarPaginacion();
+                } else {
+                    document.getElementById('tablaDBContainer').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-title">Error al cargar datos</div>
+                            <div class="empty-state-text">${data.message || 'Intenta de nuevo'}</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error cargando datos de tabla:', error);
+                document.getElementById('tablaDBContainer').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-title">Error de conexion</div>
+                        <div class="empty-state-text">No se pudieron cargar los datos</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderizarTablaDB() {
+            if (datosTablaActual.length === 0) {
+                document.getElementById('tablaDBContainer').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-title">Sin datos</div>
+                        <div class="empty-state-text">La tabla esta vacia o no hay resultados para la busqueda</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const headers = columnasTablaActual.map(c => `<th>${c.column_name}</th>`).join('');
+            const rows = datosTablaActual.map(row => {
+                const cells = columnasTablaActual.map(col => {
+                    let valor = row[col.column_name];
+                    if (valor === null || valor === undefined) {
+                        valor = '<span style="color: var(--text-tertiary);">null</span>';
+                    } else if (typeof valor === 'object') {
+                        valor = JSON.stringify(valor).substring(0, 50) + '...';
+                    } else if (typeof valor === 'string' && valor.length > 50) {
+                        valor = valor.substring(0, 50) + '...';
+                    }
+                    return `<td title="${String(row[col.column_name] || '').replace(/"/g, '&quot;')}">${valor}</td>`;
+                }).join('');
+                return `<tr>${cells}</tr>`;
+            }).join('');
+
+            document.getElementById('tablaDBContainer').innerHTML = `
+                <table>
+                    <thead><tr>${headers}</tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function actualizarPaginacion() {
+            const inicio = paginaActual * limitePorPagina + 1;
+            const fin = Math.min((paginaActual + 1) * limitePorPagina, totalRegistros);
+
+            document.getElementById('paginationInfo').textContent = `Mostrando ${inicio}-${fin} de ${totalRegistros}`;
+            document.getElementById('btnPrevPage').disabled = paginaActual === 0;
+            document.getElementById('btnNextPage').disabled = fin >= totalRegistros;
+            document.getElementById('paginationDB').style.display = totalRegistros > 0 ? 'flex' : 'none';
+        }
+
+        function cambiarPagina(direccion) {
+            paginaActual += direccion;
+            if (paginaActual < 0) paginaActual = 0;
+            cargarDatosTabla();
+        }
+
+        // ========== UTILIDADES ==========
+        function formatearFecha(fecha) {
+            if (!fecha) return '-';
+            const d = new Date(fecha);
+            return d.toLocaleDateString('es-CO', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function mostrarToast(mensaje, tipo = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = mensaje;
+            toast.className = `alert-toast show ${tipo}`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function cerrarSesion() {
+            if (confirm('Cerrar sesion?')) {
+                Auth.logout();
+            }
+        }
 
         // Cerrar modal con Escape
         document.addEventListener('keydown', (e) => {
