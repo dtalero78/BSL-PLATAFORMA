@@ -3465,13 +3465,26 @@ app.post('/api/ordenes/importar-csv', upload.single('archivo'), async (req, res)
                 // Generar ID único para la orden
                 const ordenId = `orden_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-                // Parsear fecha de atención si existe
-                let fechaAtencion = null;
+                // Parsear fecha de atención usando la función helper que maneja zona horaria Colombia
+                let fechaAtencionParsed = null;
                 if (row.fechaAtencion) {
-                    // Intentar parsear diferentes formatos de fecha
-                    const fecha = new Date(row.fechaAtencion);
-                    if (!isNaN(fecha.getTime())) {
-                        fechaAtencion = fecha.toISOString();
+                    // Normalizar formato de fecha: DD/MM/YYYY o YYYY-MM-DD -> YYYY-MM-DD
+                    let fechaNormalizada = row.fechaAtencion;
+                    if (row.fechaAtencion.includes('/')) {
+                        // Formato DD/MM/YYYY -> YYYY-MM-DD
+                        const partes = row.fechaAtencion.split('/');
+                        if (partes.length === 3) {
+                            fechaNormalizada = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+                        }
+                    }
+
+                    // Usar horaAtencion del CSV o default 08:00
+                    const horaAtencion = row.horaAtencion || '08:00';
+
+                    // Usar la función helper para construir la fecha con zona horaria Colombia
+                    const fechaObj = construirFechaAtencionColombia(fechaNormalizada, horaAtencion);
+                    if (fechaObj) {
+                        fechaAtencionParsed = fechaObj;
                     }
                 }
 
@@ -3496,7 +3509,7 @@ app.post('/api/ordenes/importar-csv', upload.single('archivo'), async (req, res)
                     row.celular || null,
                     row.cargo || null,
                     row.ciudad || null,
-                    fechaAtencion,
+                    fechaAtencionParsed,
                     row.empresa || row.codEmpresa,
                     row.tipoExamen || null,
                     row.medico || null,
@@ -3523,8 +3536,8 @@ app.post('/api/ordenes/importar-csv', upload.single('archivo'), async (req, res)
                         ciudad: row.ciudad || '',
                         tipoExamen: row.tipoExamen || '',
                         medico: row.medico || '',
-                        fechaAtencion: fechaAtencion,
-                        horaAtencion: '',
+                        fechaAtencion: fechaAtencionParsed ? fechaAtencionParsed.toISOString() : null,
+                        horaAtencion: row.horaAtencion || '',
                         atendido: row.atendido || 'PENDIENTE',
                         examenes: row.examenes || ''
                     };
