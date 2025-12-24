@@ -3604,6 +3604,15 @@ app.post('/api/ordenes/importar-csv', upload.single('archivo'), async (req, res)
 
                 // Sincronizar con Wix
                 try {
+                    // Convertir examenes a array de tags (separados por ; o ,)
+                    let examenesArray = [];
+                    if (row.examenes) {
+                        examenesArray = row.examenes
+                            .split(/[;,]/)
+                            .map(e => e.trim())
+                            .filter(e => e.length > 0);
+                    }
+
                     const wixPayload = {
                         _id: ordenId,
                         numeroId: row.numeroId,
@@ -3621,7 +3630,7 @@ app.post('/api/ordenes/importar-csv', upload.single('archivo'), async (req, res)
                         fechaAtencion: fechaAtencionParsed ? fechaAtencionParsed.toISOString() : null,
                         horaAtencion: row.horaAtencion || '',
                         atendido: row.atendido || 'PENDIENTE',
-                        examenes: row.examenes || ''
+                        examenes: examenesArray
                     };
 
                     const wixResponse = await fetch('https://www.bsl.com.co/_functions/crearHistoriaClinica', {
