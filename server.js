@@ -136,11 +136,19 @@ function construirFechaAtencionColombia(fecha, hora) {
         return null;
     }
 
-    // Asegurar formato HH:MM:SS
-    if (horaStr && horaStr.length === 5) {
-        horaStr = horaStr + ':00';
-    } else if (horaStr && horaStr.length < 5) {
-        horaStr = horaStr + ':00:00';
+    // Normalizar hora: convertir "7:00" a "07:00", "9:30" a "09:30", etc.
+    if (horaStr) {
+        const horaParts = horaStr.split(':');
+        if (horaParts.length >= 2) {
+            const hh = horaParts[0].padStart(2, '0');
+            const mm = horaParts[1].padStart(2, '0');
+            const ss = horaParts[2] ? horaParts[2].padStart(2, '0') : '00';
+            horaStr = `${hh}:${mm}:${ss}`;
+        } else {
+            horaStr = '08:00:00'; // Default si el formato es inválido
+        }
+    } else {
+        horaStr = '08:00:00';
     }
 
     // Construir la fecha con offset Colombia (UTC-5)
