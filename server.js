@@ -3469,6 +3469,8 @@ app.post('/api/ordenes/importar-csv', upload.single('archivo'), async (req, res)
             'segundo_apellido': 'segundoApellido',
             'numero_id': 'numeroId',
             'tipo_examen': 'tipoExamen',
+            'nombres': 'primerNombre',
+            'apellidos': 'primerApellido',
             'cod_empresa': 'codEmpresa'
         };
 
