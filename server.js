@@ -928,7 +928,8 @@ const initDB = async () => {
             'ciudades JSONB DEFAULT \'[]\'::jsonb',
             'examenes JSONB DEFAULT \'[]\'::jsonb',
             'subempresas JSONB DEFAULT \'[]\'::jsonb',
-            'centros_de_costo JSONB DEFAULT \'[]\'::jsonb'
+            'centros_de_costo JSONB DEFAULT \'[]\'::jsonb',
+            'cargos JSONB DEFAULT \'[]\'::jsonb'
         ];
 
         for (const column of empresasColumnsToAdd) {
@@ -5564,7 +5565,7 @@ app.get('/api/empresas', async (req, res) => {
     try {
         const result = await pool.query(`
             SELECT id, cod_empresa, empresa, nit, profesiograma, activo, created_at,
-                   ciudades, examenes, subempresas, centros_de_costo
+                   ciudades, examenes, subempresas, centros_de_costo, cargos
             FROM empresas
             WHERE activo = true
             ORDER BY empresa
@@ -5615,7 +5616,7 @@ app.get('/api/empresas/:id', async (req, res) => {
 // Crear una nueva empresa
 app.post('/api/empresas', async (req, res) => {
     try {
-        const { codEmpresa, empresa, nit, profesiograma, ciudades, examenes, subempresas, centrosDeCosto } = req.body;
+        const { codEmpresa, empresa, nit, profesiograma, ciudades, examenes, subempresas, centrosDeCosto, cargos } = req.body;
 
         if (!codEmpresa || !empresa) {
             return res.status(400).json({
@@ -5625,8 +5626,8 @@ app.post('/api/empresas', async (req, res) => {
         }
 
         const result = await pool.query(`
-            INSERT INTO empresas (cod_empresa, empresa, nit, profesiograma, ciudades, examenes, subempresas, centros_de_costo)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO empresas (cod_empresa, empresa, nit, profesiograma, ciudades, examenes, subempresas, centros_de_costo, cargos)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING *
         `, [
             codEmpresa,
@@ -5636,7 +5637,8 @@ app.post('/api/empresas', async (req, res) => {
             JSON.stringify(ciudades || []),
             JSON.stringify(examenes || []),
             JSON.stringify(subempresas || []),
-            JSON.stringify(centrosDeCosto || [])
+            JSON.stringify(centrosDeCosto || []),
+            JSON.stringify(cargos || [])
         ]);
 
         console.log(`✅ Empresa creada: ${empresa} (${codEmpresa})`);
@@ -5666,7 +5668,7 @@ app.post('/api/empresas', async (req, res) => {
 app.put('/api/empresas/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { codEmpresa, empresa, nit, profesiograma, activo, ciudades, examenes, subempresas, centrosDeCosto } = req.body;
+        const { codEmpresa, empresa, nit, profesiograma, activo, ciudades, examenes, subempresas, centrosDeCosto, cargos } = req.body;
 
         const result = await pool.query(`
             UPDATE empresas SET
@@ -5679,8 +5681,9 @@ app.put('/api/empresas/:id', async (req, res) => {
                 examenes = COALESCE($7, examenes),
                 subempresas = COALESCE($8, subempresas),
                 centros_de_costo = COALESCE($9, centros_de_costo),
+                cargos = COALESCE($10, cargos),
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = $10
+            WHERE id = $11
             RETURNING *
         `, [
             codEmpresa,
@@ -5692,6 +5695,7 @@ app.put('/api/empresas/:id', async (req, res) => {
             examenes ? JSON.stringify(examenes) : null,
             subempresas ? JSON.stringify(subempresas) : null,
             centrosDeCosto ? JSON.stringify(centrosDeCosto) : null,
+            cargos ? JSON.stringify(cargos) : null,
             id
         ]);
 
@@ -5759,7 +5763,7 @@ app.get('/api/empresas/codigo/:codEmpresa', async (req, res) => {
     try {
         const { codEmpresa } = req.params;
         const result = await pool.query(`
-            SELECT id, cod_empresa, empresa, nit, profesiograma, ciudades, examenes, subempresas, centros_de_costo
+            SELECT id, cod_empresa, empresa, nit, profesiograma, ciudades, examenes, subempresas, centros_de_costo, cargos
             FROM empresas
             WHERE cod_empresa = $1 AND activo = true
         `, [codEmpresa]);

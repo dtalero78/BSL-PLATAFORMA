@@ -825,6 +825,24 @@
                             Tip: Puedes pegar varios valores separados por coma (ej: Centro1, Centro2, Centro3)
                         </div>
                     </div>
+
+                    <!-- Sección Cargos -->
+                    <div class="config-section">
+                        <div class="config-section-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            Cargos predeterminados
+                        </div>
+                        <div class="chips-container" id="cargosChips">
+                            <span style="color: #9CA3AF; font-size: 13px;">Sin cargos configurados (campo de texto libre)</span>
+                        </div>
+                        <div class="add-input-container">
+                            <input type="text" id="inputCargo" placeholder="Un cargo o varios separados por coma...">
+                            <button type="button" class="btn-add" onclick="agregarCargo()">Agregar</button>
+                        </div>
+                        <div style="font-size: 11px; color: #9CA3AF; margin-top: 4px;">
+                            Si se configuran cargos, aparecerán como dropdown en Nueva Orden
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
@@ -842,6 +860,7 @@
         let examenesSeleccionados = [];
         let subempresasSeleccionadas = [];
         let centrosCostoSeleccionados = [];
+        let cargosSeleccionados = [];
         let todasLasCiudades = [];
         let todosLosExamenes = [];
 
@@ -987,6 +1006,33 @@
             renderChips('centrosCostoChips', centrosCostoSeleccionados, 'centroCosto');
         }
 
+        function agregarCargo() {
+            const input = document.getElementById('inputCargo');
+            const valor = input.value.trim();
+            if (!valor) return;
+
+            // Soporta múltiples valores separados por coma
+            const cargos = valor.split(',').map(c => c.trim()).filter(c => c.length > 0);
+            let agregados = 0;
+
+            cargos.forEach(cargo => {
+                if (cargo && !cargosSeleccionados.includes(cargo)) {
+                    cargosSeleccionados.push(cargo);
+                    agregados++;
+                }
+            });
+
+            if (agregados > 0) {
+                renderChips('cargosChips', cargosSeleccionados, 'cargo');
+            }
+            input.value = '';
+        }
+
+        function eliminarCargo(cargo) {
+            cargosSeleccionados = cargosSeleccionados.filter(c => c !== cargo);
+            renderChips('cargosChips', cargosSeleccionados, 'cargo');
+        }
+
         // Renderizar chips
         function renderChips(containerId, items, tipo) {
             const container = document.getElementById(containerId);
@@ -995,7 +1041,8 @@
                     ciudad: 'Sin ciudades configuradas (se mostrarán todas)',
                     examen: 'Sin exámenes configurados (se mostrarán todos)',
                     subempresa: 'Sin subempresas configuradas',
-                    centroCosto: 'Sin centros de costo configurados'
+                    centroCosto: 'Sin centros de costo configurados',
+                    cargo: 'Sin cargos configurados (campo de texto libre)'
                 };
                 container.innerHTML = `<span style="color: #9CA3AF; font-size: 13px;">${mensajes[tipo]}</span>`;
                 return;
@@ -1020,10 +1067,12 @@
             examenesSeleccionados = [];
             subempresasSeleccionadas = [];
             centrosCostoSeleccionados = [];
+            cargosSeleccionados = [];
             renderChips('ciudadesChips', [], 'ciudad');
             renderChips('examenesChips', [], 'examen');
             renderChips('subempresasChips', [], 'subempresa');
             renderChips('centrosCostoChips', [], 'centroCosto');
+            renderChips('cargosChips', [], 'cargo');
             actualizarSelectCiudades();
             actualizarSelectExamenes();
         }
@@ -1108,11 +1157,13 @@
                 examenesSeleccionados = empresa.examenes || [];
                 subempresasSeleccionadas = empresa.subempresas || [];
                 centrosCostoSeleccionados = empresa.centros_de_costo || [];
+                cargosSeleccionados = empresa.cargos || [];
 
                 renderChips('ciudadesChips', ciudadesSeleccionadas, 'ciudad');
                 renderChips('examenesChips', examenesSeleccionados, 'examen');
                 renderChips('subempresasChips', subempresasSeleccionadas, 'subempresa');
                 renderChips('centrosCostoChips', centrosCostoSeleccionados, 'centroCosto');
+                renderChips('cargosChips', cargosSeleccionados, 'cargo');
                 actualizarSelectCiudades();
                 actualizarSelectExamenes();
 
@@ -1140,7 +1191,8 @@
                 ciudades: ciudadesSeleccionadas,
                 examenes: examenesSeleccionados,
                 subempresas: subempresasSeleccionadas,
-                centrosDeCosto: centrosCostoSeleccionados
+                centrosDeCosto: centrosCostoSeleccionados,
+                cargos: cargosSeleccionados
             };
 
             const btnGuardar = document.getElementById('btnGuardar');

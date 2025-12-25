@@ -2307,8 +2307,9 @@
                     </div>
 
                     <div class="form-row">
-                        <div class="form-group">
+                        <div class="form-group" id="cargoContainer">
                             <label class="form-label">Cargo <span class="required">*</span></label>
+                            <!-- Se reemplaza dinámicamente por input o select según configuración -->
                             <input type="text" class="form-input" id="modalCargo" placeholder="Cargo del trabajador">
                         </div>
                         <div class="form-group">
@@ -3584,6 +3585,7 @@
             cargarCiudadesModal();
             cargarSubempresasModal();
             cargarCentrosCostoModal();
+            cargarCargosModal();
             limpiarFormularioModal();
             document.getElementById('modalPaso1').style.display = 'block';
             document.getElementById('modalPaso2').style.display = 'none';
@@ -3642,6 +3644,29 @@
                     configEmpresa.centros_de_costo.map(cc => `<option value="${cc}">${cc}</option>`).join('');
             } else {
                 container.style.display = 'none';
+            }
+        }
+
+        // Cargar cargos según configuración (dropdown o input de texto)
+        function cargarCargosModal() {
+            const container = document.getElementById('cargoContainer');
+            if (!container) return;
+
+            if (configEmpresa && configEmpresa.cargos && configEmpresa.cargos.length > 0) {
+                // Reemplazar por select
+                container.innerHTML = `
+                    <label class="form-label">Cargo <span class="required">*</span></label>
+                    <select class="form-select" id="modalCargo">
+                        <option value="">Seleccionar cargo...</option>
+                        ${configEmpresa.cargos.map(cargo => `<option value="${cargo}">${cargo}</option>`).join('')}
+                    </select>
+                `;
+            } else {
+                // Mantener como input de texto
+                container.innerHTML = `
+                    <label class="form-label">Cargo <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="modalCargo" placeholder="Cargo del trabajador">
+                `;
             }
         }
 
