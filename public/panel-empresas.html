@@ -56,10 +56,100 @@
         .login-screen {
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            gap: 24px;
             background: var(--bg-secondary);
+        }
+
+        /* Banner de bienvenida */
+        .welcome-banner {
+            background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%);
+            border-radius: 20px;
+            padding: 24px 32px;
+            width: 100%;
+            max-width: 520px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 200px;
+            height: 200px;
+            background: rgba(129, 199, 132, 0.2);
+            border-radius: 50%;
+        }
+
+        .welcome-banner-content {
+            flex: 1;
+            z-index: 1;
+        }
+
+        .welcome-banner-content h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2E7D32;
+            margin-bottom: 8px;
+        }
+
+        .welcome-banner-content p {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        .welcome-banner-content p strong {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .welcome-banner-image {
+            width: 100px;
+            height: 100px;
+            flex-shrink: 0;
+            z-index: 1;
+        }
+
+        .welcome-banner-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .welcome-banner-arrow {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #81C784;
+            z-index: 1;
+        }
+
+        @media (max-width: 560px) {
+            .welcome-banner {
+                flex-direction: column;
+                text-align: center;
+                padding: 20px;
+            }
+
+            .welcome-banner-image {
+                order: -1;
+            }
+
+            .welcome-banner-arrow {
+                display: none;
+            }
         }
 
         .login-card {
@@ -1653,6 +1743,20 @@
 <body>
     <!-- Login Screen (solo se muestra si no está autenticado) -->
     <div class="login-screen" id="loginScreen">
+        <!-- Banner de bienvenida -->
+        <div class="welcome-banner">
+            <div class="welcome-banner-content">
+                <h3>Tenemos una sorpresa para ti!</h3>
+                <p>Este es tu <strong>nuevo panel de empresa</strong>, con un monton de cosas nuevas que puedes hacer. <strong>Registrate</strong> creando tu usuario y contrasena y, al finalizar, <strong>escribenos por WhatsApp</strong> para autorizar tu ingreso.</p>
+            </div>
+            <div class="welcome-banner-image">
+                <img src="/doctor-banner.png" alt="Doctor">
+            </div>
+            <svg class="welcome-banner-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6"></path>
+            </svg>
+        </div>
+
         <div class="login-card">
             <div class="login-logo">
                 <img src="/bsl-logo.png" alt="BSL">
