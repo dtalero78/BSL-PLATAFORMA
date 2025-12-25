@@ -2427,7 +2427,9 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Médico</label>
-                                <input type="text" class="form-input" id="edit-hc-medico" name="hc_medico">
+                                <select class="form-input" id="edit-hc-medico" name="hc_medico">
+                                    <option value="">Seleccionar médico...</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Estado PV</label>
@@ -3011,6 +3013,9 @@
         // ========== EXÁMENES STATE ==========
         let examenesData = [];
         let editExamenesSeleccionados = [];
+
+        // ========== MÉDICOS STATE ==========
+        let medicosData = [];
 
         // ========== UTILITY FUNCTIONS ==========
         function formatearFecha(fecha) {
@@ -3937,6 +3942,43 @@
             }
         }
 
+        async function cargarMedicosDisponibles() {
+            try {
+                const response = await fetch('/api/medicos');
+                const result = await response.json();
+                if (result.success) {
+                    medicosData = result.data;
+                }
+            } catch (error) {
+                console.error('Error al cargar médicos:', error);
+            }
+        }
+
+        function poblarSelectMedicos(medicoActual) {
+            const select = document.getElementById('edit-hc-medico');
+            select.innerHTML = '<option value="">Seleccionar médico...</option>';
+
+            medicosData.forEach(medico => {
+                const nombreCompleto = `${medico.primer_nombre} ${medico.primer_apellido}`;
+                const option = document.createElement('option');
+                option.value = nombreCompleto;
+                option.textContent = nombreCompleto;
+                if (medicoActual && nombreCompleto === medicoActual) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+
+            // Si el médico actual no está en la lista pero tiene valor, agregarlo como opción
+            if (medicoActual && !medicosData.some(m => `${m.primer_nombre} ${m.primer_apellido}` === medicoActual)) {
+                const option = document.createElement('option');
+                option.value = medicoActual;
+                option.textContent = medicoActual;
+                option.selected = true;
+                select.appendChild(option);
+            }
+        }
+
         function renderEditExamenes() {
             const container = document.getElementById('editExamenesContainer');
 
@@ -4075,7 +4117,7 @@
                 // Datos del examen HC
                 document.getElementById('edit-hc-tipoExamen').value = orden.tipoExamen || '';
                 document.getElementById('edit-hc-atendido').value = orden.atendido || '';
-                document.getElementById('edit-hc-medico').value = orden.medico || '';
+                poblarSelectMedicos(orden.medico || '');
                 document.getElementById('edit-hc-pvEstado').value = orden.pvEstado || '';
                 // Fecha de atención (formato datetime-local: YYYY-MM-DDTHH:MM) - siempre en hora Colombia
                 if (orden.fechaAtencion) {
@@ -4529,6 +4571,7 @@
             // Load data
             cargarFormularios();
             cargarExamenesDisponibles();
+            cargarMedicosDisponibles();
 
             // Search - Búsqueda server-side con debounce (usa índice GIN pg_trgm)
             document.getElementById('searchInput').addEventListener('input', async function(e) {
