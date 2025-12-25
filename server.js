@@ -210,6 +210,9 @@ function determinarGeneroWebhook(examenes) {
 // Disparar webhook a Make.com
 async function dispararWebhookMake(orden) {
     try {
+        // Si la modalidad es presencial, enviar "PRESENCIAL" como médico
+        const medicoWebhook = orden.modalidad === 'presencial' ? 'PRESENCIAL' : limpiarStringWebhook(orden.medico);
+
         const params = new URLSearchParams({
             cel: limpiarTelefonoWebhook(orden.celular),
             cedula: limpiarStringWebhook(orden.numeroId),
@@ -219,7 +222,7 @@ async function dispararWebhookMake(orden) {
             ciudad: limpiarStringWebhook(orden.ciudad),
             fecha: orden.fechaAtencion ? new Date(orden.fechaAtencion).toLocaleDateString('es-CO') : '',
             hora: orden.horaAtencion || '',
-            medico: limpiarStringWebhook(orden.medico),
+            medico: medicoWebhook,
             id: orden._id
         });
 
@@ -3401,7 +3404,7 @@ app.post('/api/ordenes', async (req, res) => {
             tipoExamen || null,
             medico || null,
             construirFechaAtencionColombia(fechaAtencion, horaAtencion),
-            null, // horaAtencion ya no se usa, la hora está en fechaAtencion
+            horaAtencion || null,
             atendido || 'PENDIENTE',
             examenes || null
         ];
@@ -3420,7 +3423,8 @@ app.post('/api/ordenes', async (req, res) => {
             ciudad,
             fechaAtencion,
             horaAtencion,
-            medico
+            medico,
+            modalidad
         });
 
         // 2. Sincronizar con Wix
