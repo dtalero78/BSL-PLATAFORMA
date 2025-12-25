@@ -839,6 +839,7 @@ const initDB = async () => {
                 numero_documento VARCHAR(50) UNIQUE NOT NULL,
                 celular_whatsapp VARCHAR(20) NOT NULL,
                 nombre_completo VARCHAR(200),
+                nombre_empresa VARCHAR(200),
                 rol VARCHAR(20) DEFAULT 'empresa' CHECK (rol IN ('empresa', 'admin')),
                 cod_empresa VARCHAR(50),
                 estado VARCHAR(20) DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'aprobado', 'rechazado', 'suspendido')),
@@ -858,6 +859,16 @@ const initDB = async () => {
             await pool.query(`CREATE INDEX IF NOT EXISTS idx_usuarios_rol ON usuarios(rol)`);
         } catch (err) {
             // Índices ya existen
+        }
+
+        // Migración: agregar columna nombre_empresa si no existe
+        try {
+            await pool.query(`
+                ALTER TABLE usuarios
+                ADD COLUMN IF NOT EXISTS nombre_empresa VARCHAR(200)
+            `);
+        } catch (err) {
+            // Columna ya existe
         }
 
         // Crear tabla de sesiones
@@ -1069,7 +1080,7 @@ const requireAdmin = (req, res, next) => {
 // POST /api/auth/registro - Registro de nuevo usuario
 app.post('/api/auth/registro', async (req, res) => {
     try {
-        const { email, password, numeroDocumento, celularWhatsapp, nombreCompleto, codEmpresa } = req.body;
+        const { email, password, numeroDocumento, celularWhatsapp, nombreCompleto, nombreEmpresa, codEmpresa } = req.body;
 
         // Validaciones
         if (!email || !password || !numeroDocumento || !celularWhatsapp) {
@@ -1117,12 +1128,24 @@ app.post('/api/auth/registro', async (req, res) => {
 
         // Insertar usuario
         const result = await pool.query(`
-            INSERT INTO usuarios (email, password_hash, numero_documento, celular_whatsapp, nombre_completo, cod_empresa, rol, estado)
-            VALUES ($1, $2, $3, $4, $5, $6, 'empresa', 'pendiente')
-            RETURNING id, email, nombre_completo, rol, estado, fecha_registro
-        `, [email.toLowerCase(), passwordHash, numeroDocumento, celularWhatsapp, nombreCompleto || null, codEmpresa?.toUpperCase() || null]);
+            INSERT INTO usuarios (email, password_hash, numero_documento, celular_whatsapp, nombre_completo, nombre_empresa, cod_empresa, rol, estado)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, 'empresa', 'pendiente')
+            RETURNING id, email, nombre_completo, nombre_empresa, rol, estado, fecha_registro
+        `, [email.toLowerCase(), passwordHash, numeroDocumento, celularWhatsapp, nombreCompleto || null, nombreEmpresa || null, codEmpresa?.toUpperCase() || null]);
 
         console.log(`📝 Nuevo usuario registrado: ${email} (pendiente de aprobación)`);
+
+        // Enviar mensaje de WhatsApp de confirmación de registro
+        const celularFormateado = celularWhatsapp.startsWith('57') ? celularWhatsapp : `57${celularWhatsapp}`;
+        const mensajeWhatsApp = `Hola! Recibimos tu registro a la plataforma BSL, en un momento recibiras la autorizacion de entrada.`;
+
+        try {
+            sendWhatsAppMessage(celularFormateado, mensajeWhatsApp);
+            console.log(`📱 WhatsApp de confirmación enviado a ${celularFormateado}`);
+        } catch (whatsappError) {
+            console.error('Error enviando WhatsApp de registro:', whatsappError);
+            // No fallamos el registro si falla el WhatsApp
+        }
 
         res.status(201).json({
             success: true,
