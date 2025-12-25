@@ -181,6 +181,58 @@ function notificarNuevaOrden(orden) {
     console.log(`📡 Notificación SSE enviada a ${sseClients.length} clientes`);
 }
 
+// ========== FUNCIONES PARA WEBHOOK MAKE.COM ==========
+
+// Limpiar strings (quitar acentos, espacios, puntos)
+function limpiarStringWebhook(str) {
+    if (!str) return '';
+    const acentos = { 'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
+                      'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U', 'ñ': 'n', 'Ñ': 'N' };
+    return str.split('').map(letra => acentos[letra] || letra).join('')
+              .replace(/\s+/g, '').replace(/\./g, '').replace(/\t/g, '');
+}
+
+// Limpiar teléfono (quitar prefijo +57 o 57)
+function limpiarTelefonoWebhook(telefono) {
+    if (!telefono) return '';
+    let limpio = telefono.replace(/\s+/g, '').replace(/-/g, '');
+    if (limpio.startsWith('+57')) limpio = limpio.substring(3);
+    else if (limpio.startsWith('57')) limpio = limpio.substring(2);
+    return limpio;
+}
+
+// Determinar género basado en exámenes
+function determinarGeneroWebhook(examenes) {
+    if (!examenes) return '';
+    return examenes.includes('Serología') ? 'FEMENINO' : '';
+}
+
+// Disparar webhook a Make.com
+async function dispararWebhookMake(orden) {
+    try {
+        const params = new URLSearchParams({
+            cel: limpiarTelefonoWebhook(orden.celular),
+            cedula: limpiarStringWebhook(orden.numeroId),
+            nombre: limpiarStringWebhook(orden.primerNombre),
+            empresa: limpiarStringWebhook(orden.codEmpresa),
+            genero: determinarGeneroWebhook(orden.examenes),
+            ciudad: limpiarStringWebhook(orden.ciudad),
+            fecha: orden.fechaAtencion ? new Date(orden.fechaAtencion).toLocaleDateString('es-CO') : '',
+            hora: orden.horaAtencion || '',
+            medico: limpiarStringWebhook(orden.medico),
+            id: orden._id
+        });
+
+        const url = `https://hook.us1.make.com/3edkq8bfppx31t6zbd86sfu7urdrhti9?${params.toString()}`;
+
+        const response = await fetch(url);
+        console.log('✅ Webhook Make.com enviado:', orden._id);
+    } catch (error) {
+        console.error('❌ Error enviando webhook Make.com:', error.message);
+        // No bloquear la respuesta al cliente si falla el webhook
+    }
+}
+
 // Función para enviar mensajes de WhatsApp via Whapi Cloud
 function sendWhatsAppMessage(toNumber, messageBody) {
     const url = "https://gate.whapi.cloud/messages/text";
@@ -3356,6 +3408,20 @@ app.post('/api/ordenes', async (req, res) => {
 
         const pgResult = await pool.query(insertQuery, insertValues);
         console.log('✅ PostgreSQL: Orden guardada con _id:', wixId);
+
+        // Disparar webhook a Make.com (async, no bloquea)
+        dispararWebhookMake({
+            _id: wixId,
+            celular,
+            numeroId,
+            primerNombre,
+            codEmpresa,
+            examenes,
+            ciudad,
+            fechaAtencion,
+            horaAtencion,
+            medico
+        });
 
         // 2. Sincronizar con Wix
         console.log('');

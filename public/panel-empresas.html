@@ -2566,6 +2566,22 @@
         </div>
     </div>
 
+    <!-- Modal Confirmación Orden Creada -->
+    <div class="modal-overlay-center" id="modalConfirmacion" style="display: none;">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div style="padding: 24px;">
+                <div style="width: 60px; height: 60px; background: #10B981; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <h2 style="margin: 0 0 8px; color: var(--text-primary); font-size: 20px;">Orden Creada</h2>
+                <p style="margin: 0 0 20px; color: var(--text-secondary);" id="confirmacionMensaje">La orden ha sido creada exitosamente.</p>
+                <button class="btn-modal btn-modal-primary" onclick="cerrarModalConfirmacion()" style="width: 100%;">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/auth.js"></script>
     <script>
         let codEmpresa = '';
@@ -3963,7 +3979,7 @@
                 if (result.success) {
                     cerrarModalNuevaOrden();
                     actualizarDatos();
-                    alert('Orden creada exitosamente');
+                    mostrarModalConfirmacion('Orden creada exitosamente');
                 } else {
                     mostrarAlertaModal(result.message || 'Error al crear la orden');
                 }
@@ -4115,6 +4131,16 @@
 
         function cerrarModalExpirado() {
             document.getElementById('modalExpirado').classList.remove('active');
+        }
+
+        // ========== MODAL CONFIRMACIÓN ==========
+        function mostrarModalConfirmacion(mensaje = 'La orden ha sido creada exitosamente.') {
+            document.getElementById('confirmacionMensaje').textContent = mensaje;
+            document.getElementById('modalConfirmacion').style.display = 'flex';
+        }
+
+        function cerrarModalConfirmacion() {
+            document.getElementById('modalConfirmacion').style.display = 'none';
         }
 
         function cambiarModalidadExpirado(modalidad) {
