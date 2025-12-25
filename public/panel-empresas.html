@@ -248,6 +248,105 @@
             display: block;
         }
 
+        /* Form styles for login */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(1, 118, 211, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-tertiary);
+            padding: 4px;
+        }
+
+        .password-toggle:hover {
+            color: var(--text-primary);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert.error {
+            background: #FEF2F2;
+            color: #DC2626;
+        }
+
+        .alert.success {
+            background: #ECFDF5;
+            color: #059669;
+        }
+
+        .alert.warning {
+            background: #FEF3C7;
+            color: #D97706;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .login-footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+
         /* ========== PANEL SCREEN ========== */
         .panel-screen {
             display: none;
@@ -1762,14 +1861,39 @@
                 <img src="/bsl-logo.png" alt="BSL">
             </div>
             <h1 class="login-title">Panel de Empresa</h1>
-            <p class="login-subtitle">Verificando sesion...</p>
+            <p class="login-subtitle">Ingresa tus credenciales para continuar</p>
 
-            <div class="login-error" id="loginError"></div>
+            <div class="alert" id="alertMsg"></div>
 
-            <a href="/login.html" class="login-btn" style="display: inline-block; text-align: center; text-decoration: none;">Iniciar Sesion</a>
-            <p style="text-align: center; margin-top: 16px; font-size: 14px; color: var(--text-secondary);">
-                No tienes cuenta? <a href="/registro.html" style="color: var(--accent-color);">Registrate</a>
-            </p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Correo electronico</label>
+                    <input type="email" class="form-input" id="loginEmail"
+                           placeholder="correo@ejemplo.com" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Contrasena</label>
+                    <div class="password-wrapper">
+                        <input type="password" class="form-input" id="loginPassword"
+                               placeholder="Tu contrasena" required autocomplete="current-password">
+                        <button type="button" class="password-toggle" onclick="toggleLoginPassword()">
+                            <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-btn" id="btnLogin">
+                    Iniciar Sesion
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <p>No tienes cuenta? <a href="/registro.html">Registrate aqui</a></p>
+            </div>
         </div>
     </div>
 
@@ -2570,8 +2694,90 @@
             }
         }
 
+        // ========== FUNCIONES DE LOGIN ==========
+        function toggleLoginPassword() {
+            const input = document.getElementById('loginPassword');
+            const icon = document.getElementById('eyeIcon');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+            } else {
+                input.type = 'password';
+                icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+            }
+        }
+
+        function mostrarAlertaLogin(mensaje, tipo = 'error') {
+            const alert = document.getElementById('alertMsg');
+            alert.textContent = mensaje;
+            alert.className = `alert show ${tipo}`;
+        }
+
+        function ocultarAlertaLogin() {
+            document.getElementById('alertMsg').className = 'alert';
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            ocultarAlertaLogin();
+
+            const btn = document.getElementById('btnLogin');
+            btn.disabled = true;
+            btn.textContent = 'Verificando...';
+
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const result = await Auth.login(email, password);
+
+                if (result.success) {
+                    mostrarAlertaLogin('Inicio de sesion exitoso!', 'success');
+                    setTimeout(async () => {
+                        usuarioActual = result.usuario;
+                        codEmpresa = usuarioActual.codEmpresa || usuarioActual.cod_empresa || '';
+
+                        // Si es admin sin codEmpresa, redirigir al panel admin
+                        if (usuarioActual.rol === 'admin' && !codEmpresa) {
+                            window.location.href = '/panel-admin.html';
+                            return;
+                        }
+
+                        // Cargar permisos y configuración
+                        await cargarPermisos();
+                        await cargarConfigEmpresa();
+                        mostrarPanel();
+                        aplicarPermisosUI();
+                    }, 500);
+                } else {
+                    // Manejar diferentes estados
+                    if (result.estado === 'pendiente') {
+                        mostrarAlertaLogin('Tu cuenta esta pendiente de aprobacion. Te notificaremos cuando sea aprobada.', 'warning');
+                    } else if (result.estado === 'rechazado') {
+                        mostrarAlertaLogin('Tu solicitud de cuenta fue rechazada. Contacta al administrador.', 'error');
+                    } else if (result.estado === 'suspendido') {
+                        mostrarAlertaLogin('Tu cuenta ha sido suspendida. Contacta al administrador.', 'error');
+                    } else {
+                        mostrarAlertaLogin(result.message || 'Error al iniciar sesion');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarAlertaLogin('Error de conexion. Intenta de nuevo.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Iniciar Sesion';
+            }
+        }
+
         // Verificar sesión con JWT
         document.addEventListener('DOMContentLoaded', async () => {
+            // Agregar listener al formulario de login
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
             // Verificar autenticación
             usuarioActual = await Auth.verificarSesion();
 
@@ -2591,8 +2797,8 @@
                 mostrarPanel();
                 aplicarPermisosUI();
             } else {
-                // No autenticado - mostrar pantalla de login con opciones
-                document.querySelector('.login-subtitle').textContent = 'Debes iniciar sesion para continuar';
+                // No autenticado - mostrar pantalla de login
+                // El formulario de login ya está visible por defecto
             }
 
             // Tab filters
