@@ -67,13 +67,10 @@
         /* Banner de bienvenida */
         .welcome-banner {
             background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%);
-            border-radius: 20px;
+            border-radius: 16px;
             padding: 24px 32px;
             width: 100%;
-            max-width: 520px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
+            max-width: 420px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             position: relative;
             overflow: hidden;
@@ -91,21 +88,21 @@
         }
 
         .welcome-banner-content {
-            flex: 1;
+            position: relative;
             z-index: 1;
         }
 
         .welcome-banner-content h3 {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
             color: #2E7D32;
             margin-bottom: 8px;
         }
 
         .welcome-banner-content p {
-            font-size: 14px;
+            font-size: 13px;
             color: #555;
-            line-height: 1.5;
+            line-height: 1.6;
             font-weight: 400;
         }
 
@@ -114,41 +111,9 @@
             color: #333;
         }
 
-        .welcome-banner-image {
-            width: 100px;
-            height: 100px;
-            flex-shrink: 0;
-            z-index: 1;
-        }
-
-        .welcome-banner-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .welcome-banner-arrow {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #81C784;
-            z-index: 1;
-        }
-
-        @media (max-width: 560px) {
+        @media (max-width: 460px) {
             .welcome-banner {
-                flex-direction: column;
-                text-align: center;
                 padding: 20px;
-            }
-
-            .welcome-banner-image {
-                order: -1;
-            }
-
-            .welcome-banner-arrow {
-                display: none;
             }
         }
 
@@ -1848,12 +1813,6 @@
                 <h3>Tenemos una sorpresa para ti!</h3>
                 <p>Este es tu <strong>nuevo panel de empresa</strong>, con un monton de cosas nuevas que puedes hacer. <strong>Registrate</strong> creando tu usuario y contrasena y, al finalizar, <strong>escribenos por WhatsApp</strong> para autorizar tu ingreso.</p>
             </div>
-            <div class="welcome-banner-image">
-                <img src="/doctor.png" alt="Doctor">
-            </div>
-            <svg class="welcome-banner-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 18l6-6-6-6"></path>
-            </svg>
         </div>
 
         <div class="login-card">
