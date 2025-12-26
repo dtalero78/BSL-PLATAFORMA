@@ -1097,7 +1097,7 @@
         <div class="search-bar">
             <div class="search-input-container">
                 <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" id="searchInput" placeholder="Buscar por cédula o nombre...">
+                <input type="text" class="search-input" id="searchInput" placeholder="Buscar por cédula, nombre o médico...">
             </div>
             <div class="date-filter">
                 <input type="date" id="fechaDesde" title="Fecha desde">
@@ -2000,10 +2000,8 @@
                     const result = await response.json();
 
                     if (result.success) {
-                        // Filtrar solo los de NUBIA de los resultados
-                        let resultados = result.data.filter(p =>
-                            p.medico && p.medico.toUpperCase().includes('NUBIA')
-                        );
+                        // Mostrar todos los resultados de la búsqueda (sin filtrar por médico)
+                        let resultados = result.data;
 
                         pacientesFiltrados = resultados;
 
