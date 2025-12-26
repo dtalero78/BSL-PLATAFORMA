@@ -1160,6 +1160,7 @@
             const inputFecha = document.getElementById('inputFechaAtencion');
             const fecha = inputFecha.value;
             const select = document.getElementById('selectMedico');
+            const medicoActual = select.value; // Guardar selección actual para restaurarla
 
             // Validar que la fecha no sea pasada (timezone Colombia)
             // Solo validar si el año es >= 2024 (evita falsos positivos mientras se escribe)
@@ -1204,6 +1205,14 @@
                         option.textContent = alias;
                         select.appendChild(option);
                     });
+                }
+
+                // Restaurar selección anterior si existe en la nueva lista
+                if (medicoActual) {
+                    const optionExists = Array.from(select.options).some(opt => opt.value === medicoActual);
+                    if (optionExists) {
+                        select.value = medicoActual;
+                    }
                 }
 
                 // Limpiar horarios
