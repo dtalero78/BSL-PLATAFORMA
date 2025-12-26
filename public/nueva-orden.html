@@ -1640,6 +1640,8 @@
             const datos = Object.fromEntries(formData.entries());
             // Asegurar que el numeroId venga del paso 1
             datos.numeroId = document.getElementById('inputNumeroId').value.trim();
+            console.log('📤 Datos a enviar:', JSON.stringify(datos, null, 2));
+            console.log('📋 Médico seleccionado:', document.getElementById('selectMedico').value);
             // Capitalizar nombres y apellidos
             if (datos.primerNombre) datos.primerNombre = capitalize(datos.primerNombre);
             if (datos.segundoNombre) datos.segundoNombre = capitalize(datos.segundoNombre);
