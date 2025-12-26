@@ -1122,6 +1122,7 @@
                         <th>Paciente</th>
                         <th>Cédula</th>
                         <th>Celular</th>
+                        <th>Email</th>
                         <th>Empresa</th>
                         <th>Creación</th>
                         <th>Hora Cita</th>
@@ -1399,6 +1400,7 @@
                         </td>
                         <td>${p.numeroId || '—'}</td>
                         <td>${p.celular || '—'}</td>
+                        <td>${p.email || '—'}</td>
                         <td>${p.codEmpresa || '—'}</td>
                         <td class="cell-fecha">${formatFechaCreacion(p._createdDate)}</td>
                         <td class="cell-fecha">${formatHora(p.fechaAtencion)}</td>
@@ -1591,7 +1593,7 @@
                         </div>
                         <div class="detail-field">
                             <div class="detail-field-label">Celular</div>
-                            <div class="detail-field-value">${paciente.celular || '—'}</div>
+                            <div class="detail-field-value">${paciente.celular || '��'}</div>
                         </div>
                         <div class="detail-field">
                             <div class="detail-field-label">Ciudad</div>
