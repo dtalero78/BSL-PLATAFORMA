@@ -905,7 +905,7 @@ const initDB = async () => {
                 celular_whatsapp VARCHAR(20) NOT NULL,
                 nombre_completo VARCHAR(200),
                 nombre_empresa VARCHAR(200),
-                rol VARCHAR(20) DEFAULT 'empresa' CHECK (rol IN ('empresa', 'admin')),
+                rol VARCHAR(20) DEFAULT 'empresa' CHECK (rol IN ('empresa', 'admin', 'empleado')),
                 cod_empresa VARCHAR(50),
                 estado VARCHAR(20) DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'aprobado', 'rechazado', 'suspendido')),
                 fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -934,6 +934,19 @@ const initDB = async () => {
             `);
         } catch (err) {
             // Columna ya existe
+        }
+
+        // Migración: actualizar constraint de rol para incluir 'empleado'
+        try {
+            await pool.query(`
+                ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS usuarios_rol_check
+            `);
+            await pool.query(`
+                ALTER TABLE usuarios ADD CONSTRAINT usuarios_rol_check
+                CHECK (rol IN ('empresa', 'admin', 'empleado'))
+            `);
+        } catch (err) {
+            // Constraint ya actualizada o no existe
         }
 
         // Crear tabla de sesiones
@@ -1748,7 +1761,7 @@ app.put('/api/admin/usuarios/:id/reactivar', authMiddleware, requireAdmin, async
 
 // ============ ENDPOINTS DE PERMISOS ============
 
-// Lista de permisos disponibles para panel-empresas
+// Lista de permisos disponibles para panel-empresas (rol: empresa)
 const PERMISOS_DISPONIBLES = [
     { codigo: 'VER_ORDENES', nombre: 'Ver Órdenes', descripcion: 'Ver lista y detalles de órdenes médicas' },
     { codigo: 'CREAR_ORDEN', nombre: 'Crear Orden', descripcion: 'Crear nuevas órdenes médicas' },
@@ -1759,12 +1772,44 @@ const PERMISOS_DISPONIBLES = [
     { codigo: 'VER_RESULTADOS_MEDICOS', nombre: 'Ver Resultados Médicos', descripcion: 'Ver sección de resultados médicos en detalles del paciente' }
 ];
 
+// Lista de permisos disponibles para panel-ordenes (rol: empleado)
+const PERMISOS_EMPLEADO = [
+    // Navegación/Secciones
+    { codigo: 'EMP_VER_ORDENES', nombre: 'Ver Órdenes', descripcion: 'Acceder a la lista de órdenes', categoria: 'Navegación' },
+    { codigo: 'EMP_NUEVA_ORDEN', nombre: 'Nueva Orden', descripcion: 'Acceder a crear nueva orden', categoria: 'Navegación' },
+    { codigo: 'EMP_SUBIR_LOTE', nombre: 'Subir Lote', descripcion: 'Acceder a carga masiva de órdenes', categoria: 'Navegación' },
+    { codigo: 'EMP_CALENDARIO', nombre: 'Calendario', descripcion: 'Acceder al calendario de citas', categoria: 'Navegación' },
+    { codigo: 'EMP_MEDICOS', nombre: 'Médicos', descripcion: 'Acceder a gestión de médicos', categoria: 'Navegación' },
+    { codigo: 'EMP_EXAMENES', nombre: 'Exámenes', descripcion: 'Acceder a gestión de exámenes', categoria: 'Navegación' },
+    { codigo: 'EMP_EMPRESAS', nombre: 'Empresas', descripcion: 'Acceder a gestión de empresas', categoria: 'Navegación' },
+    // Acciones sobre órdenes
+    { codigo: 'EMP_VER_DETALLES', nombre: 'Ver Detalles', descripcion: 'Ver detalles completos de una orden', categoria: 'Acciones' },
+    { codigo: 'EMP_EDITAR_ORDEN', nombre: 'Editar Orden', descripcion: 'Modificar datos de una orden', categoria: 'Acciones' },
+    { codigo: 'EMP_ELIMINAR_ORDEN', nombre: 'Eliminar Orden', descripcion: 'Eliminar órdenes individuales o masivas', categoria: 'Acciones' },
+    { codigo: 'EMP_MARCAR_PAGADO', nombre: 'Marcar Pagado', descripcion: 'Cambiar estado de pago de órdenes', categoria: 'Acciones' },
+    { codigo: 'EMP_ENVIAR_LINK', nombre: 'Enviar Link', descripcion: 'Enviar link de prueba por WhatsApp', categoria: 'Acciones' },
+    { codigo: 'EMP_ASIGNAR_MEDICO', nombre: 'Asignar Médico', descripcion: 'Asignar médico a una orden', categoria: 'Acciones' },
+    { codigo: 'EMP_CAMBIAR_ESTADO', nombre: 'Cambiar Estado', descripcion: 'Modificar estado de la orden', categoria: 'Acciones' },
+    { codigo: 'EMP_MODIFICAR_EXAMENES', nombre: 'Modificar Exámenes', descripcion: 'Agregar o quitar exámenes de una orden', categoria: 'Acciones' },
+    { codigo: 'EMP_ENLAZAR_FORMULARIO', nombre: 'Enlazar Formulario', descripcion: 'Vincular orden con formulario médico', categoria: 'Acciones' }
+];
+
 // GET /api/admin/permisos/disponibles - Obtener lista de permisos disponibles
+// Query param: tipo = 'empresa' | 'empleado' (default: empresa)
 app.get('/api/admin/permisos/disponibles', authMiddleware, requireAdmin, (req, res) => {
-    res.json({
-        success: true,
-        permisos: PERMISOS_DISPONIBLES
-    });
+    const { tipo } = req.query;
+
+    if (tipo === 'empleado') {
+        res.json({
+            success: true,
+            permisos: PERMISOS_EMPLEADO
+        });
+    } else {
+        res.json({
+            success: true,
+            permisos: PERMISOS_DISPONIBLES
+        });
+    }
 });
 
 // GET /api/admin/usuarios/:id/permisos - Obtener permisos de un usuario
@@ -1805,9 +1850,11 @@ app.put('/api/admin/usuarios/:id/permisos', authMiddleware, requireAdmin, async 
             });
         }
 
-        // Validar que los permisos existen
-        const permisosValidos = PERMISOS_DISPONIBLES.map(p => p.codigo);
-        const permisosInvalidos = permisos.filter(p => !permisosValidos.includes(p));
+        // Validar que los permisos existen (aceptar tanto permisos de empresa como de empleado)
+        const permisosValidosEmpresa = PERMISOS_DISPONIBLES.map(p => p.codigo);
+        const permisosValidosEmpleado = PERMISOS_EMPLEADO.map(p => p.codigo);
+        const todosPermisosValidos = [...permisosValidosEmpresa, ...permisosValidosEmpleado];
+        const permisosInvalidos = permisos.filter(p => !todosPermisosValidos.includes(p));
         if (permisosInvalidos.length > 0) {
             return res.status(400).json({
                 success: false,
@@ -1848,11 +1895,15 @@ app.put('/api/admin/usuarios/:id/permisos', authMiddleware, requireAdmin, async 
 // GET /api/auth/mis-permisos - Obtener permisos del usuario autenticado
 app.get('/api/auth/mis-permisos', authMiddleware, async (req, res) => {
     try {
-        // Los admins tienen todos los permisos
+        // Los admins tienen todos los permisos (empresa + empleado)
         if (req.usuario.rol === 'admin') {
+            const todosPermisos = [
+                ...PERMISOS_DISPONIBLES.map(p => p.codigo),
+                ...PERMISOS_EMPLEADO.map(p => p.codigo)
+            ];
             return res.json({
                 success: true,
-                permisos: PERMISOS_DISPONIBLES.map(p => p.codigo)
+                permisos: todosPermisos
             });
         }
 
@@ -5218,7 +5269,7 @@ app.get('/api/medicos', async (req, res) => {
         const result = await pool.query(`
             SELECT id, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido,
                    numero_licencia, tipo_licencia, fecha_vencimiento_licencia, especialidad,
-                   firma, activo, created_at, COALESCE(tiempo_consulta, 10) as tiempo_consulta
+                   firma, activo, created_at, COALESCE(tiempo_consulta, 10) as tiempo_consulta, alias
             FROM medicos
             WHERE activo = true
             ORDER BY primer_apellido, primer_nombre
@@ -6865,7 +6916,8 @@ app.get('/api/nubia/pacientes', async (req, res) => {
                    h."atendido", h."examenes", h."_createdDate", h."fechaConsulta", h."fechaAtencion", h."horaAtencion",
                    h."pvEstado", h."mdConceptoFinal", h."mdRecomendacionesMedicasAdicionales", h."mdObservacionesCertificado",
                    h."pagado",
-                   (SELECT COALESCE(f.foto_url, f.foto) FROM formularios f WHERE f.numero_id = h."numeroId" ORDER BY f.fecha_registro DESC LIMIT 1) as foto
+                   (SELECT COALESCE(f.foto_url, f.foto) FROM formularios f WHERE f.numero_id = h."numeroId" ORDER BY f.fecha_registro DESC LIMIT 1) as foto,
+                   (SELECT f.email FROM formularios f WHERE f.numero_id = h."numeroId" ORDER BY f.fecha_registro DESC LIMIT 1) as email
             FROM "HistoriaClinica" h
             WHERE h."medico" ILIKE '%NUBIA%'
               AND h."fechaAtencion" >= $1
