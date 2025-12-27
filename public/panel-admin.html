@@ -1275,7 +1275,7 @@
                     <label class="form-label">Usuario</label>
                     <p id="aprobarUsuarioInfo" style="font-size: 14px; color: var(--text-secondary); margin: 0;"></p>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="grupoEmpresaAprobar">
                     <label class="form-label">Asignar a empresa *</label>
                     <select class="form-select" id="aprobarEmpresaSelect" required>
                         <option value="">Selecciona una empresa...</option>
@@ -1294,7 +1294,7 @@
 
     <!-- Modal Permisos Usuario -->
     <div class="modal-overlay" id="modalPermisos">
-        <div class="modal">
+        <div class="modal" style="max-width: 600px;">
             <div class="modal-header">
                 <h3 class="modal-title">Gestionar Permisos</h3>
                 <button class="modal-close" onclick="cerrarModal('modalPermisos')">
@@ -1304,14 +1304,34 @@
                     </svg>
                 </button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                 <div class="form-group">
                     <label class="form-label">Usuario</label>
                     <p id="permisosUsuarioInfo" style="font-size: 14px; color: var(--text-secondary); margin: 0;"></p>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">Rol del Usuario</label>
+                    <p id="permisosUsuarioRol" style="font-size: 14px; margin: 0;">
+                        <span id="rolBadge" style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;"></span>
+                    </p>
+                </div>
+                <!-- Permisos de Empresa (solo visible si rol=empresa) -->
+                <div class="form-group" id="seccionPermisosEmpresa" style="display: none;">
                     <label class="form-label">Permisos del Panel Empresas</label>
-                    <div id="listaPermisos" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                    <div id="listaPermisosEmpresa" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                    </div>
+                </div>
+                <!-- Permisos de Empleado (solo visible si rol=empleado) -->
+                <div id="seccionPermisosEmpleado" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" style="margin-bottom: 12px;">Permisos del Panel Órdenes - Navegación</label>
+                        <div id="listaPermisosEmpleadoNav" style="display: flex; flex-direction: column; gap: 8px;">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label class="form-label" style="margin-bottom: 12px;">Permisos del Panel Órdenes - Acciones</label>
+                        <div id="listaPermisosEmpleadoAcciones" style="display: flex; flex-direction: column; gap: 8px;">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1334,7 +1354,9 @@
         let usuarioAprobarId = null;
         let usuarioAprobarInfo = null;
         let usuarioPermisosId = null;
-        let permisosDisponibles = [];
+        let usuarioPermisosRol = null;
+        let permisosDisponiblesEmpresa = [];
+        let permisosDisponiblesEmpleado = [];
 
         // Variables para base de datos
         let tablasDisponibles = [];
@@ -1536,7 +1558,7 @@
                         const nombreEscapado = (u.nombre_completo || '').replace(/'/g, "\\'");
                         const esClickeable = u.estado === 'aprobado' && u.rol !== 'admin';
                         const estiloFila = esClickeable ? 'cursor: pointer;' : '';
-                        const onclickFila = esClickeable ? `onclick="abrirModalPermisos(${u.id}, '${u.email}', '${nombreEscapado}')"` : '';
+                        const onclickFila = esClickeable ? `onclick="abrirModalPermisos(${u.id}, '${u.email}', '${nombreEscapado}', '${u.rol}')"` : '';
                         return `
                         <tr style="${estiloFila}" ${onclickFila} title="${esClickeable ? 'Clic para gestionar permisos' : ''}">
                             <td>${u.nombre_completo || '-'}</td>
@@ -1579,7 +1601,7 @@
                 `;
             } else if (usuario.estado === 'aprobado') {
                 return `
-                    <button class="btn-action" style="background: #F0F9FF; color: #0369A1;" onclick="abrirModalPermisos(${usuario.id}, '${usuario.email}', '${nombreEscapado}')">Permisos</button>
+                    <button class="btn-action" style="background: #F0F9FF; color: #0369A1;" onclick="abrirModalPermisos(${usuario.id}, '${usuario.email}', '${nombreEscapado}', '${usuario.rol}')">Permisos</button>
                     <button class="btn-action suspend" onclick="suspenderUsuario(${usuario.id})">Suspender</button>
                 `;
             } else if (usuario.estado === 'suspendido' || usuario.estado === 'rechazado') {
@@ -1611,14 +1633,40 @@
             }
         }
 
-        function aprobarUsuario(id, email, nombre) {
+        async function aprobarUsuario(id, email, nombre) {
             usuarioAprobarId = id;
             usuarioAprobarInfo = { email, nombre };
 
+            // Obtener información completa del usuario para conocer su rol
+            let rol = 'empresa'; // Default
+            try {
+                const response = await Auth.fetchAuth(`/api/admin/usuarios?limit=1000`);
+                if (response && response.ok) {
+                    const data = await response.json();
+                    const usuario = data.data.find(u => u.id === id);
+                    if (usuario) {
+                        rol = usuario.rol;
+                    }
+                }
+            } catch (error) {
+                console.error('Error obteniendo rol del usuario:', error);
+            }
+
             document.getElementById('aprobarUsuarioInfo').innerHTML = `
                 <strong>${nombre || 'Sin nombre'}</strong><br>
-                ${email}
+                ${email}<br>
+                <span style="color: var(--text-tertiary); font-size: 12px;">Rol: ${rol}</span>
             `;
+
+            // Mostrar/ocultar campo de empresa según el rol
+            const grupoEmpresa = document.getElementById('grupoEmpresaAprobar');
+            if (rol === 'empresa') {
+                grupoEmpresa.style.display = 'block';
+                document.getElementById('aprobarEmpresaSelect').required = true;
+            } else {
+                grupoEmpresa.style.display = 'none';
+                document.getElementById('aprobarEmpresaSelect').required = false;
+            }
 
             document.getElementById('aprobarEmpresaSelect').value = '';
             document.getElementById('modalAprobar').classList.add('show');
@@ -1626,8 +1674,11 @@
 
         async function confirmarAprobacion() {
             const codEmpresa = document.getElementById('aprobarEmpresaSelect').value;
+            const grupoEmpresa = document.getElementById('grupoEmpresaAprobar');
+            const empresaEsRequerida = grupoEmpresa.style.display !== 'none';
 
-            if (!codEmpresa) {
+            // Solo validar empresa si el campo está visible (usuario es de tipo empresa)
+            if (empresaEsRequerida && !codEmpresa) {
                 mostrarToast('Debes seleccionar una empresa', 'error');
                 return;
             }
@@ -1639,13 +1690,16 @@
             try {
                 const response = await Auth.fetchAuth(`/api/admin/usuarios/${usuarioAprobarId}/aprobar`, {
                     method: 'PUT',
-                    body: JSON.stringify({ codEmpresa })
+                    body: JSON.stringify({ codEmpresa: codEmpresa || undefined })
                 });
                 if (!response) return;
                 const data = await response.json();
 
                 if (data.success) {
-                    mostrarToast(`Usuario aprobado y asignado a ${codEmpresa}`, 'success');
+                    const mensaje = codEmpresa
+                        ? `Usuario aprobado y asignado a ${codEmpresa}`
+                        : 'Usuario aprobado exitosamente';
+                    mostrarToast(mensaje, 'success');
                     cerrarModal('modalAprobar');
                     cargarEstadisticas();
                     cargarPendientes();
@@ -1778,11 +1832,21 @@
         // ========== FUNCIONES DE PERMISOS ==========
         async function cargarPermisosDisponibles() {
             try {
-                const response = await Auth.fetchAuth('/api/admin/permisos/disponibles');
-                if (response && response.ok) {
-                    const data = await response.json();
+                // Cargar permisos de empresa
+                const responseEmpresa = await Auth.fetchAuth('/api/admin/permisos/disponibles?tipo=empresa');
+                if (responseEmpresa && responseEmpresa.ok) {
+                    const data = await responseEmpresa.json();
                     if (data.success) {
-                        permisosDisponibles = data.permisos || [];
+                        permisosDisponiblesEmpresa = data.permisos || [];
+                    }
+                }
+
+                // Cargar permisos de empleado
+                const responseEmpleado = await Auth.fetchAuth('/api/admin/permisos/disponibles?tipo=empleado');
+                if (responseEmpleado && responseEmpleado.ok) {
+                    const data = await responseEmpleado.json();
+                    if (data.success) {
+                        permisosDisponiblesEmpleado = data.permisos || [];
                     }
                 }
             } catch (error) {
@@ -1790,18 +1854,33 @@
             }
         }
 
-        async function abrirModalPermisos(id, email, nombre) {
+        async function abrirModalPermisos(id, email, nombre, rol) {
             usuarioPermisosId = id;
+            usuarioPermisosRol = rol;
 
             document.getElementById('permisosUsuarioInfo').innerHTML = `
                 <strong>${nombre || 'Sin nombre'}</strong><br>
                 <span style="color: var(--text-tertiary);">${email}</span>
             `;
 
-            if (permisosDisponibles.length === 0) {
+            // Mostrar badge de rol
+            const rolBadge = document.getElementById('rolBadge');
+            const rolesConfig = {
+                'empresa': { text: 'Empresa', bg: '#DBEAFE', color: '#1E40AF' },
+                'empleado': { text: 'Empleado', bg: '#FEF3C7', color: '#92400E' },
+                'admin': { text: 'Administrador', bg: '#D1FAE5', color: '#065F46' }
+            };
+            const rolConfig = rolesConfig[rol] || { text: rol, bg: '#E5E7EB', color: '#374151' };
+            rolBadge.textContent = rolConfig.text;
+            rolBadge.style.backgroundColor = rolConfig.bg;
+            rolBadge.style.color = rolConfig.color;
+
+            // Cargar permisos disponibles si no están cargados
+            if (permisosDisponiblesEmpresa.length === 0 || permisosDisponiblesEmpleado.length === 0) {
                 await cargarPermisosDisponibles();
             }
 
+            // Obtener permisos actuales del usuario
             let permisosActuales = [];
             try {
                 const response = await Auth.fetchAuth(`/api/admin/usuarios/${id}/permisos`);
@@ -1815,19 +1894,53 @@
                 console.error('Error cargando permisos del usuario:', error);
             }
 
-            const container = document.getElementById('listaPermisos');
-            container.innerHTML = permisosDisponibles.map(p => `
-                <label style="display: flex; align-items: flex-start; gap: 10px; padding: 10px; background: var(--bg-tertiary); border-radius: 8px; cursor: pointer;">
-                    <input type="checkbox" name="permiso" value="${p.codigo}" ${permisosActuales.includes(p.codigo) ? 'checked' : ''}
-                        style="margin-top: 2px; width: 18px; height: 18px; cursor: pointer;">
-                    <div>
-                        <strong style="font-size: 14px;">${p.nombre}</strong>
-                        <p style="font-size: 12px; color: var(--text-tertiary); margin: 2px 0 0 0;">${p.descripcion}</p>
-                    </div>
-                </label>
-            `).join('');
+            // Mostrar sección según rol
+            const seccionEmpresa = document.getElementById('seccionPermisosEmpresa');
+            const seccionEmpleado = document.getElementById('seccionPermisosEmpleado');
+
+            if (rol === 'empresa') {
+                seccionEmpresa.style.display = 'block';
+                seccionEmpleado.style.display = 'none';
+
+                // Renderizar permisos de empresa
+                const containerEmpresa = document.getElementById('listaPermisosEmpresa');
+                containerEmpresa.innerHTML = permisosDisponiblesEmpresa.map(p => renderPermisoCheckbox(p, permisosActuales)).join('');
+
+            } else if (rol === 'empleado') {
+                seccionEmpresa.style.display = 'none';
+                seccionEmpleado.style.display = 'block';
+
+                // Separar permisos por categoría
+                const permisosNav = permisosDisponiblesEmpleado.filter(p => p.categoria === 'Navegación');
+                const permisosAcciones = permisosDisponiblesEmpleado.filter(p => p.categoria === 'Acciones');
+
+                // Renderizar permisos de navegación
+                const containerNav = document.getElementById('listaPermisosEmpleadoNav');
+                containerNav.innerHTML = permisosNav.map(p => renderPermisoCheckbox(p, permisosActuales)).join('');
+
+                // Renderizar permisos de acciones
+                const containerAcciones = document.getElementById('listaPermisosEmpleadoAcciones');
+                containerAcciones.innerHTML = permisosAcciones.map(p => renderPermisoCheckbox(p, permisosActuales)).join('');
+
+            } else if (rol === 'admin') {
+                seccionEmpresa.style.display = 'none';
+                seccionEmpleado.style.display = 'none';
+            }
 
             document.getElementById('modalPermisos').classList.add('show');
+        }
+
+        function renderPermisoCheckbox(permiso, permisosActuales) {
+            return `
+                <label style="display: flex; align-items: flex-start; gap: 10px; padding: 10px; background: var(--bg-tertiary); border-radius: 8px; cursor: pointer;">
+                    <input type="checkbox" name="permiso" value="${permiso.codigo}" ${permisosActuales.includes(permiso.codigo) ? 'checked' : ''}
+                        style="margin-top: 2px; width: 18px; height: 18px; cursor: pointer;">
+                    <div>
+                        <strong style="font-size: 14px;">${permiso.nombre}</strong>
+                        <p style="font-size: 12px; color: var(--text-tertiary); margin: 2px 0 0 0;">${permiso.descripcion}</p>
+                    </div>
+                </label>
+            `;
         }
 
         async function guardarPermisos() {
@@ -1835,8 +1948,16 @@
             btn.disabled = true;
             btn.textContent = 'Guardando...';
 
-            const checkboxes = document.querySelectorAll('#listaPermisos input[name="permiso"]:checked');
-            const permisos = Array.from(checkboxes).map(cb => cb.value);
+            // Obtener checkboxes de ambas secciones (empresa y empleado)
+            const checkboxesEmpresa = document.querySelectorAll('#listaPermisosEmpresa input[name="permiso"]:checked');
+            const checkboxesEmpleadoNav = document.querySelectorAll('#listaPermisosEmpleadoNav input[name="permiso"]:checked');
+            const checkboxesEmpleadoAcciones = document.querySelectorAll('#listaPermisosEmpleadoAcciones input[name="permiso"]:checked');
+
+            const permisos = [
+                ...Array.from(checkboxesEmpresa).map(cb => cb.value),
+                ...Array.from(checkboxesEmpleadoNav).map(cb => cb.value),
+                ...Array.from(checkboxesEmpleadoAcciones).map(cb => cb.value)
+            ];
 
             try {
                 const response = await Auth.fetchAuth(`/api/admin/usuarios/${usuarioPermisosId}/permisos`, {
