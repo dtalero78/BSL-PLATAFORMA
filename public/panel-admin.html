@@ -1275,9 +1275,18 @@
                     <label class="form-label">Usuario</label>
                     <p id="aprobarUsuarioInfo" style="font-size: 14px; color: var(--text-secondary); margin: 0;"></p>
                 </div>
-                <div class="form-group" id="grupoEmpresaAprobar">
+                <div class="form-group">
+                    <label class="form-label">Asignar rol *</label>
+                    <select class="form-select" id="aprobarRolSelect" required onchange="toggleEmpresaField()">
+                        <option value="">Selecciona un rol...</option>
+                        <option value="empresa">Empresa</option>
+                        <option value="empleado">Empleado</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="form-group" id="grupoEmpresaAprobar" style="display: none;">
                     <label class="form-label">Asignar a empresa *</label>
-                    <select class="form-select" id="aprobarEmpresaSelect" required>
+                    <select class="form-select" id="aprobarEmpresaSelect">
                         <option value="">Selecciona una empresa...</option>
                     </select>
                     <p style="font-size: 12px; color: var(--text-tertiary); margin-top: 6px;">
@@ -1633,53 +1642,51 @@
             }
         }
 
-        async function aprobarUsuario(id, email, nombre) {
+        function toggleEmpresaField() {
+            const rol = document.getElementById('aprobarRolSelect').value;
+            const grupoEmpresa = document.getElementById('grupoEmpresaAprobar');
+            const empresaSelect = document.getElementById('aprobarEmpresaSelect');
+
+            if (rol === 'empresa') {
+                grupoEmpresa.style.display = 'block';
+                empresaSelect.required = true;
+            } else {
+                grupoEmpresa.style.display = 'none';
+                empresaSelect.required = false;
+                empresaSelect.value = ''; // Limpiar selección
+            }
+        }
+
+        function aprobarUsuario(id, email, nombre) {
             usuarioAprobarId = id;
             usuarioAprobarInfo = { email, nombre };
 
-            // Obtener información completa del usuario para conocer su rol
-            let rol = 'empresa'; // Default
-            try {
-                const response = await Auth.fetchAuth(`/api/admin/usuarios?limit=1000`);
-                if (response && response.ok) {
-                    const data = await response.json();
-                    const usuario = data.data.find(u => u.id === id);
-                    if (usuario) {
-                        rol = usuario.rol;
-                    }
-                }
-            } catch (error) {
-                console.error('Error obteniendo rol del usuario:', error);
-            }
-
             document.getElementById('aprobarUsuarioInfo').innerHTML = `
                 <strong>${nombre || 'Sin nombre'}</strong><br>
-                ${email}<br>
-                <span style="color: var(--text-tertiary); font-size: 12px;">Rol: ${rol}</span>
+                ${email}
             `;
 
-            // Mostrar/ocultar campo de empresa según el rol
-            const grupoEmpresa = document.getElementById('grupoEmpresaAprobar');
-            if (rol === 'empresa') {
-                grupoEmpresa.style.display = 'block';
-                document.getElementById('aprobarEmpresaSelect').required = true;
-            } else {
-                grupoEmpresa.style.display = 'none';
-                document.getElementById('aprobarEmpresaSelect').required = false;
-            }
-
+            // Reset form
+            document.getElementById('aprobarRolSelect').value = '';
             document.getElementById('aprobarEmpresaSelect').value = '';
+            document.getElementById('grupoEmpresaAprobar').style.display = 'none';
+
             document.getElementById('modalAprobar').classList.add('show');
         }
 
         async function confirmarAprobacion() {
+            const rol = document.getElementById('aprobarRolSelect').value;
             const codEmpresa = document.getElementById('aprobarEmpresaSelect').value;
-            const grupoEmpresa = document.getElementById('grupoEmpresaAprobar');
-            const empresaEsRequerida = grupoEmpresa.style.display !== 'none';
 
-            // Solo validar empresa si el campo está visible (usuario es de tipo empresa)
-            if (empresaEsRequerida && !codEmpresa) {
-                mostrarToast('Debes seleccionar una empresa', 'error');
+            // Validar que se haya seleccionado un rol
+            if (!rol) {
+                mostrarToast('Debes seleccionar un rol', 'error');
+                return;
+            }
+
+            // Solo validar empresa si el rol es 'empresa'
+            if (rol === 'empresa' && !codEmpresa) {
+                mostrarToast('Debes seleccionar una empresa para usuarios de tipo Empresa', 'error');
                 return;
             }
 
@@ -1690,15 +1697,19 @@
             try {
                 const response = await Auth.fetchAuth(`/api/admin/usuarios/${usuarioAprobarId}/aprobar`, {
                     method: 'PUT',
-                    body: JSON.stringify({ codEmpresa: codEmpresa || undefined })
+                    body: JSON.stringify({
+                        rol: rol,
+                        codEmpresa: codEmpresa || undefined
+                    })
                 });
                 if (!response) return;
                 const data = await response.json();
 
                 if (data.success) {
-                    const mensaje = codEmpresa
-                        ? `Usuario aprobado y asignado a ${codEmpresa}`
-                        : 'Usuario aprobado exitosamente';
+                    let mensaje = `Usuario aprobado como ${rol}`;
+                    if (codEmpresa) {
+                        mensaje += ` y asignado a ${codEmpresa}`;
+                    }
                     mostrarToast(mensaje, 'success');
                     cerrarModal('modalAprobar');
                     cargarEstadisticas();

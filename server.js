@@ -1595,11 +1595,11 @@ app.get('/api/admin/usuarios/pendientes', authMiddleware, requireAdmin, async (r
 app.put('/api/admin/usuarios/:id/aprobar', authMiddleware, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { codEmpresa } = req.body;
+        const { codEmpresa, rol } = req.body;
 
         // Obtener información del usuario a aprobar
         const usuarioResult = await pool.query(
-            'SELECT id, email, nombre_completo, rol FROM usuarios WHERE id = $1 AND estado = \'pendiente\'',
+            'SELECT id, email, nombre_completo FROM usuarios WHERE id = $1 AND estado = \'pendiente\'',
             [id]
         );
 
@@ -1610,10 +1610,16 @@ app.put('/api/admin/usuarios/:id/aprobar', authMiddleware, requireAdmin, async (
             });
         }
 
-        const usuario = usuarioResult.rows[0];
+        // Validar que se envió un rol
+        if (!rol || !['empresa', 'empleado', 'admin'].includes(rol)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Debe especificar un rol válido (empresa, empleado, admin)'
+            });
+        }
 
         // Solo validar empresa si el rol es 'empresa'
-        if (usuario.rol === 'empresa') {
+        if (rol === 'empresa') {
             if (!codEmpresa) {
                 return res.status(400).json({
                     success: false,
@@ -1635,16 +1641,17 @@ app.put('/api/admin/usuarios/:id/aprobar', authMiddleware, requireAdmin, async (
             }
         }
 
-        // Actualizar usuario (asignar empresa solo si se proporcionó)
+        // Actualizar usuario con rol y empresa
         const result = await pool.query(`
             UPDATE usuarios
             SET estado = 'aprobado',
                 fecha_aprobacion = NOW(),
                 aprobado_por = $1,
-                cod_empresa = $2
-            WHERE id = $3
+                rol = $2,
+                cod_empresa = $3
+            WHERE id = $4
             RETURNING id, email, nombre_completo, estado, cod_empresa, rol
-        `, [req.usuario.id, codEmpresa ? codEmpresa.toUpperCase() : null, id]);
+        `, [req.usuario.id, rol, codEmpresa ? codEmpresa.toUpperCase() : null, id]);
 
         const empresaInfo = result.rows[0].cod_empresa ? ` -> ${result.rows[0].cod_empresa}` : '';
         console.log(`✅ Usuario aprobado: ${result.rows[0].email} (${result.rows[0].rol})${empresaInfo} (por ${req.usuario.email})`);
