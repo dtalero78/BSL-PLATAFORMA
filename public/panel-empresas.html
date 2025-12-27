@@ -2703,11 +2703,8 @@
                 if (navNuevaOrden) navNuevaOrden.style.display = 'none';
             }
 
-            // VER_ESTADISTICAS - Ocultar tarjetas de estadísticas
-            if (!tienePermiso('VER_ESTADISTICAS')) {
-                const statsGrid = document.querySelector('.stats-grid');
-                if (statsGrid) statsGrid.style.display = 'none';
-            }
+            // VER_ESTADISTICAS - Siempre visible (no se oculta)
+            // Las estadísticas siempre se muestran para todos los usuarios de empresa
         }
 
         // ========== FUNCIONES DE LOGIN ==========
