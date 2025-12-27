@@ -2886,7 +2886,11 @@
                     : `/api/ordenes?codEmpresa=${encodeURIComponent(codEmpresa)}&limit=${LIMIT_POR_PAGINA}&offset=0`;
 
                 // Primera carga: obtener stats y primera página
-                const response = await fetch(endpoint);
+                const response = await Auth.fetchAuth(endpoint);
+                if (!response) {
+                    mostrarEmpty();
+                    return;
+                }
                 const result = await response.json();
 
                 if (result.success) {
@@ -2932,7 +2936,8 @@
 
             while (offset < totalOrdenes) {
                 try {
-                    const response = await fetch(`${baseEndpoint}?codEmpresa=${encodeURIComponent(codEmpresa)}&limit=${LIMIT_POR_PAGINA}&offset=${offset}`);
+                    const response = await Auth.fetchAuth(`${baseEndpoint}?codEmpresa=${encodeURIComponent(codEmpresa)}&limit=${LIMIT_POR_PAGINA}&offset=${offset}`);
+                    if (!response) break;
                     const result = await response.json();
 
                     if (result.success && result.data) {
