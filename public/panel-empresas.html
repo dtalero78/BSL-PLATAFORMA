@@ -3869,6 +3869,14 @@
                     let tagsCompletados = [];
                     let tagsPendientes = [];
 
+                    // Mapeo de nombre de prueba a tipo de prueba para el backend
+                    const tiposPrueba = {
+                        'Formulario': 'formulario',
+                        'Pruebas ADC': 'adc',
+                        'Audiometría': 'audiometria',
+                        'Visual': 'visiometria'
+                    };
+
                     // Formulario
                     if (p.formulario.completado) {
                         tagsCompletados.push('Formulario');
@@ -3901,9 +3909,20 @@
                         `<span style="display: inline-block; padding: 6px 12px; background: #D1FAE5; color: #065F46; border-radius: 6px; font-size: 13px; margin: 4px;">${tag} ✓</span>`
                     ).join('');
 
-                    const tagsPendientesHTML = tagsPendientes.map(tag =>
-                        `<span style="display: inline-block; padding: 6px 12px; background: #FEF3C7; color: #92400E; border-radius: 6px; font-size: 13px; margin: 4px;">${tag} ⏳</span>`
-                    ).join('');
+                    // Si el codEmpresa es Sitel, hacer los tags pendientes clickeables
+                    const esSitel = paciente.codEmpresa === 'Sitel';
+                    const ordenId = paciente._id;
+                    const tagsPendientesHTML = tagsPendientes.map(tag => {
+                        if (esSitel) {
+                            return `<span class="prueba-tag-pendiente" data-tipo="${tiposPrueba[tag]}" data-orden="${ordenId}" onclick="enviarLinkPrueba(this)" style="display: inline-block; padding: 6px 12px; background: #FEF3C7; color: #92400E; border-radius: 6px; font-size: 13px; margin: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#FDE68A'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#FEF3C7'; this.style.transform='translateY(0)'">${tag} ⏳</span>`;
+                        } else {
+                            return `<span style="display: inline-block; padding: 6px 12px; background: #FEF3C7; color: #92400E; border-radius: 6px; font-size: 13px; margin: 4px;">${tag} ⏳</span>`;
+                        }
+                    }).join('');
+
+                    const hintText = esSitel && tagsPendientes.length > 0
+                        ? `<div class="detail-field-label" style="color: #F59E0B; margin-top: 12px;">Pendientes <span style="font-size: 11px; font-weight: 400; color: #6B7280;">(clic para enviar link por WhatsApp)</span></div>`
+                        : `<div class="detail-field-label" style="color: #F59E0B; margin-top: 12px;">Pendientes</div>`;
 
                     return `
                     <div class="detail-card" style="background: #F9FAFB; border: 1px solid #E5E7EB;">
@@ -3914,7 +3933,7 @@
                             <div class="detail-field-value">${tagsCompletadosHTML}</div>
                             ` : ''}
                             ${tagsPendientes.length > 0 ? `
-                            <div class="detail-field-label" style="color: #F59E0B; margin-top: 12px;">Pendientes</div>
+                            ${hintText}
                             <div class="detail-field-value">${tagsPendientesHTML}</div>
                             ` : ''}
                             ${tagsCompletados.length === 0 && tagsPendientes.length === 0 ? `
@@ -5240,6 +5259,62 @@
         }
 
         // ==================== FIN FUNCIONES SECCIÓN ESTADÍSTICAS ====================
+
+        // ========== ENVIAR LINK PRUEBA POR WHATSAPP ==========
+        async function enviarLinkPrueba(tagElement) {
+            const tipoPrueba = tagElement.dataset.tipo;
+            const ordenId = tagElement.dataset.orden;
+            const nombrePrueba = tagElement.textContent;
+
+            // Confirmación
+            if (!confirm(`¿Enviar link de "${nombrePrueba.trim()}" por WhatsApp al paciente?`)) {
+                return;
+            }
+
+            // Mostrar estado de carga en el tag
+            const textoOriginal = tagElement.textContent;
+            tagElement.textContent = 'Enviando...';
+            tagElement.style.opacity = '0.6';
+            tagElement.style.pointerEvents = 'none';
+
+            try {
+                const response = await fetch('/api/enviar-link-prueba', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ordenId, tipoPrueba })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Mostrar éxito temporalmente
+                    tagElement.textContent = '✓ Enviado';
+                    tagElement.style.background = '#D1FAE5';
+                    tagElement.style.color = '#065F46';
+
+                    setTimeout(() => {
+                        tagElement.textContent = textoOriginal;
+                        tagElement.style.background = '#FEF3C7';
+                        tagElement.style.color = '#92400E';
+                        tagElement.style.opacity = '1';
+                        tagElement.style.pointerEvents = 'auto';
+                    }, 2000);
+                } else {
+                    alert('Error: ' + (result.message || 'No se pudo enviar el mensaje'));
+                    tagElement.textContent = textoOriginal;
+                    tagElement.style.opacity = '1';
+                    tagElement.style.pointerEvents = 'auto';
+                }
+            } catch (error) {
+                console.error('Error enviando link:', error);
+                alert('Error al enviar el mensaje. Intenta de nuevo.');
+                tagElement.textContent = textoOriginal;
+                tagElement.style.opacity = '1';
+                tagElement.style.pointerEvents = 'auto';
+            }
+        }
     </script>
 
     <!-- Contenedor oculto para iframes de descarga -->
