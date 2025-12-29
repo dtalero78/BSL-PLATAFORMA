@@ -3451,6 +3451,7 @@
                     </th>
                     <th>Paciente</th>
                     <th>Cédula</th>
+                    <th>Centro de Costo</th>
                     <th>Fecha Programada</th>
                     <th>Fecha Consulta</th>
                     <th>Estado</th>
@@ -3513,6 +3514,9 @@
                     const aprobacionColor = estadoAprobacion === 'Aprobado' ? '#10B981' : (estadoAprobacion === 'No Aprobado' ? '#EF4444' : '#F59E0B');
                     const aprobacionBadge = `<span style="display: inline-block; padding: 6px 12px; background: ${aprobacionColor}20; color: ${aprobacionColor}; border-radius: 6px; font-size: 13px; font-weight: 600;">${estadoAprobacion}</span>`;
 
+                    // Centro de costo
+                    const centroCosto = orden.centro_de_costo || '-';
+
                     return `
                         <tr>
                             <td style="text-align: center;" onclick="event.stopPropagation();">
@@ -3527,6 +3531,7 @@
                                 </div>
                             </td>
                             <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;">${cedula}</td>
+                            <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;">${centroCosto}</td>
                             <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;">${fechaProgramada}</td>
                             <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;">${fechaConsulta}</td>
                             <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;"><span class="status-badge ${statusClass}"><span class="status-dot"></span>${estado}</span></td>
