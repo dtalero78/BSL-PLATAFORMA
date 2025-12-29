@@ -3453,6 +3453,7 @@
                     <th>Cédula</th>
                     <th>Fecha Programada</th>
                     <th>Fecha Consulta</th>
+                    <th>Estado</th>
                     <th>Exámenes Faltantes</th>
                     <th>Aprobación SST</th>
                     <th style="width: 50px; text-align: center;">Descargar</th>
@@ -3504,11 +3505,24 @@
                     const initials = nombre.split(' ').slice(0, 2).map(n => n.charAt(0)).join('').toUpperCase() || '?';
                     const hasFoto = orden.foto_url ? 'has-photo' : '';
 
-                    // Obtener exámenes faltantes
-                    const examenesFaltantes = obtenerExamenesFaltantes(orden);
-                    const examenesTags = examenesFaltantes.length > 0
-                        ? examenesFaltantes.map(ex => `<span style="display: inline-block; padding: 4px 8px; background: #FEF3C7; color: #92400E; border-radius: 4px; font-size: 11px; margin: 2px;">${ex}</span>`).join(' ')
-                        : '<span style="color: #10B981; font-weight: 500;">✓ Completo</span>';
+                    // Estado de atención
+                    const estado = orden.atendido || 'PENDIENTE';
+                    const statusClass = estado === 'ATENDIDO' ? 'atendido' : (estado === 'EN PROCESO' ? 'proceso' : 'pendiente');
+
+                    // Obtener exámenes pendientes según el campo examenes
+                    const examenesProgramados = orden.examenes || '';
+                    let examenesTags = '';
+
+                    if (orden.atendido === 'ATENDIDO') {
+                        // Si está atendido, mostrar que debe ver detalles para estado exacto
+                        examenesTags = '<span style="color: #3B82F6; font-size: 12px; cursor: pointer;" title="Ver detalles">📋 Ver detalles</span>';
+                    } else {
+                        // Si no está atendido, mostrar exámenes programados
+                        const examenesFaltantes = obtenerExamenesFaltantes(orden);
+                        examenesTags = examenesFaltantes.length > 0
+                            ? examenesFaltantes.map(ex => `<span style="display: inline-block; padding: 4px 8px; background: #FEF3C7; color: #92400E; border-radius: 4px; font-size: 11px; margin: 2px;">${ex}</span>`).join(' ')
+                            : '<span style="color: #F59E0B; font-weight: 500;">⏳ En proceso</span>';
+                    }
 
                     // Obtener estado de aprobación
                     const estadoAprobacion = obtenerEstadoAprobacion(orden.aprobacion);
@@ -3531,6 +3545,7 @@
                             <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;">${cedula}</td>
                             <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;">${fechaProgramada}</td>
                             <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;">${fechaConsulta}</td>
+                            <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;"><span class="status-badge ${statusClass}"><span class="status-dot"></span>${estado}</span></td>
                             <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;">${examenesTags}</td>
                             <td onclick="abrirModalDetalles('${orden._id}')" style="cursor: pointer;">${aprobacionBadge}</td>
                             <td style="text-align: center;" onclick="event.stopPropagation();">
@@ -3773,11 +3788,23 @@
         }
 
         // ========== MODAL DETALLES ==========
-        function abrirModalDetalles(id) {
+        async function abrirModalDetalles(id) {
             const paciente = allData.find(p => p._id === id) || filteredData.find(p => p._id === id);
             if (!paciente) return;
 
             pacienteActual = paciente;
+
+            // Cargar estado de pruebas desde el backend
+            let estadoPruebas = null;
+            try {
+                const estadoResponse = await fetch(`/api/estado-pruebas/${id}`);
+                const estadoResult = await estadoResponse.json();
+                if (estadoResult.success) {
+                    estadoPruebas = estadoResult.data;
+                }
+            } catch (e) {
+                console.log('No se pudo cargar estado de pruebas:', e);
+            }
             const nombre = `${paciente.primerNombre || ''} ${paciente.segundoNombre || ''} ${paciente.primerApellido || ''} ${paciente.segundoApellido || ''}`.trim();
             const initials = nombre.split(' ').slice(0, 2).map(n => n.charAt(0)).join('').toUpperCase() || '?';
             const estado = paciente.atendido || 'PENDIENTE';
@@ -3848,6 +3875,67 @@
                         <div class="detail-field-value">${paciente.examenes || '-'}</div>
                     </div>
                 </div>
+
+                ${estadoPruebas && estadoPruebas.pruebas ? (() => {
+                    const p = estadoPruebas.pruebas;
+                    let tagsCompletados = [];
+                    let tagsPendientes = [];
+
+                    // Formulario
+                    if (p.formulario.completado) {
+                        tagsCompletados.push('Formulario');
+                    } else if (p.formulario.requerido) {
+                        tagsPendientes.push('Formulario');
+                    }
+
+                    // Pruebas ADC
+                    if (p.adc.completado) {
+                        tagsCompletados.push('Pruebas ADC');
+                    } else if (p.adc.requerido) {
+                        tagsPendientes.push('Pruebas ADC');
+                    }
+
+                    // Audiometría
+                    if (p.audiometria.completado) {
+                        tagsCompletados.push('Audiometría');
+                    } else if (p.audiometria.requerido) {
+                        tagsPendientes.push('Audiometría');
+                    }
+
+                    // Visual (Visiometría)
+                    if (p.visiometria.completado) {
+                        tagsCompletados.push('Visual');
+                    } else if (p.visiometria.requerido) {
+                        tagsPendientes.push('Visual');
+                    }
+
+                    const tagsCompletadosHTML = tagsCompletados.map(tag =>
+                        `<span style="display: inline-block; padding: 6px 12px; background: #D1FAE5; color: #065F46; border-radius: 6px; font-size: 13px; margin: 4px;">${tag} ✓</span>`
+                    ).join('');
+
+                    const tagsPendientesHTML = tagsPendientes.map(tag =>
+                        `<span style="display: inline-block; padding: 6px 12px; background: #FEF3C7; color: #92400E; border-radius: 6px; font-size: 13px; margin: 4px;">${tag} ⏳</span>`
+                    ).join('');
+
+                    return `
+                    <div class="detail-card" style="background: #F9FAFB; border: 1px solid #E5E7EB;">
+                        <div class="detail-card-title" style="color: #374151;">Estado de Pruebas</div>
+                        <div class="detail-field">
+                            ${tagsCompletados.length > 0 ? `
+                            <div class="detail-field-label" style="color: #10B981;">Completados</div>
+                            <div class="detail-field-value">${tagsCompletadosHTML}</div>
+                            ` : ''}
+                            ${tagsPendientes.length > 0 ? `
+                            <div class="detail-field-label" style="color: #F59E0B; margin-top: 12px;">Pendientes</div>
+                            <div class="detail-field-value">${tagsPendientesHTML}</div>
+                            ` : ''}
+                            ${tagsCompletados.length === 0 && tagsPendientes.length === 0 ? `
+                            <div class="detail-field-value" style="color: #6B7280;">No hay pruebas registradas</div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    `;
+                })() : ''}
 
                 ${(paciente.atendido === 'ATENDIDO' && tienePermiso('VER_RESULTADOS_MEDICOS')) ? `
                 <div class="detail-card">
@@ -3970,6 +4058,34 @@
 
                     const ansiedad = formatResultado(data.ansiedad);
                     const depresion = formatResultado(data.depresion);
+                    const congruencia = data.congruencia;
+
+                    let congruenciaHTML = '';
+                    if (congruencia && typeof congruencia === 'object' && congruencia !== 'NO REALIZÓ PRUEBA') {
+                        congruenciaHTML = `
+                            <div style="padding: 12px; background: #fff; border-radius: 8px;">
+                                <div style="font-weight: 600; color: #334155; margin-bottom: 8px;">Congruencia</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
+                                    <div>
+                                        <span style="color: #64748B;">Familia:</span>
+                                        <span style="font-weight: 600; color: #0369A1; margin-left: 4px;">${congruencia.CongruenciaFamilia || '-'}</span>
+                                    </div>
+                                    <div>
+                                        <span style="color: #64748B;">Relación:</span>
+                                        <span style="font-weight: 600; color: #0369A1; margin-left: 4px;">${congruencia.CongruenciaRelacion || '-'}</span>
+                                    </div>
+                                    <div>
+                                        <span style="color: #64748B;">Autocuidado:</span>
+                                        <span style="font-weight: 600; color: #0369A1; margin-left: 4px;">${congruencia.CongruenciaAutocuidado || '-'}</span>
+                                    </div>
+                                    <div>
+                                        <span style="color: #64748B;">Ocupacional:</span>
+                                        <span style="font-weight: 600; color: #0369A1; margin-left: 4px;">${congruencia.CongruenciaOcupacional || '-'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
 
                     container.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #fff; border-radius: 8px;">
@@ -3986,6 +4102,7 @@
                             </div>
                             <div style="font-size: 24px; font-weight: 700; color: #0369A1;">${depresion.valor || '-'}</div>
                         </div>
+                        ${congruenciaHTML}
                     `;
                 } else {
                     container.innerHTML = '<div style="text-align: center; color: #EF4444;">Error al cargar resultados</div>';

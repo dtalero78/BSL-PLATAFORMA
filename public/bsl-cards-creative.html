@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BSL - Patient Cards Creativos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Medical Vital Palette - Inspirado en monitores médicos */
+            --vital-green: #10B981;
+            --vital-cyan: #06B6D4;
+            --vital-amber: #F59E0B;
+            --vital-red: #EF4444;
+            --vital-purple: #8B5CF6;
+
+            /* Base colors */
+            --bg-primary: #FAFAFA;
+            --bg-card: #FFFFFF;
+            --text-primary: #171717;
+            --text-secondary: #525252;
+            --text-muted: #A3A3A3;
+            --border: #E5E5E5;
+
+            /* Gradients vitales */
+            --gradient-completed: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            --gradient-pending: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+            --gradient-urgent: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Figtree', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 48px 24px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            font-size: 40px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #171717 0%, #525252 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 48px;
+            font-weight: 500;
+        }
+
+        /* ============================================
+           CARDS GRID - Layout dinámico
+           ============================================ */
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 32px;
+            margin-bottom: 64px;
+        }
+
+        /* ============================================
+           PATIENT CARD - Diseño asimétrico con "vital sign"
+           ============================================ */
+
+        .patient-card {
+            position: relative;
+            background: var(--bg-card);
+            border-radius: 24px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+        }
+
+        .patient-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Borde lateral con gradiente según estado */
+        .patient-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            background: var(--card-gradient);
+            z-index: 1;
+        }
+
+        .patient-card[data-status="completed"] {
+            --card-gradient: var(--gradient-completed);
+            --card-color: var(--vital-green);
+        }
+
+        .patient-card[data-status="pending"] {
+            --card-gradient: var(--gradient-pending);
+            --card-color: var(--vital-amber);
+        }
+
+        .patient-card[data-status="urgent"] {
+            --card-gradient: var(--gradient-urgent);
+            --card-color: var(--vital-red);
+        }
+
+        /* Header del card con diseño diagonal */
+        .card-header {
+            position: relative;
+            padding: 24px 28px 20px 34px;
+            background: linear-gradient(
+                165deg,
+                rgba(0, 0, 0, 0.01) 0%,
+                rgba(0, 0, 0, 0.02) 100%
+            );
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .card-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(
+                circle at top right,
+                var(--card-color),
+                transparent 70%
+            );
+            opacity: 0.08;
+            pointer-events: none;
+        }
+
+        /* Status badge flotante en esquina superior derecha */
+        .status-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: var(--card-gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 2;
+        }
+
+        /* Patient Avatar - Diseño hexagonal */
+        .patient-avatar {
+            width: 72px;
+            height: 72px;
+            background: var(--card-gradient);
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .patient-card:hover .patient-avatar {
+            transform: rotate(15deg) scale(1.1);
+        }
+
+        .patient-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }
+
+        .patient-id {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.05em;
+        }
+
+        /* Card Body - Información organizada */
+        .card-body {
+            padding: 24px 28px 24px 34px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .patient-card:hover .info-icon {
+            background: var(--card-color);
+            transform: rotate(5deg);
+        }
+
+        .info-icon svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--text-secondary);
+            transition: stroke 0.3s ease;
+        }
+
+        .patient-card:hover .info-icon svg {
+            stroke: white;
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .info-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            margin-bottom: 2px;
+        }
+
+        .info-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Exam type tag especial */
+        .exam-type-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.02));
+            border: 1.5px solid rgba(0, 0, 0, 0.08);
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .patient-card:hover .exam-type-tag {
+            background: var(--card-color);
+            border-color: var(--card-color);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .exam-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .exam-icon svg {
+            width: 12px;
+            height: 12px;
+            stroke: currentColor;
+            stroke-width: 2.5;
+        }
+
+        /* Card Footer con acción */
+        .card-footer {
+            padding: 20px 28px 24px 34px;
+            border-top: 1px solid rgba(0, 0, 0, 0.04);
+            display: flex;
+            gap: 12px;
+        }
+
+        .card-action-btn {
+            flex: 1;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.02));
+            border: none;
+            border-radius: 14px;
+            font-family: 'Figtree', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--card-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card-action-btn:hover::before {
+            opacity: 1;
+        }
+
+        .card-action-btn span {
+            position: relative;
+            z-index: 1;
+            transition: color 0.3s ease;
+        }
+
+        .card-action-btn:hover span {
+            color: white;
+        }
+
+        .card-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Botón secundario de opciones */
+        .card-options-btn {
+            padding: 14px 18px;
+            background: rgba(0, 0, 0, 0.03);
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .card-options-btn:hover {
+            background: var(--card-color);
+            transform: rotate(90deg);
+        }
+
+        .card-options-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-secondary);
+            transition: stroke 0.3s ease;
+        }
+
+        .card-options-btn:hover svg {
+            stroke: white;
+        }
+
+        /* ============================================
+           VITAL SIGN LINE - Línea decorativa animada
+           ============================================ */
+
+        .vital-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .patient-card:hover .vital-line {
+            opacity: 1;
+        }
+
+        .vital-line svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Animación de la línea vital según estado */
+        @keyframes pulse-line {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(-10px);
+            }
+        }
+
+        .patient-card[data-status="completed"] .vital-line path {
+            stroke: var(--vital-green);
+            animation: pulse-line 3s ease-in-out infinite;
+        }
+
+        .patient-card[data-status="pending"] .vital-line path {
+            stroke: var(--vital-amber);
+            animation: pulse-line 2s ease-in-out infinite;
+        }
+
+        .patient-card[data-status="urgent"] .vital-line path {
+            stroke: var(--vital-red);
+            animation: pulse-line 1s ease-in-out infinite;
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .page-title {
+                font-size: 32px;
+            }
+
+            .patient-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+
+            .patient-name {
+                font-size: 20px;
+            }
+        }
+
+        /* ============================================
+           EMPTY STATE
+           ============================================ */
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 24px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================
+           LOADING STATE
+           ============================================ */
+
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        .skeleton-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 24px;
+            animation: shimmer 2s infinite linear;
+            background: linear-gradient(
+                90deg,
+                #f0f0f0 25%,
+                #e0e0e0 50%,
+                #f0f0f0 75%
+            );
+            background-size: 1000px 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">Órdenes de Pacientes</h1>
+        <p class="page-subtitle">Vista de tarjetas con diseño "Clinical Vitality"</p>
+
+        <div class="cards-grid" id="cardsGrid">
+
+            <!-- CARD 1: COMPLETED -->
+            <div class="patient-card" data-status="completed">
+                <div class="card-header">
+                    <span class="status-badge">Atendido</span>
+                    <div class="patient-avatar">JP</div>
+                    <h3 class="patient-name">Juan Pérez García</h3>
+                    <p class="patient-id">ID: 1234567890</p>
+                </div>
+
+                <div class="card-body">
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Empresa</div>
+                            <div class="info-value">SANITHELP-JJ</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Fecha y Hora</div>
+                            <div class="info-value">27 Dic 2024, 14:30</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="exam-type-tag">
+                            <span class="exam-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M9 18V5l12-2v13"></path>
+                                    <circle cx="6" cy="18" r="3"></circle>
+                                    <circle cx="18" cy="16" r="3"></circle>
+                                </svg>
+                            </span>
+                            Audiometría
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <button class="card-action-btn">
+                        <span>Ver Detalles</span>
+                    </button>
+                    <button class="card-options-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Vital Sign Line -->
+                <div class="vital-line">
+                    <svg viewBox="0 0 200 4" preserveAspectRatio="none">
+                        <path d="M0,2 L40,2 L45,0 L50,4 L55,2 L200,2" fill="none" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- CARD 2: PENDING -->
+            <div class="patient-card" data-status="pending">
+                <div class="card-header">
+                    <span class="status-badge">Pendiente</span>
+                    <div class="patient-avatar">MG</div>
+                    <h3 class="patient-name">María González López</h3>
+                    <p class="patient-id">ID: 9876543210</p>
+                </div>
+
+                <div class="card-body">
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Empresa</div>
+                            <div class="info-value">ACME Corporation</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Fecha y Hora</div>
+                            <div class="info-value">27 Dic 2024, 15:00</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="exam-type-tag">
+                            <span class="exam-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </span>
+                            Visiometría
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <button class="card-action-btn">
+                        <span>Ver Detalles</span>
+                    </button>
+                    <button class="card-options-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="vital-line">
+                    <svg viewBox="0 0 200 4" preserveAspectRatio="none">
+                        <path d="M0,2 Q20,0 40,2 T80,2 Q100,3 120,2 T200,2" fill="none" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- CARD 3: URGENT -->
+            <div class="patient-card" data-status="urgent">
+                <div class="card-header">
+                    <span class="status-badge">Urgente</span>
+                    <div class="patient-avatar">AL</div>
+                    <h3 class="patient-name">Ana López Martínez</h3>
+                    <p class="patient-id">ID: 1111222233</p>
+                </div>
+
+                <div class="card-body">
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Empresa</div>
+                            <div class="info-value">SANITHELP-JJ</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Fecha y Hora</div>
+                            <div class="info-value">27 Dic 2024, 09:00</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="exam-type-tag">
+                            <span class="exam-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                                </svg>
+                            </span>
+                            Psicológico
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <button class="card-action-btn">
+                        <span>Ver Detalles</span>
+                    </button>
+                    <button class="card-options-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="vital-line">
+                    <svg viewBox="0 0 200 4" preserveAspectRatio="none">
+                        <path d="M0,2 L30,2 L33,0 L36,4 L39,2 L60,2 L63,0 L66,4 L69,2 L90,2 L93,0 L96,4 L99,2 L120,2 L123,0 L126,4 L129,2 L150,2 L153,0 L156,4 L159,2 L200,2" fill="none" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- CARD 4: COMPLETED (Otro paciente) -->
+            <div class="patient-card" data-status="completed">
+                <div class="card-header">
+                    <span class="status-badge">Atendido</span>
+                    <div class="patient-avatar">CR</div>
+                    <h3 class="patient-name">Carlos Rodríguez</h3>
+                    <p class="patient-id">ID: 5555555555</p>
+                </div>
+
+                <div class="card-body">
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Empresa</div>
+                            <div class="info-value">TechCorp SA</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Fecha y Hora</div>
+                            <div class="info-value">27 Dic 2024, 11:45</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="exam-type-tag">
+                            <span class="exam-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                                </svg>
+                            </span>
+                            Psicológico
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <button class="card-action-btn">
+                        <span>Ver Detalles</span>
+                    </button>
+                    <button class="card-options-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="vital-line">
+                    <svg viewBox="0 0 200 4" preserveAspectRatio="none">
+                        <path d="M0,2 L40,2 L45,0 L50,4 L55,2 L200,2" fill="none" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- CARD 5: PENDING -->
+            <div class="patient-card" data-status="pending">
+                <div class="card-header">
+                    <span class="status-badge">Pendiente</span>
+                    <div class="patient-avatar">DS</div>
+                    <h3 class="patient-name">Diego Sánchez Cruz</h3>
+                    <p class="patient-id">ID: 7777888899</p>
+                </div>
+
+                <div class="card-body">
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Empresa</div>
+                            <div class="info-value">Global Industries</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Fecha y Hora</div>
+                            <div class="info-value">26 Dic 2024, 16:30</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="exam-type-tag">
+                            <span class="exam-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M9 18V5l12-2v13"></path>
+                                    <circle cx="6" cy="18" r="3"></circle>
+                                    <circle cx="18" cy="16" r="3"></circle>
+                                </svg>
+                            </span>
+                            Audiometría
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <button class="card-action-btn">
+                        <span>Ver Detalles</span>
+                    </button>
+                    <button class="card-options-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="vital-line">
+                    <svg viewBox="0 0 200 4" preserveAspectRatio="none">
+                        <path d="M0,2 Q20,0 40,2 T80,2 Q100,3 120,2 T200,2" fill="none" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- CARD 6: COMPLETED -->
+            <div class="patient-card" data-status="completed">
+                <div class="card-header">
+                    <span class="status-badge">Atendido</span>
+                    <div class="patient-avatar">LM</div>
+                    <h3 class="patient-name">Laura Martín Silva</h3>
+                    <p class="patient-id">ID: 4444333322</p>
+                </div>
+
+                <div class="card-body">
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Empresa</div>
+                            <div class="info-value">SANITHELP-JJ</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Fecha y Hora</div>
+                            <div class="info-value">26 Dic 2024, 10:15</div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="exam-type-tag">
+                            <span class="exam-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </span>
+                            Visiometría
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <button class="card-action-btn">
+                        <span>Ver Detalles</span>
+                    </button>
+                    <button class="card-options-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="vital-line">
+                    <svg viewBox="0 0 200 4" preserveAspectRatio="none">
+                        <path d="M0,2 L40,2 L45,0 L50,4 L55,2 L200,2" fill="none" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Función para renderizar cards desde datos reales
+        function renderPatientCard(data) {
+            const statusMap = {
+                'ATENDIDO': 'completed',
+                'PENDIENTE': 'pending',
+                'URGENTE': 'urgent'
+            };
+
+            const examIconMap = {
+                'Audiometría': `<path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle>`,
+                'Visiometría': `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>`,
+                'Psicológico': `<path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>`
+            };
+
+            const initials = (data.nombre || '').split(' ')
+                .map(n => n[0])
+                .join('')
+                .toUpperCase()
+                .substring(0, 2);
+
+            const status = statusMap[data.estado] || 'pending';
+            const examIcon = examIconMap[data.tipoExamen] || examIconMap['Audiometría'];
+
+            return `
+                <div class="patient-card" data-status="${status}">
+                    <div class="card-header">
+                        <span class="status-badge">${data.estado}</span>
+                        <div class="patient-avatar">${initials}</div>
+                        <h3 class="patient-name">${data.nombre}</h3>
+                        <p class="patient-id">ID: ${data.numeroId}</p>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="info-row">
+                            <div class="info-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-label">Empresa</div>
+                                <div class="info-value">${data.empresa}</div>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-label">Fecha y Hora</div>
+                                <div class="info-value">${data.fechaAtencion}</div>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <span class="exam-type-tag">
+                                <span class="exam-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        ${examIcon}
+                                    </svg>
+                                </span>
+                                ${data.tipoExamen}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <button class="card-action-btn" onclick="verDetalles('${data._id}')">
+                            <span>Ver Detalles</span>
+                        </button>
+                        <button class="card-options-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <circle cx="12" cy="5" r="1"></circle>
+                                <circle cx="12" cy="19" r="1"></circle>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="vital-line">
+                        <svg viewBox="0 0 200 4" preserveAspectRatio="none">
+                            <path d="M0,2 L40,2 L45,0 L50,4 L55,2 L200,2" fill="none" stroke-width="2"/>
+                        </svg>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Función para cargar datos desde tu API
+        async function cargarOrdenes() {
+            try {
+                // Aquí conectarías con tu endpoint real
+                // const response = await fetch('/api/ordenes');
+                // const data = await response.json();
+
+                // Por ahora mostramos los cards de ejemplo
+                console.log('Cards renderizados desde el HTML');
+            } catch (error) {
+                console.error('Error cargando órdenes:', error);
+            }
+        }
+
+        // Función para ver detalles
+        function verDetalles(id) {
+            console.log('Ver detalles de orden:', id);
+            // Aquí abrirías tu modal de detalles
+        }
+
+        // Event listeners para los botones
+        document.addEventListener('DOMContentLoaded', () => {
+            const actionButtons = document.querySelectorAll('.card-action-btn');
+            actionButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    console.log('Botón clickeado:', e.target.closest('.patient-card').querySelector('.patient-name').textContent);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

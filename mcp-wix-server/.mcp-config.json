@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "bsl-wix": {
+      "command": "node",
+      "args": ["/Users/danieltalero/BSL-PLATAFORMA/BSL-PLATAFORMA/mcp-wix-server/index.js"],
+      "env": {}
+    }
+  }
+}

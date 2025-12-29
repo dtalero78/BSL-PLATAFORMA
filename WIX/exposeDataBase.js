@@ -825,22 +825,34 @@ export async function obtenerFormulariosPorIds(ids) {
  * @param {number} limit - Número de registros a obtener (máx 1000)
  * @returns {Promise<Object>} - items, totalCount, hasMore
  */
-export async function exportarTodaHistoriaClinica(skip = 0, limit = 1000) {
+export async function exportarTodaHistoriaClinica(skip = 0, limit = 1000, desde = null) {
     try {
-        console.log(`📤 Exportando HistoriaClinica - skip: ${skip}, limit: ${limit}`);
+        console.log(`📤 Exportando HistoriaClinica - skip: ${skip}, limit: ${limit}, desde: ${desde || 'todos'}`);
 
         // Limitar a máximo 1000 por restricción de Wix
         const pageSize = Math.min(limit, 1000);
 
-        // Primero obtenemos el total count
-        const countResult = await wixData.query("HistoriaClinica")
-            .limit(1)
-            .find();
+        // Query base
+        let query = wixData.query("HistoriaClinica");
 
+        // Filtrar por fecha si se especifica
+        if (desde) {
+            const fechaDesde = new Date(desde);
+            query = query.ge("_createdDate", fechaDesde);
+        }
+
+        // Primero obtenemos el total count
+        const countResult = await query.limit(1).find();
         const totalCount = countResult.totalCount;
 
         // Luego obtenemos los items con paginación
-        const result = await wixData.query("HistoriaClinica")
+        let dataQuery = wixData.query("HistoriaClinica");
+        if (desde) {
+            const fechaDesde = new Date(desde);
+            dataQuery = dataQuery.ge("_createdDate", fechaDesde);
+        }
+
+        const result = await dataQuery
             .ascending("_createdDate") // Ordenar para consistencia
             .skip(skip)
             .limit(pageSize)
@@ -872,24 +884,37 @@ export async function exportarTodaHistoriaClinica(skip = 0, limit = 1000) {
  * Exporta todos los registros de FORMULARIO con paginación
  * @param {number} skip - Número de registros a saltar
  * @param {number} limit - Número de registros a obtener (máx 1000)
+ * @param {string} desde - Fecha mínima de _createdDate (opcional, formato YYYY-MM-DD)
  * @returns {Promise<Object>} - items, totalCount, hasMore
  */
-export async function exportarTodoFormulario(skip = 0, limit = 1000) {
+export async function exportarTodoFormulario(skip = 0, limit = 1000, desde = null) {
     try {
-        console.log(`📤 Exportando FORMULARIO - skip: ${skip}, limit: ${limit}`);
+        console.log(`📤 Exportando FORMULARIO - skip: ${skip}, limit: ${limit}, desde: ${desde || 'todos'}`);
 
         // Limitar a máximo 1000 por restricción de Wix
         const pageSize = Math.min(limit, 1000);
 
-        // Primero obtenemos el total count
-        const countResult = await wixData.query("FORMULARIO")
-            .limit(1)
-            .find();
+        // Query base
+        let query = wixData.query("FORMULARIO");
 
+        // Filtrar por fecha si se especifica
+        if (desde) {
+            const fechaDesde = new Date(desde);
+            query = query.ge("_createdDate", fechaDesde);
+        }
+
+        // Primero obtenemos el total count
+        const countResult = await query.limit(1).find();
         const totalCount = countResult.totalCount;
 
         // Luego obtenemos los items con paginación
-        const result = await wixData.query("FORMULARIO")
+        let dataQuery = wixData.query("FORMULARIO");
+        if (desde) {
+            const fechaDesde = new Date(desde);
+            dataQuery = dataQuery.ge("_createdDate", fechaDesde);
+        }
+
+        const result = await dataQuery
             .ascending("_createdDate") // Ordenar para consistencia
             .skip(skip)
             .limit(pageSize)

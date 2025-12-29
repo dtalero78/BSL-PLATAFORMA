@@ -4,3 +4,15 @@ package-lock.json
 *.log
 .DS_Store
 .cache/
+.mcp.json
+
+# Scripts de migración con credenciales
+importar-empresas.js
+check-fields.js
+check-mapping.js
+migracion-formulario.js
+migracion-historia-clinica.js
+sincronizar-datos-medicos.js
+
+# Datos sensibles
+empresas.csv

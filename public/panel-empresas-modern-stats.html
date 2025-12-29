@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BSL - Modern Statistics Component</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Tipografía distintiva: DM Serif Display + JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Medical Color Palette - Inspirado en equipos médicos */
+            --medical-blue: #0A4D68;
+            --surgical-green: #05C168;
+            --clinical-cyan: #088395;
+            --diagnostic-amber: #FFA41B;
+            --alert-red: #DC2626;
+
+            /* Neutrals con calidez */
+            --bg-primary: #F8FAFB;
+            --bg-secondary: #FFFFFF;
+            --surface-elevated: #FFFFFF;
+            --text-primary: #1A1D29;
+            --text-secondary: #64748B;
+            --text-muted: #94A3B8;
+            --border-subtle: #E2E8F0;
+
+            /* Shadows médicas - Sutiles pero presentes */
+            --shadow-soft: 0 1px 3px rgba(10, 77, 104, 0.04), 0 1px 2px rgba(10, 77, 104, 0.02);
+            --shadow-medium: 0 4px 6px rgba(10, 77, 104, 0.07), 0 2px 4px rgba(10, 77, 104, 0.05);
+            --shadow-elevated: 0 10px 15px rgba(10, 77, 104, 0.1), 0 4px 6px rgba(10, 77, 104, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 40px 24px;
+            min-height: 100vh;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .demo-header {
+            margin-bottom: 40px;
+        }
+
+        .demo-header h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 42px;
+            color: var(--medical-blue);
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .demo-header p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* ============================================
+           MODERN STATS GRID - Componente Principal
+           ============================================ */
+
+        .stats-modern-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .stat-modern-card {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .stat-modern-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-elevated);
+            border-color: var(--medical-blue);
+        }
+
+        /* Indicador de color lateral */
+        .stat-modern-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--card-accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-modern-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Variantes de color por tipo */
+        .stat-modern-card[data-type="scheduled"] {
+            --card-accent: var(--clinical-cyan);
+        }
+
+        .stat-modern-card[data-type="completed"] {
+            --card-accent: var(--surgical-green);
+        }
+
+        .stat-modern-card[data-type="total"] {
+            --card-accent: var(--medical-blue);
+        }
+
+        .stat-modern-card[data-type="pending"] {
+            --card-accent: var(--diagnostic-amber);
+        }
+
+        /* Header de la tarjeta */
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .stat-label-modern {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-secondary);
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--card-accent), var(--card-accent));
+            opacity: 0.1;
+            transition: all 0.3s ease;
+        }
+
+        .stat-modern-card:hover .stat-icon {
+            opacity: 0.15;
+            transform: scale(1.05);
+        }
+
+        .stat-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--card-accent);
+            stroke-width: 2.5;
+        }
+
+        /* Valor principal */
+        .stat-value-modern {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 48px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        /* Animación de contador */
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-value-modern.updating {
+            animation: countUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Metadata adicional */
+        .stat-metadata {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .stat-change.positive {
+            background: rgba(5, 193, 104, 0.1);
+            color: var(--surgical-green);
+        }
+
+        .stat-change.negative {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--alert-red);
+        }
+
+        .stat-change svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* Micro-interacción: Pulso en actualización */
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.95);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(0.95);
+                opacity: 1;
+            }
+        }
+
+        .stat-modern-card.live {
+            animation: pulse-ring 2s ease-in-out infinite;
+        }
+
+        /* Indicador "Live" */
+        .live-indicator {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 8px;
+            height: 8px;
+            background: var(--surgical-green);
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px rgba(5, 193, 104, 0.2);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* ============================================
+           TIMELINE VISUAL (Bonus Component)
+           ============================================ */
+
+        .timeline-section {
+            margin-top: 48px;
+        }
+
+        .timeline-header {
+            font-family: 'DM Serif Display', serif;
+            font-size: 28px;
+            color: var(--medical-blue);
+            margin-bottom: 24px;
+        }
+
+        .timeline-container {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 20px;
+            padding-bottom: 24px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-subtle);
+            position: relative;
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .timeline-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-muted);
+            min-width: 80px;
+            padding-top: 2px;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .timeline-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .timeline-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .timeline-badge.completed {
+            background: rgba(5, 193, 104, 0.1);
+            color: var(--surgical-green);
+        }
+
+        .timeline-badge.pending {
+            background: rgba(255, 164, 27, 0.1);
+            color: var(--diagnostic-amber);
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+
+        @media (max-width: 768px) {
+            .stats-modern-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .stat-value-modern {
+                font-size: 36px;
+            }
+
+            .demo-header h1 {
+                font-size: 32px;
+            }
+
+            .timeline-item {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .timeline-time {
+                min-width: auto;
+            }
+        }
+
+        /* ============================================
+           LOADING STATES
+           ============================================ */
+
+        .stat-modern-card.loading .stat-value-modern {
+            background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            color: transparent;
+            border-radius: 8px;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>Panel de Estadísticas Modernizado</h1>
+            <p>Componente rediseñado para BSL Plataforma con estética "Clinical Precision"</p>
+        </div>
+
+        <!-- COMPONENTE PRINCIPAL: Stats Grid Modernizado -->
+        <div class="stats-modern-grid">
+            <!-- Card 1: Programados Hoy -->
+            <div class="stat-modern-card" data-type="scheduled">
+                <div class="stat-card-header">
+                    <span class="stat-label-modern">Programados Hoy</span>
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </div>
+                </div>
+                <div class="stat-value-modern" id="statProgramadosHoy">24</div>
+                <div class="stat-metadata">
+                    <span class="stat-change positive">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="18 15 12 9 6 15"></polyline>
+                        </svg>
+                        +12%
+                    </span>
+                    <span>vs. ayer</span>
+                </div>
+            </div>
+
+            <!-- Card 2: Atendidos Hoy -->
+            <div class="stat-modern-card live" data-type="completed">
+                <div class="live-indicator"></div>
+                <div class="stat-card-header">
+                    <span class="stat-label-modern">Atendidos Hoy</span>
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                </div>
+                <div class="stat-value-modern" id="statAtendidosHoy">18</div>
+                <div class="stat-metadata">
+                    <span class="stat-change positive">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="18 15 12 9 6 15"></polyline>
+                        </svg>
+                        +8%
+                    </span>
+                    <span>75% completado</span>
+                </div>
+            </div>
+
+            <!-- Card 3: Total Órdenes -->
+            <div class="stat-modern-card" data-type="total">
+                <div class="stat-card-header">
+                    <span class="stat-label-modern">Total Órdenes</span>
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                    </div>
+                </div>
+                <div class="stat-value-modern" id="statTotalOrdenes">342</div>
+                <div class="stat-metadata">
+                    <span>Este mes</span>
+                </div>
+            </div>
+
+            <!-- Card 4: Pendientes (Nuevo) -->
+            <div class="stat-modern-card" data-type="pending">
+                <div class="stat-card-header">
+                    <span class="stat-label-modern">Pendientes</span>
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                </div>
+                <div class="stat-value-modern" id="statPendientes">6</div>
+                <div class="stat-metadata">
+                    <span class="stat-change negative">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                        Requiere atención
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPONENTE BONUS: Timeline Visual -->
+        <div class="timeline-section">
+            <h2 class="timeline-header">Actividad Reciente</h2>
+            <div class="timeline-container">
+                <div class="timeline-item">
+                    <div class="timeline-time">14:32</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Examen Audiometría Completado</div>
+                        <div class="timeline-description">Juan Pérez - ID: 1234567890 - SANITHELP-JJ</div>
+                        <span class="timeline-badge completed">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Completado
+                        </span>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-time">13:15</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Nueva Orden Creada</div>
+                        <div class="timeline-description">María González - Visiometría Programada</div>
+                        <span class="timeline-badge pending">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            Pendiente
+                        </span>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-time">11:45</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Certificado Generado</div>
+                        <div class="timeline-description">Carlos Rodríguez - Apto para trabajo en alturas</div>
+                        <span class="timeline-badge completed">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Completado
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulación de actualización en tiempo real
+        function simulateDataUpdate() {
+            const cards = document.querySelectorAll('.stat-value-modern');
+
+            setInterval(() => {
+                // Actualizar Atendidos Hoy (simulación)
+                const atendidosElement = document.getElementById('statAtendidosHoy');
+                const currentValue = parseInt(atendidosElement.textContent);
+
+                // Agregar clase de animación
+                atendidosElement.classList.add('updating');
+
+                // Actualizar valor
+                setTimeout(() => {
+                    atendidosElement.textContent = currentValue + 1;
+                    atendidosElement.classList.remove('updating');
+                }, 300);
+
+            }, 10000); // Cada 10 segundos
+        }
+
+        // Iniciar simulación
+        simulateDataUpdate();
+
+        // Ejemplo de cómo integrar con tus datos reales:
+        function actualizarEstadisticas(datos) {
+            document.getElementById('statProgramadosHoy').textContent = datos.programadosHoy || 0;
+            document.getElementById('statAtendidosHoy').textContent = datos.atendidosHoy || 0;
+            document.getElementById('statTotalOrdenes').textContent = datos.totalOrdenes || 0;
+            document.getElementById('statPendientes').textContent = datos.pendientes || 0;
+        }
+
+        // Simular estado de carga
+        function mostrarCargando() {
+            document.querySelectorAll('.stat-modern-card').forEach(card => {
+                card.classList.add('loading');
+            });
+        }
+
+        function ocultarCargando() {
+            document.querySelectorAll('.stat-modern-card').forEach(card => {
+                card.classList.remove('loading');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -36,6 +36,9 @@ import { enviarPreguntasTrasRespuesta } from 'backend/automaticWhp';
 import { callOpenAI } from 'backend/open-ai';
 import { consultarCita } from 'backend/consultaHistoriaClinicaBot';
 import { analizarImagenPago } from 'backend/analizarImagenPago';
+import { depresion } from 'backend/depresion.jsw';
+import { ansiedad } from 'backend/ansiedad.jsw';
+
 
 export function sendTextMessage(toNumber, messageBody) {
     const url = "https://gate.whapi.cloud/messages/text";
@@ -2906,15 +2909,16 @@ import { exportarTodaHistoriaClinica } from 'backend/exposeDataBase';
 
 /**
  * GET: Exportar toda la tabla HistoriaClinica con paginación
- * URL: /_functions/exportarHistoriaClinica?skip=0&limit=1000
+ * URL: /_functions/exportarHistoriaClinica?skip=0&limit=1000&desde=2025-12-20
  *
  * Uso para migración:
  * 1. Primera llamada: ?skip=0&limit=1000
  * 2. Si hasMore=true, siguiente llamada: ?skip=1000&limit=1000
  * 3. Repetir hasta hasMore=false
+ * 4. Opcional: &desde=YYYY-MM-DD para filtrar por fecha de creación
  */
 export async function get_exportarHistoriaClinica(request) {
-    const { skip = '0', limit = '1000' } = request.query;
+    const { skip = '0', limit = '1000', desde = null } = request.query;
 
     try {
         const skipNum = parseInt(skip, 10);
@@ -2930,8 +2934,8 @@ export async function get_exportarHistoriaClinica(request) {
             });
         }
 
-        console.log(`[exportarHistoriaClinica] skip=${skipNum}, limit=${limitNum}`);
-        const resultado = await exportarTodaHistoriaClinica(skipNum, limitNum);
+        console.log(`[exportarHistoriaClinica] skip=${skipNum}, limit=${limitNum}, desde=${desde || 'todos'}`);
+        const resultado = await exportarTodaHistoriaClinica(skipNum, limitNum, desde);
 
         return ok({
             headers: {
@@ -2975,10 +2979,10 @@ import { exportarTodoFormulario } from 'backend/exposeDataBase';
 
 /**
  * GET: Exportar FORMULARIO con paginación para migración
- * URL: /_functions/exportarFormulario?skip=0&limit=1000
+ * URL: /_functions/exportarFormulario?skip=0&limit=1000&desde=2025-12-20
  */
 export async function get_exportarFormulario(request) {
-    const { skip = '0', limit = '1000' } = request.query;
+    const { skip = '0', limit = '1000', desde = null } = request.query;
 
     try {
         const skipNum = parseInt(skip, 10);
@@ -2994,8 +2998,8 @@ export async function get_exportarFormulario(request) {
             });
         }
 
-        console.log(`[exportarFormulario] skip=${skipNum}, limit=${limitNum}`);
-        const resultado = await exportarTodoFormulario(skipNum, limitNum);
+        console.log(`[exportarFormulario] skip=${skipNum}, limit=${limitNum}, desde=${desde || 'todos'}`);
+        const resultado = await exportarTodoFormulario(skipNum, limitNum, desde);
 
         return ok({
             headers: {
@@ -3020,6 +3024,215 @@ export async function get_exportarFormulario(request) {
  * OPTIONS: CORS preflight para exportarFormulario
  */
 export function options_exportarFormulario(request) {
+    return {
+        status: 204,
+        headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
+        },
+        body: {}
+    };
+}
+
+/**
+ * ════════════════════════════════════════════════════════════════════════════
+ * ENDPOINTS PARA EVALUACIÓN PSICOLÓGICA (DEPRESIÓN Y ANSIEDAD)
+ * ════════════════════════════════════════════════════════════════════════════
+ */
+
+/**
+ * GET: Calcular resultado de depresión por número de documento
+ * URL: /_functions/depresion?numeroId=123456&codEmpresa=XXX
+ */
+export async function get_depresion(request) {
+    const { numeroId, codEmpresa, edad, hijos } = request.query;
+
+    if (!numeroId) {
+        return badRequest({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: { success: false, error: "El parámetro 'numeroId' es requerido" }
+        });
+    }
+
+    try {
+        console.log(`[depresion] Calculando para numeroId: ${numeroId}`);
+        const resultado = await depresion(numeroId, codEmpresa || "", edad || "", hijos || "");
+
+        return ok({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: {
+                success: true,
+                numeroId,
+                resultado
+            }
+        });
+    } catch (error) {
+        console.error("[depresion] Error:", error);
+        return serverError({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: { success: false, error: error.message }
+        });
+    }
+}
+
+/**
+ * GET: Calcular resultado de ansiedad por número de documento
+ * URL: /_functions/ansiedad?numeroId=123456&codEmpresa=XXX
+ */
+export async function get_ansiedad(request) {
+    const { numeroId, codEmpresa } = request.query;
+
+    if (!numeroId) {
+        return badRequest({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: { success: false, error: "El parámetro 'numeroId' es requerido" }
+        });
+    }
+
+    try {
+        console.log(`[ansiedad] Calculando para numeroId: ${numeroId}`);
+        const resultado = await ansiedad(numeroId, codEmpresa || "");
+
+        return ok({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: {
+                success: true,
+                numeroId,
+                resultado
+            }
+        });
+    } catch (error) {
+        console.error("[ansiedad] Error:", error);
+        return serverError({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: { success: false, error: error.message }
+        });
+    }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// ENDPOINT PARA SINCRONIZACIÓN DE DATOS MÉDICOS POR FECHA
+// ════════════════════════════════════════════════════════════════════════════
+
+/**
+ * GET: Obtener registros de HistoriaClinica por fechaConsulta
+ * URL: /_functions/historiaClinicaPorFecha?fecha=2025-12-26
+ *
+ * Retorna todos los registros cuya fechaConsulta coincide con la fecha dada.
+ * Incluye todos los campos médicos para sincronización con PostgreSQL.
+ */
+export async function get_historiaClinicaPorFecha(request) {
+    const { fecha } = request.query;
+
+    if (!fecha) {
+        return badRequest({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: { success: false, error: "El parámetro 'fecha' es requerido (formato: YYYY-MM-DD)" }
+        });
+    }
+
+    try {
+        console.log(`[historiaClinicaPorFecha] Buscando registros para fecha: ${fecha}`);
+
+        // Crear rango de fechas para el día completo
+        const fechaInicio = new Date(`${fecha}T00:00:00.000Z`);
+        const fechaFin = new Date(`${fecha}T23:59:59.999Z`);
+
+        // Consultar en HistoriaClinica por fechaConsulta
+        const resultado = await wixData.query("HistoriaClinica")
+            .ge("fechaConsulta", fechaInicio)
+            .le("fechaConsulta", fechaFin)
+            .limit(1000)
+            .find();
+
+        console.log(`[historiaClinicaPorFecha] Encontrados: ${resultado.items.length} registros`);
+
+        // Mapear los campos relevantes
+        const items = resultado.items.map(item => ({
+            _id: item._id,
+            numeroId: item.numeroId,
+            primerNombre: item.primerNombre,
+            segundoNombre: item.segundoNombre,
+            primerApellido: item.primerApellido,
+            segundoApellido: item.segundoApellido,
+            celular: item.celular,
+            codEmpresa: item.codEmpresa,
+            empresa: item.empresa,
+            cargo: item.cargo,
+            ciudad: item.ciudad,
+            tipoExamen: item.tipoExamen,
+            examenes: item.examenes,
+            medico: item.medico,
+            fechaAtencion: item.fechaAtencion,
+            horaAtencion: item.horaAtencion,
+            atendido: item.atendido,
+            fechaConsulta: item.fechaConsulta,
+            pagado: item.pagado,
+            pvEstado: item.pvEstado,
+            // Campos médicos
+            mdConceptoFinal: item.mdConceptoFinal,
+            mdRecomendacionesMedicasAdicionales: item.mdRecomendacionesMedicasAdicionales,
+            mdObservacionesCertificado: item.mdObservacionesCertificado,
+            mdObsParaMiDocYa: item.mdObsParaMiDocYa,
+            mdAntecedentes: item.mdAntecedentes,
+            mdDx1: item.mdDx1,
+            mdDx2: item.mdDx2,
+            // Metadatos
+            _createdDate: item._createdDate,
+            _updatedDate: item._updatedDate
+        }));
+
+        return ok({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: {
+                success: true,
+                fecha: fecha,
+                totalCount: resultado.items.length,
+                items: items
+            }
+        });
+    } catch (error) {
+        console.error("[historiaClinicaPorFecha] Error:", error);
+        return serverError({
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: { success: false, error: error.message }
+        });
+    }
+}
+
+/**
+ * OPTIONS: CORS preflight para historiaClinicaPorFecha
+ */
+export function options_historiaClinicaPorFecha(request) {
     return {
         status: 204,
         headers: {

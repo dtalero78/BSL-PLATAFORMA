@@ -4031,25 +4031,46 @@ app.get('/api/ordenes', authMiddleware, async (req, res) => {
     }
 });
 
-// GET /api/pruebas-psicologicas/:numeroId - Obtener resultados de ansiedad y depresión desde Wix
+// GET /api/pruebas-psicologicas/:numeroId - Obtener resultados de ansiedad, depresión y congruencia desde PostgreSQL
 app.get('/api/pruebas-psicologicas/:numeroId', async (req, res) => {
     try {
         const { numeroId } = req.params;
 
-        // Consultar ambos endpoints en paralelo
-        const [ansiedadRes, depresionRes] = await Promise.all([
-            fetch(`https://www.bsl.com.co/_functions/ansiedad?numeroId=${numeroId}`),
-            fetch(`https://www.bsl.com.co/_functions/depresion?numeroId=${numeroId}`)
-        ]);
+        // Consultar registro de pruebasADC en PostgreSQL
+        const result = await pool.query(
+            'SELECT * FROM "pruebasADC" WHERE numero_id = $1 LIMIT 1',
+            [numeroId]
+        );
 
-        const ansiedad = await ansiedadRes.json();
-        const depresion = await depresionRes.json();
+        if (result.rows.length === 0) {
+            return res.json({
+                success: true,
+                numeroId,
+                ansiedad: 'NO REALIZÓ PRUEBA',
+                depresion: 'NO REALIZÓ PRUEBA',
+                congruencia: 'NO REALIZÓ PRUEBA'
+            });
+        }
+
+        const registro = result.rows[0];
+        const codEmpresa = registro.cod_empresa || '';
+
+        // Importar funciones de calificación
+        const { calcularAnsiedad } = require('./calcular-ansiedad');
+        const { calcularDepresion } = require('./calcular-depresion');
+        const { calcularCongruencia } = require('./calcular-congruencia');
+
+        // Calcular resultados
+        const ansiedad = calcularAnsiedad(registro, codEmpresa);
+        const depresion = calcularDepresion(registro, codEmpresa);
+        const congruencia = calcularCongruencia(registro);
 
         res.json({
             success: true,
             numeroId,
-            ansiedad: ansiedad.resultado || 'NO REALIZÓ PRUEBA',
-            depresion: depresion.resultado || 'NO REALIZÓ PRUEBA'
+            ansiedad,
+            depresion,
+            congruencia
         });
     } catch (error) {
         console.error('Error consultando pruebas psicológicas:', error);

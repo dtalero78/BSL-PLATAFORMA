@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BSL - Panel Modernizado Completo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Tipografía profesional médica: Sora (geométrica, moderna) + JetBrains Mono (datos) -->
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Medical Color Palette - Profesional y confiable */
+            --medical-primary: #0C4A6E;
+            --medical-secondary: #0EA5E9;
+            --success-green: #059669;
+            --warning-amber: #F59E0B;
+            --error-red: #DC2626;
+            --info-blue: #3B82F6;
+
+            /* Neutrals refinados */
+            --bg-primary: #F8FAFC;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #F1F5F9;
+            --surface-elevated: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #94A3B8;
+            --border-color: #E2E8F0;
+            --border-subtle: #F1F5F9;
+
+            /* Shadows */
+            --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+            --shadow-md: 0 4px 6px rgba(15, 23, 42, 0.1), 0 2px 4px rgba(15, 23, 42, 0.06);
+            --shadow-lg: 0 10px 15px rgba(15, 23, 42, 0.1), 0 4px 6px rgba(15, 23, 42, 0.05);
+            --shadow-xl: 0 20px 25px rgba(15, 23, 42, 0.1), 0 10px 10px rgba(15, 23, 42, 0.04);
+
+            /* Spacing */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-2xl: 48px;
+
+            /* Border radius */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .demo-wrapper {
+            min-height: 100vh;
+            padding: var(--spacing-2xl) var(--spacing-lg);
+        }
+
+        .demo-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ============================================
+           HEADER MODERNIZADO
+           ============================================ */
+
+        .page-header-modern {
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .page-header-modern h1 {
+            font-family: 'Sora', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--medical-primary);
+            margin-bottom: var(--spacing-sm);
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .page-header-modern p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+            flex-wrap: wrap;
+        }
+
+        /* ============================================
+           BUTTONS MODERNIZADOS
+           ============================================ */
+
+        .btn-modern {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-modern:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-modern:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--medical-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0A3A54;
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--medical-primary);
+        }
+
+        .btn-success {
+            background: var(--success-green);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #047857;
+        }
+
+        .btn-modern svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* ============================================
+           STATS GRID MEJORADO
+           ============================================ */
+
+        .stats-modern-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .stat-modern-card {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stat-modern-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--card-accent);
+        }
+
+        /* Barra lateral de color */
+        .stat-modern-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--card-accent);
+            transform: scaleY(0);
+            transform-origin: bottom;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stat-modern-card:hover::before {
+            transform: scaleY(1);
+            transform-origin: top;
+        }
+
+        /* Variantes */
+        .stat-modern-card[data-type="scheduled"] {
+            --card-accent: var(--info-blue);
+        }
+
+        .stat-modern-card[data-type="completed"] {
+            --card-accent: var(--success-green);
+        }
+
+        .stat-modern-card[data-type="total"] {
+            --card-accent: var(--medical-primary);
+        }
+
+        .stat-modern-card[data-type="pending"] {
+            --card-accent: var(--warning-amber);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .stat-label-modern {
+            font-family: 'Sora', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .stat-icon-wrapper {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--card-accent);
+            opacity: 0.1;
+            transition: all 0.3s ease;
+        }
+
+        .stat-modern-card:hover .stat-icon-wrapper {
+            opacity: 0.15;
+            transform: rotate(5deg) scale(1.05);
+        }
+
+        .stat-icon-wrapper svg {
+            width: 22px;
+            height: 22px;
+            stroke: var(--card-accent);
+            stroke-width: 2.5;
+        }
+
+        .stat-value-modern {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: var(--spacing-sm);
+            letter-spacing: -0.02em;
+        }
+
+        .stat-metadata {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .stat-badge.up {
+            background: rgba(5, 150, 105, 0.1);
+            color: var(--success-green);
+        }
+
+        .stat-badge.down {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--error-red);
+        }
+
+        .stat-badge svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* ============================================
+           TABLA MODERNIZADA
+           ============================================ */
+
+        .table-section {
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .section-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--medical-primary);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .table-modern-container {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table-modern {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table-modern thead {
+            background: var(--bg-tertiary);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .table-modern th {
+            font-family: 'Sora', sans-serif;
+            padding: 16px 20px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .table-modern tbody tr {
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background 0.15s ease;
+        }
+
+        .table-modern tbody tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .table-modern tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .table-modern td {
+            padding: 18px 20px;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        /* Patient info cell */
+        .patient-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .patient-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--medical-secondary), var(--medical-primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .patient-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .patient-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .patient-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Sora', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .status-badge.completed {
+            background: rgba(5, 150, 105, 0.1);
+            color: var(--success-green);
+            border: 1px solid rgba(5, 150, 105, 0.2);
+        }
+
+        .status-badge.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-amber);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .status-badge.urgent {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--error-red);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Exam type tag */
+        .exam-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Action buttons in table */
+        .table-action-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .table-action-btn:hover {
+            background: var(--medical-primary);
+            color: white;
+            border-color: var(--medical-primary);
+        }
+
+        /* ============================================
+           SEARCH & FILTER BAR
+           ============================================ */
+
+        .filter-bar {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .search-input-wrapper svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            stroke: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--medical-primary);
+            box-shadow: 0 0 0 3px rgba(12, 74, 110, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .filter-select {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            font-size: 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--medical-primary);
+        }
+
+        /* ============================================
+           CARDS GRID (Alternative layout)
+           ============================================ */
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .patient-card {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .patient-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--medical-secondary);
+        }
+
+        .patient-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .patient-card .patient-info {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .patient-card-meta {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .patient-card-meta-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .patient-card-meta-item svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-muted);
+        }
+
+        .patient-card-footer {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+
+        @media (max-width: 1024px) {
+            .stats-modern-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stats-modern-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value-modern {
+                font-size: 36px;
+            }
+
+            .page-header-modern h1 {
+                font-size: 28px;
+            }
+
+            .table-modern-container {
+                overflow-x: auto;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+            }
+
+            .search-input-wrapper {
+                width: 100%;
+            }
+        }
+
+        /* ============================================
+           LOADING STATES
+           ============================================ */
+
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite;
+            border-radius: var(--radius-sm);
+        }
+
+        .skeleton-text {
+            height: 14px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-title {
+            height: 24px;
+            width: 60%;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-wrapper">
+        <div class="demo-container">
+            <!-- HEADER MODERNIZADO -->
+            <div class="page-header-modern">
+                <h1>Panel de Órdenes Médicas</h1>
+                <p>Gestiona y monitorea los exámenes ocupacionales de tus empleados</p>
+
+                <div class="header-actions">
+                    <button class="btn-modern btn-primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Nueva Orden
+                    </button>
+                    <button class="btn-modern btn-secondary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Exportar
+                    </button>
+                    <button class="btn-modern btn-secondary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                        Filtros
+                    </button>
+                </div>
+            </div>
+
+            <!-- STATS GRID -->
+            <div class="stats-modern-grid">
+                <div class="stat-modern-card" data-type="scheduled">
+                    <div class="stat-card-header">
+                        <span class="stat-label-modern">Programados Hoy</span>
+                        <div class="stat-icon-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="stat-value-modern">24</div>
+                    <div class="stat-metadata">
+                        <span class="stat-badge up">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="18 15 12 9 6 15"></polyline>
+                            </svg>
+                            12%
+                        </span>
+                        <span>vs. ayer</span>
+                    </div>
+                </div>
+
+                <div class="stat-modern-card" data-type="completed">
+                    <div class="stat-card-header">
+                        <span class="stat-label-modern">Atendidos Hoy</span>
+                        <div class="stat-icon-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="stat-value-modern">18</div>
+                    <div class="stat-metadata">
+                        <span class="stat-badge up">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="18 15 12 9 6 15"></polyline>
+                            </svg>
+                            8%
+                        </span>
+                        <span>75% completado</span>
+                    </div>
+                </div>
+
+                <div class="stat-modern-card" data-type="total">
+                    <div class="stat-card-header">
+                        <span class="stat-label-modern">Total Órdenes</span>
+                        <div class="stat-icon-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="stat-value-modern">342</div>
+                    <div class="stat-metadata">
+                        <span>Este mes</span>
+                    </div>
+                </div>
+
+                <div class="stat-modern-card" data-type="pending">
+                    <div class="stat-card-header">
+                        <span class="stat-label-modern">Pendientes</span>
+                        <div class="stat-icon-wrapper">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="stat-value-modern">6</div>
+                    <div class="stat-metadata">
+                        <span class="stat-badge down">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                            Requiere atención
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FILTER BAR -->
+            <div class="filter-bar">
+                <div class="search-input-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" class="search-input" placeholder="Buscar por nombre, ID o empresa...">
+                </div>
+                <select class="filter-select">
+                    <option>Todos los estados</option>
+                    <option>Atendidos</option>
+                    <option>Pendientes</option>
+                    <option>Urgentes</option>
+                </select>
+                <select class="filter-select">
+                    <option>Todos los exámenes</option>
+                    <option>Audiometría</option>
+                    <option>Visiometría</option>
+                    <option>Psicológico</option>
+                </select>
+            </div>
+
+            <!-- TABLA MODERNIZADA -->
+            <div class="table-section">
+                <h2 class="section-title">Órdenes Recientes</h2>
+                <div class="table-modern-container">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th>Paciente</th>
+                                <th>Empresa</th>
+                                <th>Examen</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="patient-info">
+                                        <div class="patient-avatar">JP</div>
+                                        <div class="patient-details">
+                                            <div class="patient-name">Juan Pérez García</div>
+                                            <div class="patient-id">1234567890</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>SANITHELP-JJ</td>
+                                <td><span class="exam-tag">Audiometría</span></td>
+                                <td>27 Dic 2024, 14:30</td>
+                                <td>
+                                    <span class="status-badge completed">
+                                        <span class="status-dot"></span>
+                                        Atendido
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="table-action-btn">Ver Detalles</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="patient-info">
+                                        <div class="patient-avatar">MG</div>
+                                        <div class="patient-details">
+                                            <div class="patient-name">María González</div>
+                                            <div class="patient-id">9876543210</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>ACME Corp</td>
+                                <td><span class="exam-tag">Visiometría</span></td>
+                                <td>27 Dic 2024, 15:00</td>
+                                <td>
+                                    <span class="status-badge pending">
+                                        <span class="status-dot"></span>
+                                        Pendiente
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="table-action-btn">Ver Detalles</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="patient-info">
+                                        <div class="patient-avatar">CR</div>
+                                        <div class="patient-details">
+                                            <div class="patient-name">Carlos Rodríguez</div>
+                                            <div class="patient-id">5555555555</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>TechCorp SA</td>
+                                <td><span class="exam-tag">Psicológico</span></td>
+                                <td>27 Dic 2024, 11:45</td>
+                                <td>
+                                    <span class="status-badge completed">
+                                        <span class="status-dot"></span>
+                                        Atendido
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="table-action-btn">Ver Detalles</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="patient-info">
+                                        <div class="patient-avatar">AL</div>
+                                        <div class="patient-details">
+                                            <div class="patient-name">Ana López Martínez</div>
+                                            <div class="patient-id">1111222233</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>SANITHELP-JJ</td>
+                                <td><span class="exam-tag">Audiometría</span></td>
+                                <td>27 Dic 2024, 09:00</td>
+                                <td>
+                                    <span class="status-badge urgent">
+                                        <span class="status-dot"></span>
+                                        Urgente
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="table-action-btn">Ver Detalles</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="patient-info">
+                                        <div class="patient-avatar">DS</div>
+                                        <div class="patient-details">
+                                            <div class="patient-name">Diego Sánchez Cruz</div>
+                                            <div class="patient-id">7777888899</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Global Industries</td>
+                                <td><span class="exam-tag">Visiometría</span></td>
+                                <td>26 Dic 2024, 16:30</td>
+                                <td>
+                                    <span class="status-badge completed">
+                                        <span class="status-dot"></span>
+                                        Atendido
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="table-action-btn">Ver Detalles</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CARDS GRID (Vista alternativa) -->
+            <div class="table-section">
+                <h2 class="section-title">Vista de Tarjetas (Alternativa)</h2>
+                <div class="cards-grid">
+                    <!-- Card 1 -->
+                    <div class="patient-card">
+                        <div class="patient-card-header">
+                            <span class="status-badge completed">
+                                <span class="status-dot"></span>
+                                Atendido
+                            </span>
+                        </div>
+                        <div class="patient-info">
+                            <div class="patient-avatar">JP</div>
+                            <div class="patient-details">
+                                <div class="patient-name">Juan Pérez García</div>
+                                <div class="patient-id">ID: 1234567890</div>
+                            </div>
+                        </div>
+                        <div class="patient-card-meta">
+                            <div class="patient-card-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span>27 Dic 2024, 14:30</span>
+                            </div>
+                            <div class="patient-card-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span>SANITHELP-JJ</span>
+                            </div>
+                            <div class="patient-card-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                                <span>Audiometría</span>
+                            </div>
+                        </div>
+                        <div class="patient-card-footer">
+                            <button class="btn-modern btn-secondary" style="flex: 1; justify-content: center;">Ver Detalles</button>
+                            <button class="btn-modern btn-secondary" style="padding: 12px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="1"></circle>
+                                    <circle cx="12" cy="5" r="1"></circle>
+                                    <circle cx="12" cy="19" r="1"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="patient-card">
+                        <div class="patient-card-header">
+                            <span class="status-badge pending">
+                                <span class="status-dot"></span>
+                                Pendiente
+                            </span>
+                        </div>
+                        <div class="patient-info">
+                            <div class="patient-avatar">MG</div>
+                            <div class="patient-details">
+                                <div class="patient-name">María González</div>
+                                <div class="patient-id">ID: 9876543210</div>
+                            </div>
+                        </div>
+                        <div class="patient-card-meta">
+                            <div class="patient-card-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span>27 Dic 2024, 15:00</span>
+                            </div>
+                            <div class="patient-card-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span>ACME Corp</span>
+                            </div>
+                            <div class="patient-card-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                                <span>Visiometría</span>
+                            </div>
+                        </div>
+                        <div class="patient-card-footer">
+                            <button class="btn-modern btn-secondary" style="flex: 1; justify-content: center;">Ver Detalles</button>
+                            <button class="btn-modern btn-secondary" style="padding: 12px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="1"></circle>
+                                    <circle cx="12" cy="5" r="1"></circle>
+                                    <circle cx="12" cy="19" r="1"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="patient-card">
+                        <div class="patient-card-header">
+                            <span class="status-badge urgent">
+                                <span class="status-dot"></span>
+                                Urgente
+                            </span>
+                        </div>
+                        <div class="patient-info">
+                            <div class="patient-avatar">AL</div>
+                            <div class="patient-details">
+                                <div class="patient-name">Ana López Martínez</div>
+                                <div class="patient-id">ID: 1111222233</div>
+                            </div>
+                        </div>
+                        <div class="patient-card-meta">
+                            <div class="patient-card-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span>27 Dic 2024, 09:00</span>
+                            </div>
+                            <div class="patient-card-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span>SANITHELP-JJ</span>
+                            </div>
+                            <div class="patient-card-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                                <span>Audiometría</span>
+                            </div>
+                        </div>
+                        <div class="patient-card-footer">
+                            <button class="btn-modern btn-secondary" style="flex: 1; justify-content: center;">Ver Detalles</button>
+                            <button class="btn-modern btn-secondary" style="padding: 12px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="1"></circle>
+                                    <circle cx="12" cy="5" r="1"></circle>
+                                    <circle cx="12" cy="19" r="1"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Función para integrar con tus datos reales
+        function actualizarDashboard(datos) {
+            // Actualizar estadísticas
+            document.querySelector('[data-type="scheduled"] .stat-value-modern').textContent = datos.programadosHoy || 0;
+            document.querySelector('[data-type="completed"] .stat-value-modern').textContent = datos.atendidosHoy || 0;
+            document.querySelector('[data-type="total"] .stat-value-modern').textContent = datos.totalOrdenes || 0;
+            document.querySelector('[data-type="pending"] .stat-value-modern').textContent = datos.pendientes || 0;
+        }
+
+        // Ejemplo de búsqueda en tiempo real
+        const searchInput = document.querySelector('.search-input');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            // Aquí conectarías con tu función de búsqueda
+            console.log('Buscando:', searchTerm);
+        });
+
+        // Hover effect en filas de tabla
+        const tableRows = document.querySelectorAll('.table-modern tbody tr');
+        tableRows.forEach(row => {
+            row.addEventListener('click', () => {
+                console.log('Fila clickeada:', row);
+                // Aquí abrirías el modal de detalles
+            });
+        });
+    </script>
+</body>
+</html>
