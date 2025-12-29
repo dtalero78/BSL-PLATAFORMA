@@ -832,6 +832,8 @@
                 'DeStori': { codEmpresa: 'STORI', empresa: 'Stori Card', tipoExamen: 'Ingreso' },
                 'EVERTEC': { codEmpresa: 'EVERTEC', empresa: 'EVERTEC', tipoExamen: 'Ingreso' },
                 'rippling': { codEmpresa: 'RIPPLING', empresa: 'Rippling', tipoExamen: 'Ingreso' },
+                'ripplingperiodico': { codEmpresa: 'RIPPLING', empresa: 'Rippling', tipoExamen: 'Periódico' },
+                'ripplingegreso': { codEmpresa: 'RIPPLING', empresa: 'Rippling', tipoExamen: 'Egreso' },
                 'ATR': { codEmpresa: 'ATR', empresa: 'ATR', tipoExamen: 'Ingreso' }
             };
 
@@ -1193,15 +1195,19 @@
             }
 
             // Solo empresas especiales tienen su propio codEmpresa
+            let tipoExamenFinal = 'Ingreso'; // valor por defecto
             if (refEmpresa) {
                 const empresasEspeciales = {
-                    'DeStori': { codEmpresa: 'STORI', empresa: 'Stori Card' },
-                    'EVERTEC': { codEmpresa: 'EVERTEC', empresa: 'EVERTEC' },
-                    'rippling': { codEmpresa: 'RIPPLING', empresa: 'Rippling' }
+                    'DeStori': { codEmpresa: 'STORI', empresa: 'Stori Card', tipoExamen: 'Ingreso' },
+                    'EVERTEC': { codEmpresa: 'EVERTEC', empresa: 'EVERTEC', tipoExamen: 'Ingreso' },
+                    'rippling': { codEmpresa: 'RIPPLING', empresa: 'Rippling', tipoExamen: 'Ingreso' },
+                    'ripplingperiodico': { codEmpresa: 'RIPPLING', empresa: 'Rippling', tipoExamen: 'Periódico' },
+                    'ripplingegreso': { codEmpresa: 'RIPPLING', empresa: 'Rippling', tipoExamen: 'Egreso' }
                 };
                 if (empresasEspeciales[refEmpresa]) {
                     codEmpresa = empresasEspeciales[refEmpresa].codEmpresa;
                     empresaNombre = empresasEspeciales[refEmpresa].empresa;
+                    tipoExamenFinal = empresasEspeciales[refEmpresa].tipoExamen;
                 }
             }
 
@@ -1219,7 +1225,7 @@
                 fechaAtencion: fecha,  // YYYY-MM-DD - el backend construye el timestamp con hora Colombia
                 horaAtencion: hora,    // HH:MM - hora Colombia, el backend lo usa para construir fechaAtencion
                 examenes: examenesSeleccionados.join(', '),
-                tipoExamen: 'Ingreso',
+                tipoExamen: tipoExamenFinal,
                 atendido: 'PENDIENTE',
                 ciudad: document.getElementById('ciudad').value,
                 medico: 'NUBIA'

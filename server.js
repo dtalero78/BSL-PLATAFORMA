@@ -905,6 +905,120 @@ const initDB = async () => {
             )
         `);
 
+        // Crear tabla laboratorios si no existe
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS laboratorios (
+                id SERIAL PRIMARY KEY,
+                orden_id VARCHAR(100) REFERENCES "HistoriaClinica"("_id") ON DELETE CASCADE,
+                numero_id VARCHAR(50),
+                primer_nombre VARCHAR(100),
+                primer_apellido VARCHAR(100),
+                empresa VARCHAR(100),
+                cod_empresa VARCHAR(50),
+
+                -- Tipo de prueba: 'CUADRO_HEMATICO', 'COPROLOGICO', 'PERFIL_LIPIDICO', 'KOH'
+                tipo_prueba VARCHAR(50) NOT NULL,
+
+                -- CUADRO HEMÁTICO (HEMOGRAMA)
+                hematocrito VARCHAR(50),
+                hemoglobina VARCHAR(50),
+                conc_corpus_hb VARCHAR(50),
+                plaquetas VARCHAR(50),
+                sedimentacio_globular VARCHAR(50),
+                globulos_blancos VARCHAR(50),
+                neutrofilos VARCHAR(50),
+                linfocitos VARCHAR(50),
+                monocitos VARCHAR(50),
+                basofilos VARCHAR(50),
+                eosinofilos VARCHAR(50),
+                cayados VARCHAR(50),
+                observaciones_hemograma TEXT,
+
+                -- COPROLÓGICO
+                consistencia VARCHAR(50),
+                color VARCHAR(50),
+                olor VARCHAR(50),
+                moco VARCHAR(50),
+                sangre VARCHAR(50),
+                parasitologico VARCHAR(50),
+                observaciones_coprologico TEXT,
+                vegetales VARCHAR(100),
+                musculares VARCHAR(100),
+                celulosa VARCHAR(100),
+                almidones VARCHAR(100),
+                levaduras VARCHAR(100),
+                hongos VARCHAR(100),
+                neutras VARCHAR(100),
+                hominis VARCHAR(100),
+                leucocitos VARCHAR(100),
+                bacteriana VARCHAR(100),
+
+                -- PERFIL LIPÍDICO + QUÍMICA
+                glicemia_pre VARCHAR(50),
+                glicemia_post VARCHAR(50),
+                tsh VARCHAR(50),
+                colesterol_total VARCHAR(50),
+                colesterol_hdl VARCHAR(50),
+                colesterol_ldl VARCHAR(50),
+                trigliceridos VARCHAR(50),
+                transaminasa_gpt VARCHAR(50),
+                transaminasa_got VARCHAR(50),
+                bilirrubina_directa VARCHAR(50),
+                bilirrubina_indirecta VARCHAR(50),
+                bilirrubina_total VARCHAR(50),
+                nitrogeno_ureico_bun VARCHAR(50),
+                creatinina_en_suero VARCHAR(50),
+                colinesterasa VARCHAR(50),
+                quimica_observaciones TEXT,
+                fosfatasa_alcalina VARCHAR(50),
+
+                -- INMUNOLOGÍA
+                grupo_sanguineo VARCHAR(20),
+                factor_rh VARCHAR(20),
+                inmunologia_observaciones TEXT,
+                serologia_vdrl VARCHAR(50),
+                serologia_cuantitativa VARCHAR(50),
+                como_reporto_a_la_empresa TEXT,
+
+                -- MICROBIOLOGÍA
+                frotis_faringeo VARCHAR(100),
+                koh_en_unas VARCHAR(100),
+                cultivo_faringeo VARCHAR(100),
+                frotis_naso_derecha VARCHAR(100),
+                frotis_naso_izquierda VARCHAR(100),
+                microbiologia_observaciones TEXT,
+                coprocultivo VARCHAR(100),
+                leptospira VARCHAR(100),
+                baciloscopia VARCHAR(100),
+
+                -- TOXICOLOGÍA
+                alcohol_aire_respirado VARCHAR(100),
+                marihuana_orina VARCHAR(100),
+                morfina VARCHAR(100),
+                cocaina VARCHAR(100),
+                metanfetaminas VARCHAR(100),
+                alcohol_saliva VARCHAR(100),
+                anfetaminas VARCHAR(100),
+                alcohol_sangre VARCHAR(100),
+                toxicologia_observaciones TEXT,
+
+                -- Metadatos
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_by VARCHAR(100),
+                updated_by VARCHAR(100)
+            )
+        `);
+
+        // Crear índice para búsquedas rápidas de laboratorios
+        try {
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_laboratorios_orden_id ON laboratorios(orden_id)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_laboratorios_numero_id ON laboratorios(numero_id)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_laboratorios_tipo_prueba ON laboratorios(tipo_prueba)`);
+        } catch (err) {
+            // Índices ya existen
+        }
+
         // Crear tabla de usuarios para autenticación
         await pool.query(`
             CREATE TABLE IF NOT EXISTS usuarios (
@@ -8302,6 +8416,220 @@ app.post('/api/visiometrias', async (req, res) => {
         }
     } catch (error) {
         console.error('❌ Error guardando visiometría:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ========== ENDPOINTS LABORATORIOS ==========
+
+// Obtener laboratorio por orden_id
+app.get('/api/laboratorios/:ordenId', async (req, res) => {
+    try {
+        const { ordenId } = req.params;
+
+        const result = await pool.query(
+            'SELECT * FROM laboratorios WHERE orden_id = $1 ORDER BY created_at DESC',
+            [ordenId]
+        );
+
+        if (result.rows.length === 0) {
+            // No existe, devolver datos vacíos con info del paciente
+            const ordenResult = await pool.query(
+                'SELECT "numeroId", "primerNombre", "primerApellido", "empresa", "codEmpresa" FROM "HistoriaClinica" WHERE "_id" = $1',
+                [ordenId]
+            );
+
+            if (ordenResult.rows.length === 0) {
+                return res.status(404).json({ success: false, message: 'Orden no encontrada' });
+            }
+
+            const orden = ordenResult.rows[0];
+            return res.json({
+                success: true,
+                data: [],
+                paciente: {
+                    numeroId: orden.numeroId,
+                    primerNombre: orden.primerNombre,
+                    primerApellido: orden.primerApellido,
+                    empresa: orden.empresa,
+                    codEmpresa: orden.codEmpresa
+                }
+            });
+        }
+
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.error('❌ Error obteniendo laboratorios:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Obtener un laboratorio específico por ID
+app.get('/api/laboratorios/detalle/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(
+            'SELECT * FROM laboratorios WHERE id = $1',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Laboratorio no encontrado' });
+        }
+
+        res.json({ success: true, data: result.rows[0] });
+    } catch (error) {
+        console.error('❌ Error obteniendo laboratorio:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Obtener historial de laboratorios por número de identificación
+app.get('/api/laboratorios/historial/:numeroId', async (req, res) => {
+    try {
+        const { numeroId } = req.params;
+        const { tipoPrueba } = req.query;
+
+        let query = 'SELECT * FROM laboratorios WHERE numero_id = $1';
+        const params = [numeroId];
+
+        if (tipoPrueba) {
+            query += ' AND tipo_prueba = $2';
+            params.push(tipoPrueba);
+        }
+
+        query += ' ORDER BY created_at DESC';
+
+        const result = await pool.query(query, params);
+
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.error('❌ Error obteniendo historial de laboratorios:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Crear o actualizar laboratorio
+app.post('/api/laboratorios', async (req, res) => {
+    try {
+        const datos = req.body;
+
+        if (!datos.orden_id || !datos.tipo_prueba) {
+            return res.status(400).json({
+                success: false,
+                message: 'orden_id y tipo_prueba son requeridos'
+            });
+        }
+
+        // Si viene un ID, actualizar; si no, crear nuevo
+        if (datos.id) {
+            // Actualizar existente
+            const campos = [
+                'numero_id', 'primer_nombre', 'primer_apellido', 'empresa', 'cod_empresa', 'tipo_prueba',
+                // CUADRO HEMÁTICO
+                'hematocrito', 'hemoglobina', 'conc_corpus_hb', 'plaquetas', 'sedimentacio_globular',
+                'globulos_blancos', 'neutrofilos', 'linfocitos', 'monocitos', 'basofilos', 'eosinofilos',
+                'cayados', 'observaciones_hemograma',
+                // COPROLÓGICO
+                'consistencia', 'color', 'olor', 'moco', 'sangre', 'parasitologico', 'observaciones_coprologico',
+                'vegetales', 'musculares', 'celulosa', 'almidones', 'levaduras', 'hongos', 'neutras',
+                'hominis', 'leucocitos', 'bacteriana',
+                // PERFIL LIPÍDICO + QUÍMICA
+                'glicemia_pre', 'glicemia_post', 'tsh', 'colesterol_total', 'colesterol_hdl', 'colesterol_ldl',
+                'trigliceridos', 'transaminasa_gpt', 'transaminasa_got', 'bilirrubina_directa', 'bilirrubina_indirecta',
+                'bilirrubina_total', 'nitrogeno_ureico_bun', 'creatinina_en_suero', 'colinesterasa',
+                'quimica_observaciones', 'fosfatasa_alcalina',
+                // INMUNOLOGÍA
+                'grupo_sanguineo', 'factor_rh', 'inmunologia_observaciones', 'serologia_vdrl',
+                'serologia_cuantitativa', 'como_reporto_a_la_empresa',
+                // MICROBIOLOGÍA
+                'frotis_faringeo', 'koh_en_unas', 'cultivo_faringeo', 'frotis_naso_derecha',
+                'frotis_naso_izquierda', 'microbiologia_observaciones', 'coprocultivo', 'leptospira', 'baciloscopia',
+                // TOXICOLOGÍA
+                'alcohol_aire_respirado', 'marihuana_orina', 'morfina', 'cocaina', 'metanfetaminas',
+                'alcohol_saliva', 'anfetaminas', 'alcohol_sangre', 'toxicologia_observaciones',
+                'updated_by'
+            ];
+
+            const setClauses = campos.map((campo, i) => `${campo} = $${i + 2}`).join(', ');
+            const updateQuery = `
+                UPDATE laboratorios SET
+                    ${setClauses},
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = $1
+                RETURNING *
+            `;
+
+            const values = [datos.id, ...campos.map(c => datos[c] || null)];
+            const result = await pool.query(updateQuery, values);
+            console.log('✅ Laboratorio actualizado, ID:', datos.id);
+            return res.json({ success: true, data: result.rows[0], operacion: 'UPDATE' });
+        } else {
+            // Insertar nuevo
+            const campos = [
+                'orden_id', 'numero_id', 'primer_nombre', 'primer_apellido', 'empresa', 'cod_empresa', 'tipo_prueba',
+                // CUADRO HEMÁTICO
+                'hematocrito', 'hemoglobina', 'conc_corpus_hb', 'plaquetas', 'sedimentacio_globular',
+                'globulos_blancos', 'neutrofilos', 'linfocitos', 'monocitos', 'basofilos', 'eosinofilos',
+                'cayados', 'observaciones_hemograma',
+                // COPROLÓGICO
+                'consistencia', 'color', 'olor', 'moco', 'sangre', 'parasitologico', 'observaciones_coprologico',
+                'vegetales', 'musculares', 'celulosa', 'almidones', 'levaduras', 'hongos', 'neutras',
+                'hominis', 'leucocitos', 'bacteriana',
+                // PERFIL LIPÍDICO + QUÍMICA
+                'glicemia_pre', 'glicemia_post', 'tsh', 'colesterol_total', 'colesterol_hdl', 'colesterol_ldl',
+                'trigliceridos', 'transaminasa_gpt', 'transaminasa_got', 'bilirrubina_directa', 'bilirrubina_indirecta',
+                'bilirrubina_total', 'nitrogeno_ureico_bun', 'creatinina_en_suero', 'colinesterasa',
+                'quimica_observaciones', 'fosfatasa_alcalina',
+                // INMUNOLOGÍA
+                'grupo_sanguineo', 'factor_rh', 'inmunologia_observaciones', 'serologia_vdrl',
+                'serologia_cuantitativa', 'como_reporto_a_la_empresa',
+                // MICROBIOLOGÍA
+                'frotis_faringeo', 'koh_en_unas', 'cultivo_faringeo', 'frotis_naso_derecha',
+                'frotis_naso_izquierda', 'microbiologia_observaciones', 'coprocultivo', 'leptospira', 'baciloscopia',
+                // TOXICOLOGÍA
+                'alcohol_aire_respirado', 'marihuana_orina', 'morfina', 'cocaina', 'metanfetaminas',
+                'alcohol_saliva', 'anfetaminas', 'alcohol_sangre', 'toxicologia_observaciones',
+                'created_by'
+            ];
+
+            const insertPlaceholders = campos.map((_, i) => `$${i + 1}`).join(', ');
+            const insertQuery = `
+                INSERT INTO laboratorios (${campos.join(', ')})
+                VALUES (${insertPlaceholders})
+                RETURNING *
+            `;
+
+            const values = campos.map(c => datos[c] || null);
+            const result = await pool.query(insertQuery, values);
+            console.log('✅ Laboratorio creado para orden:', datos.orden_id);
+            return res.json({ success: true, data: result.rows[0], operacion: 'INSERT' });
+        }
+    } catch (error) {
+        console.error('❌ Error guardando laboratorio:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Eliminar laboratorio
+app.delete('/api/laboratorios/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(
+            'DELETE FROM laboratorios WHERE id = $1 RETURNING *',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Laboratorio no encontrado' });
+        }
+
+        console.log('✅ Laboratorio eliminado, ID:', id);
+        res.json({ success: true, data: result.rows[0] });
+    } catch (error) {
+        console.error('❌ Error eliminando laboratorio:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

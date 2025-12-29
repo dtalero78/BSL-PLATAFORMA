@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Laboratorios - BSL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root {
+            --bg-primary: #F3F3F3;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #F3F3F3;
+            --text-primary: #181818;
+            --text-secondary: #444444;
+            --border-color: #DDDBDA;
+            --accent-color: #0176D3;
+            --accent-hover: #014486;
+            --success-color: #10B981;
+            --error-color: #EF4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header h1 i {
+            color: var(--accent-color);
+        }
+
+        .patient-info {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .patient-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .patient-info-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .patient-info-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Test Selector Section */
+        .test-selector-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .test-selector-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .test-card {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            background: var(--bg-tertiary);
+        }
+
+        .test-card:hover {
+            border-color: var(--accent-color);
+            background: var(--bg-secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-card.selected {
+            border-color: var(--accent-color);
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .test-card-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .test-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .test-card-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .test-card.selected .test-card-desc {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Historial Section */
+        .history-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .history-section.show {
+            display: block;
+        }
+
+        .history-list {
+            margin-top: 16px;
+        }
+
+        .history-item {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .history-item:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-color);
+        }
+
+        .history-item-info {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .history-item-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .history-item-date {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .history-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Form Section */
+        .form-section {
+            display: none;
+        }
+
+        .form-section.show {
+            display: block;
+        }
+
+        .section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: var(--accent-color);
+            width: 20px;
+            height: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .form-grid.two-cols {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .form-grid.four-cols {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        @media (max-width: 1024px) {
+            .form-grid, .form-grid.four-cols {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-grid, .form-grid.two-cols, .form-grid.four-cols {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #DC2626;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header">
+            <h1>
+                <i data-feather="activity"></i>
+                Panel de Laboratorios
+            </h1>
+            <button class="btn btn-secondary" onclick="window.location.href='ordenes.html'">
+                <i data-feather="arrow-left"></i>
+                Volver a Órdenes
+            </button>
+        </div>
+
+        <!-- Patient Info -->
+        <div class="patient-info" id="patientInfo" style="display: none;">
+            <div class="patient-info-item">
+                <span class="patient-info-label">Nombre</span>
+                <span class="patient-info-value" id="patientName">-</span>
+            </div>
+            <div class="patient-info-item">
+                <span class="patient-info-label">Número de ID</span>
+                <span class="patient-info-value" id="patientId">-</span>
+            </div>
+            <div class="patient-info-item">
+                <span class="patient-info-label">Empresa</span>
+                <span class="patient-info-value" id="patientCompany">-</span>
+            </div>
+        </div>
+
+        <!-- Test Selector -->
+        <div class="test-selector-section">
+            <div class="section-title">
+                <i data-feather="clipboard"></i>
+                Seleccione el tipo de prueba
+            </div>
+            <div class="test-selector-grid">
+                <div class="test-card" data-test="CUADRO_HEMATICO" onclick="selectTest('CUADRO_HEMATICO')">
+                    <div class="test-card-icon">🩸</div>
+                    <div class="test-card-title">Cuadro Hemático</div>
+                    <div class="test-card-desc">Hemograma completo</div>
+                </div>
+                <div class="test-card" data-test="COPROLOGICO" onclick="selectTest('COPROLOGICO')">
+                    <div class="test-card-icon">🔬</div>
+                    <div class="test-card-title">Coprológico</div>
+                    <div class="test-card-desc">Análisis de heces</div>
+                </div>
+                <div class="test-card" data-test="PERFIL_LIPIDICO" onclick="selectTest('PERFIL_LIPIDICO')">
+                    <div class="test-card-icon">💉</div>
+                    <div class="test-card-title">Perfil Lipídico + Química</div>
+                    <div class="test-card-desc">Colesterol, glucosa, etc.</div>
+                </div>
+                <div class="test-card" data-test="KOH" onclick="selectTest('KOH')">
+                    <div class="test-card-icon">🧪</div>
+                    <div class="test-card-title">Microbiología + KOH</div>
+                    <div class="test-card-desc">Cultivos y análisis microbiológicos</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial -->
+        <div class="history-section" id="historySection">
+            <div class="section-title">
+                <i data-feather="clock"></i>
+                Historial de resultados anteriores
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="loading">Cargando historial...</div>
+            </div>
+        </div>
+
+        <!-- Form Section (will be populated dynamically) -->
+        <div class="form-section" id="formSection">
+            <!-- Dynamic content will be inserted here -->
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-group" id="actionButtons" style="display: none;">
+            <button class="btn btn-secondary" onclick="cancelForm()">
+                <i data-feather="x"></i>
+                Cancelar
+            </button>
+            <button class="btn btn-primary" onclick="saveResults()">
+                <i data-feather="save"></i>
+                Guardar Resultados
+            </button>
+            <button class="btn btn-success" id="exportPDFBtn" onclick="exportToPDF()" style="display: none;">
+                <i data-feather="file-text"></i>
+                Exportar a PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i data-feather="check-circle"></i>
+        <span id="toastMessage">Operación exitosa</span>
+    </div>
+
+    <script>
+        // Initialize Feather Icons
+        feather.replace();
+
+        // Global Variables
+        let ordenId = null;
+        let pacienteData = null;
+        let selectedTest = null;
+        let currentLabId = null;
+
+        // Get orden_id from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        ordenId = urlParams.get('ordenId') || urlParams.get('_id');
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!ordenId) {
+                showToast('Error: No se especificó la orden', 'error');
+                setTimeout(() => window.location.href = 'ordenes.html', 2000);
+                return;
+            }
+
+            await loadPatientData();
+            feather.replace();
+        });
+
+        // Load patient data
+        async function loadPatientData() {
+            try {
+                const response = await fetch(`/api/laboratorios/${ordenId}`);
+                const data = await response.json();
+
+                if (data.success && data.paciente) {
+                    pacienteData = data.paciente;
+                    document.getElementById('patientName').textContent =
+                        `${pacienteData.primerNombre || ''} ${pacienteData.primerApellido || ''}`.trim();
+                    document.getElementById('patientId').textContent = pacienteData.numeroId || '-';
+                    document.getElementById('patientCompany').textContent = pacienteData.empresa || '-';
+                    document.getElementById('patientInfo').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('Error loading patient data:', error);
+                showToast('Error al cargar datos del paciente', 'error');
+            }
+        }
+
+        // Select test type
+        function selectTest(testType) {
+            selectedTest = testType;
+            currentLabId = null; // Reset lab ID when selecting new test
+
+            // Update UI
+            document.querySelectorAll('.test-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-test="${testType}"]`).classList.add('selected');
+
+            // Load history
+            loadHistory(testType);
+
+            // Show form
+            loadTestForm(testType);
+        }
+
+        // Load history for selected test
+        async function loadHistory(testType) {
+            const historySection = document.getElementById('historySection');
+            const historyList = document.getElementById('historyList');
+
+            historyList.innerHTML = '<div class="loading">Cargando historial...</div>';
+            historySection.classList.add('show');
+
+            try {
+                const response = await fetch(`/api/laboratorios/historial/${pacienteData.numeroId}?tipoPrueba=${testType}`);
+                const data = await response.json();
+
+                if (data.success && data.data.length > 0) {
+                    historyList.innerHTML = data.data.map(item => `
+                        <div class="history-item" onclick="loadHistoryItem(${item.id})">
+                            <div class="history-item-info">
+                                <span class="history-item-badge">${getTestName(item.tipo_prueba)}</span>
+                                <span class="history-item-date">${formatDate(item.created_at)}</span>
+                                <span>${item.created_by || 'Sistema'}</span>
+                            </div>
+                            <div class="history-item-actions">
+                                <i data-feather="eye"></i>
+                            </div>
+                        </div>
+                    `).join('');
+                    feather.replace();
+                } else {
+                    historyList.innerHTML = '<div class="empty-state"><i data-feather="inbox"></i><p>No hay resultados anteriores</p></div>';
+                    feather.replace();
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                historyList.innerHTML = '<div class="empty-state">Error al cargar historial</div>';
+            }
+        }
+
+        // Load history item (for editing)
+        async function loadHistoryItem(labId) {
+            try {
+                const response = await fetch(`/api/laboratorios/detalle/${labId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    currentLabId = labId;
+                    populateForm(data.data);
+                    document.getElementById('exportPDFBtn').style.display = 'inline-flex';
+                    showToast('Resultado cargado para edición', 'success');
+                }
+            } catch (error) {
+                console.error('Error loading lab result:', error);
+                showToast('Error al cargar resultado', 'error');
+            }
+        }
+
+        // Load test form based on type
+        function loadTestForm(testType) {
+            const formSection = document.getElementById('formSection');
+            const actionButtons = document.getElementById('actionButtons');
+
+            let formHTML = '';
+
+            switch(testType) {
+                case 'CUADRO_HEMATICO':
+                    formHTML = getCuadroHematicoForm();
+                    break;
+                case 'COPROLOGICO':
+                    formHTML = getCoprologicoForm();
+                    break;
+                case 'PERFIL_LIPIDICO':
+                    formHTML = getPerfilLipidicoForm();
+                    break;
+                case 'KOH':
+                    formHTML = getKOHForm();
+                    break;
+            }
+
+            formSection.innerHTML = formHTML;
+            formSection.classList.add('show');
+            actionButtons.style.display = 'flex';
+            feather.replace();
+        }
+
+        // CUADRO HEMÁTICO FORM
+        function getCuadroHematicoForm() {
+            return `
+                <div class="section">
+                    <div class="section-title">
+                        <i data-feather="droplet"></i>
+                        Cuadro Hemático (Hemograma)
+                    </div>
+                    <div class="form-grid four-cols">
+                        <div class="form-group">
+                            <label>Hematocrito</label>
+                            <input type="text" id="hematocrito" name="hematocrito">
+                        </div>
+                        <div class="form-group">
+                            <label>Hemoglobina</label>
+                            <input type="text" id="hemoglobina" name="hemoglobina">
+                        </div>
+                        <div class="form-group">
+                            <label>Conc. Corpus. HB</label>
+                            <input type="text" id="conc_corpus_hb" name="conc_corpus_hb">
+                        </div>
+                        <div class="form-group">
+                            <label>Plaquetas</label>
+                            <input type="text" id="plaquetas" name="plaquetas">
+                        </div>
+                        <div class="form-group">
+                            <label>Sedimentacio. Globular</label>
+                            <input type="text" id="sedimentacio_globular" name="sedimentacio_globular">
+                        </div>
+                        <div class="form-group">
+                            <label>Glóbulos Blancos</label>
+                            <input type="text" id="globulos_blancos" name="globulos_blancos">
+                        </div>
+                        <div class="form-group">
+                            <label>Neutrofilos</label>
+                            <input type="text" id="neutrofilos" name="neutrofilos">
+                        </div>
+                        <div class="form-group">
+                            <label>Linfocitos</label>
+                            <input type="text" id="linfocitos" name="linfocitos">
+                        </div>
+                        <div class="form-group">
+                            <label>Monocitos</label>
+                            <input type="text" id="monocitos" name="monocitos">
+                        </div>
+                        <div class="form-group">
+                            <label>Basofilos</label>
+                            <input type="text" id="basofilos" name="basofilos">
+                        </div>
+                        <div class="form-group">
+                            <label>Eosinofilos</label>
+                            <input type="text" id="eosinofilos" name="eosinofilos">
+                        </div>
+                        <div class="form-group">
+                            <label>Cayados</label>
+                            <input type="text" id="cayados" name="cayados">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Observaciones</label>
+                            <textarea id="observaciones_hemograma" name="observaciones_hemograma"></textarea>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // COPROLÓGICO FORM
+        function getCoprologicoForm() {
+            return `
+                <div class="section">
+                    <div class="section-title">
+                        <i data-feather="search"></i>
+                        Examen Coprológico
+                    </div>
+                    <div class="form-grid four-cols">
+                        <div class="form-group">
+                            <label>Consistencia</label>
+                            <select id="consistencia" name="consistencia">
+                                <option value="">--Seleccione--</option>
+                                <option value="SOLIDA">SOLIDA</option>
+                                <option value="BLANDA">BLANDA</option>
+                                <option value="LIQUIDA">LIQUIDA</option>
+                                <option value="PASTOSA">PASTOSA</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Color</label>
+                            <select id="color" name="color">
+                                <option value="">--Seleccione--</option>
+                                <option value="CAFE">CAFE</option>
+                                <option value="AMARILLO">AMARILLO</option>
+                                <option value="VERDE">VERDE</option>
+                                <option value="NEGRO">NEGRO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Olor</label>
+                            <select id="olor" name="olor">
+                                <option value="">--Seleccione--</option>
+                                <option value="NORMAL">NORMAL</option>
+                                <option value="FETIDO">FETIDO</option>
+                                <option value="SUIGENERIS">SUI GENERIS</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Moco</label>
+                            <select id="moco" name="moco">
+                                <option value="">--Seleccione--</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Sangre</label>
+                            <select id="sangre" name="sangre">
+                                <option value="">--Seleccione--</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Parasitológico</label>
+                            <select id="parasitologico" name="parasitologico">
+                                <option value="">--Seleccione--</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Vegetales</label>
+                            <input type="text" id="vegetales" name="vegetales" placeholder="NEGATIVO">
+                        </div>
+                        <div class="form-group">
+                            <label>Musculares</label>
+                            <input type="text" id="musculares" name="musculares" placeholder="NEGATIVO">
+                        </div>
+                        <div class="form-group">
+                            <label>Celulosa</label>
+                            <input type="text" id="celulosa" name="celulosa" placeholder="NEGATIVO">
+                        </div>
+                        <div class="form-group">
+                            <label>Almidones</label>
+                            <input type="text" id="almidones" name="almidones" placeholder="NEGATIVO">
+                        </div>
+                        <div class="form-group">
+                            <label>Levaduras</label>
+                            <input type="text" id="levaduras" name="levaduras" placeholder="NEGATIVO">
+                        </div>
+                        <div class="form-group">
+                            <label>Hongos</label>
+                            <input type="text" id="hongos" name="hongos" placeholder="NEGATIVO">
+                        </div>
+                        <div class="form-group">
+                            <label>Neutras</label>
+                            <input type="text" id="neutras" name="neutras" placeholder="NEGATIVO">
+                        </div>
+                        <div class="form-group">
+                            <label>Hominis</label>
+                            <input type="text" id="hominis" name="hominis" placeholder="NEGATIVO">
+                        </div>
+                        <div class="form-group">
+                            <label>Leucocitos</label>
+                            <input type="text" id="leucocitos" name="leucocitos" placeholder="NORMAL">
+                        </div>
+                        <div class="form-group">
+                            <label>Bacteriana</label>
+                            <input type="text" id="bacteriana" name="bacteriana" placeholder="NORMAL">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Observaciones</label>
+                            <textarea id="observaciones_coprologico" name="observaciones_coprologico"></textarea>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // PERFIL LIPÍDICO + QUÍMICA FORM
+        function getPerfilLipidicoForm() {
+            return `
+                <div class="section">
+                    <div class="section-title">
+                        <i data-feather="activity"></i>
+                        Química Sanguínea
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Glicemia Pre</label>
+                            <input type="text" id="glicemia_pre" name="glicemia_pre">
+                        </div>
+                        <div class="form-group">
+                            <label>Glicemia Post</label>
+                            <input type="text" id="glicemia_post" name="glicemia_post">
+                        </div>
+                        <div class="form-group">
+                            <label>TSH</label>
+                            <input type="text" id="tsh" name="tsh">
+                        </div>
+                        <div class="form-group">
+                            <label>Colesterol Total</label>
+                            <input type="text" id="colesterol_total" name="colesterol_total">
+                        </div>
+                        <div class="form-group">
+                            <label>Colesterol HDL</label>
+                            <input type="text" id="colesterol_hdl" name="colesterol_hdl">
+                        </div>
+                        <div class="form-group">
+                            <label>Colesterol LDL</label>
+                            <input type="text" id="colesterol_ldl" name="colesterol_ldl">
+                        </div>
+                        <div class="form-group">
+                            <label>Triglicéridos</label>
+                            <input type="text" id="trigliceridos" name="trigliceridos">
+                        </div>
+                        <div class="form-group">
+                            <label>Transaminasa GPT</label>
+                            <input type="text" id="transaminasa_gpt" name="transaminasa_gpt">
+                        </div>
+                        <div class="form-group">
+                            <label>Transaminasa GOT</label>
+                            <input type="text" id="transaminasa_got" name="transaminasa_got">
+                        </div>
+                        <div class="form-group">
+                            <label>Bilirrubina Directa</label>
+                            <input type="text" id="bilirrubina_directa" name="bilirrubina_directa">
+                        </div>
+                        <div class="form-group">
+                            <label>Bilirrubina Indirecta</label>
+                            <input type="text" id="bilirrubina_indirecta" name="bilirrubina_indirecta">
+                        </div>
+                        <div class="form-group">
+                            <label>Bilirrubina Total</label>
+                            <input type="text" id="bilirrubina_total" name="bilirrubina_total">
+                        </div>
+                        <div class="form-group">
+                            <label>Nitrógeno Ureico (BUN)</label>
+                            <input type="text" id="nitrogeno_ureico_bun" name="nitrogeno_ureico_bun">
+                        </div>
+                        <div class="form-group">
+                            <label>Creatinina en Suero</label>
+                            <input type="text" id="creatinina_en_suero" name="creatinina_en_suero">
+                        </div>
+                        <div class="form-group">
+                            <label>Colinesterasa</label>
+                            <input type="text" id="colinesterasa" name="colinesterasa">
+                        </div>
+                        <div class="form-group">
+                            <label>Fosfatasa Alcalina</label>
+                            <input type="text" id="fosfatasa_alcalina" name="fosfatasa_alcalina">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Observaciones Química</label>
+                            <textarea id="quimica_observaciones" name="quimica_observaciones"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">
+                        <i data-feather="shield"></i>
+                        Inmunología
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Grupo Sanguíneo</label>
+                            <select id="grupo_sanguineo" name="grupo_sanguineo">
+                                <option value="">--Seleccione--</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Factor RH</label>
+                            <select id="factor_rh" name="factor_rh">
+                                <option value="">--Seleccione--</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Serología (VDRL)</label>
+                            <select id="serologia_vdrl" name="serologia_vdrl">
+                                <option value="">--Seleccione--</option>
+                                <option value="NO REACTIVO">NO REACTIVO</option>
+                                <option value="REACTIVO">REACTIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Serología Cuantitativa</label>
+                            <input type="text" id="serologia_cuantitativa" name="serologia_cuantitativa">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Como reporto a la empresa</label>
+                            <textarea id="como_reporto_a_la_empresa" name="como_reporto_a_la_empresa"></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Observaciones Inmunología</label>
+                            <textarea id="inmunologia_observaciones" name="inmunologia_observaciones"></textarea>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // KOH + MICROBIOLOGÍA FORM
+        function getKOHForm() {
+            return `
+                <div class="section">
+                    <div class="section-title">
+                        <i data-feather="monitor"></i>
+                        Microbiología
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Frotis Faríngeo</label>
+                            <select id="frotis_faringeo" name="frotis_faringeo">
+                                <option value="">--Seleccione--</option>
+                                <option value="NORMAL">NORMAL</option>
+                                <option value="ANORMAL">ANORMAL</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>KOH en Uñas</label>
+                            <input type="text" id="koh_en_unas" name="koh_en_unas" placeholder="NO SE OBSERVA ESTRUCTURAS FUNGICAS">
+                        </div>
+                        <div class="form-group">
+                            <label>Cultivo Faríngeo</label>
+                            <input type="text" id="cultivo_faringeo" name="cultivo_faringeo">
+                        </div>
+                        <div class="form-group">
+                            <label>Frotis Naso Derecha</label>
+                            <input type="text" id="frotis_naso_derecha" name="frotis_naso_derecha">
+                        </div>
+                        <div class="form-group">
+                            <label>Frotis Naso Izquierda</label>
+                            <input type="text" id="frotis_naso_izquierda" name="frotis_naso_izquierda">
+                        </div>
+                        <div class="form-group">
+                            <label>Coprocultivo</label>
+                            <select id="coprocultivo" name="coprocultivo">
+                                <option value="">--Seleccione--</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Leptospira</label>
+                            <select id="leptospira" name="leptospira">
+                                <option value="">--Seleccione--</option>
+                                <option value="NO SE DETECTARON ANTICUERPOS">NO SE DETECTARON ANTICUERPOS</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Baciloscopia</label>
+                            <select id="baciloscopia" name="baciloscopia">
+                                <option value="">--Seleccione--</option>
+                                <option value="NEGATIVO PARA BACILOS ACIDO ALCOHOL RESISTENTES">NEGATIVO PARA BACILOS ACIDO ALCOHOL RESISTENTES</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Observaciones Microbiología</label>
+                            <textarea id="microbiologia_observaciones" name="microbiologia_observaciones"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">
+                        <i data-feather="alert-triangle"></i>
+                        Toxicología
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Alcohol Aire Respirado</label>
+                            <select id="alcohol_aire_respirado" name="alcohol_aire_respirado">
+                                <option value="">--Seleccione--</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Marihuana Orina</label>
+                            <select id="marihuana_orina" name="marihuana_orina">
+                                <option value="">--Seleccione--</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Morfina</label>
+                            <select id="morfina" name="morfina">
+                                <option value="">--Seleccione--</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Cocaína</label>
+                            <select id="cocaina" name="cocaina">
+                                <option value="">--Seleccione--</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Metanfetaminas</label>
+                            <select id="metanfetaminas" name="metanfetaminas">
+                                <option value="">--Seleccione--</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Alcohol Saliva</label>
+                            <select id="alcohol_saliva" name="alcohol_saliva">
+                                <option value="">--Seleccione--</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Anfetaminas</label>
+                            <select id="anfetaminas" name="anfetaminas">
+                                <option value="">--Seleccione--</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Alcohol Sangre</label>
+                            <select id="alcohol_sangre" name="alcohol_sangre">
+                                <option value="">--Seleccione--</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Observaciones Toxicología</label>
+                            <textarea id="toxicologia_observaciones" name="toxicologia_observaciones"></textarea>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Populate form with existing data
+        function populateForm(data) {
+            Object.keys(data).forEach(key => {
+                const element = document.getElementById(key);
+                if (element && data[key] !== null) {
+                    element.value = data[key];
+                }
+            });
+        }
+
+        // Save results
+        async function saveResults() {
+            if (!selectedTest || !ordenId) {
+                showToast('Error: Seleccione un tipo de prueba', 'error');
+                return;
+            }
+
+            const formData = {
+                id: currentLabId,
+                orden_id: ordenId,
+                numero_id: pacienteData.numeroId,
+                primer_nombre: pacienteData.primerNombre,
+                primer_apellido: pacienteData.primerApellido,
+                empresa: pacienteData.empresa,
+                cod_empresa: pacienteData.codEmpresa,
+                tipo_prueba: selectedTest
+            };
+
+            // Collect all form inputs
+            const inputs = document.querySelectorAll('#formSection input, #formSection select, #formSection textarea');
+            inputs.forEach(input => {
+                if (input.name) {
+                    formData[input.name] = input.value || null;
+                }
+            });
+
+            try {
+                const response = await fetch('/api/laboratorios', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Resultados guardados exitosamente', 'success');
+                    currentLabId = data.data.id;
+                    document.getElementById('exportPDFBtn').style.display = 'inline-flex';
+                    loadHistory(selectedTest);
+                } else {
+                    showToast('Error al guardar resultados', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving results:', error);
+                showToast('Error al guardar resultados', 'error');
+            }
+        }
+
+        // Cancel form
+        function cancelForm() {
+            if (confirm('¿Está seguro de cancelar? Los cambios no guardados se perderán.')) {
+                window.location.href = 'ordenes.html';
+            }
+        }
+
+        // Export to PDF
+        async function exportToPDF() {
+            if (!currentLabId) {
+                showToast('Debe guardar los resultados antes de exportar', 'error');
+                return;
+            }
+
+            showToast('Generando PDF...', 'success');
+
+            // TODO: Implement PDF generation
+            setTimeout(() => {
+                showToast('PDF generado (funcionalidad en desarrollo)', 'success');
+            }, 1500);
+        }
+
+        // Utility Functions
+        function getTestName(testType) {
+            const names = {
+                'CUADRO_HEMATICO': 'Cuadro Hemático',
+                'COPROLOGICO': 'Coprológico',
+                'PERFIL_LIPIDICO': 'Perfil Lipídico',
+                'KOH': 'Microbiología'
+            };
+            return names[testType] || testType;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-CO', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toast.className = `toast ${type}`;
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

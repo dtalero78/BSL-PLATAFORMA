@@ -8,6 +8,7 @@ Este documento describe el proceso de migración de datos desde Wix CMS hacia Po
 |-----------|------------------|---------------|
 | HistoriaClinica | HistoriaClinica | 108,000+ |
 | FORMULARIO | formularios | 76,000+ |
+| ADCTEST | pruebasADC | 58,000+ |
 
 ---
 
@@ -57,6 +58,37 @@ GET /_functions/exportarHistoriaClinica?skip=0&limit=1000&desde=2025-12-20
 ```
 GET /_functions/exportarFormulario?skip=0&limit=200&desde=2025-12-20
 ```
+
+### 3. Exportar ADCTEST (Pruebas Psicológicas)
+
+**URL:** `https://www.bsl.com.co/_functions/exportarADCTEST`
+
+**Parámetros:**
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `skip` | number | Registros a saltar (paginación) |
+| `limit` | number | Máximo 1000 (recomendado 500 por cantidad de campos) |
+| `desde` | string | Fecha mínima YYYY-MM-DD (opcional) |
+
+**Ejemplo:**
+```
+GET /_functions/exportarADCTEST?skip=0&limit=500&desde=2025-12-20
+```
+
+**Respuesta:**
+```json
+{
+  "success": true,
+  "items": [...],
+  "count": 500,
+  "totalCount": 58010,
+  "skip": 0,
+  "hasMore": true,
+  "nextSkip": 500
+}
+```
+
+**Nota Importante:** En la colección ADCTEST de Wix, el campo `numeroId` contiene el UUID de `HistoriaClinica._id` (no el documento del paciente). El documento del paciente está en el campo `documento`.
 
 ---
 
@@ -113,6 +145,42 @@ node migracion-formulario.js --desde=2025-12-20
 - Pausa de 4 segundos entre lotes
 - 5 reintentos con backoff exponencial
 - Timeout de 3 minutos por petición
+
+### migracion-adc-test.js
+
+Migra registros de la colección `ADCTEST` de Wix (Pruebas Psicológicas ADC: Ansiedad, Depresión, Comportamiento).
+
+**Uso:**
+```bash
+# Migración completa
+node migracion-adc-test.js
+
+# Migrar solo desde una fecha específica
+node migracion-adc-test.js --desde=2025-12-20
+
+# Continuar desde un punto específico (si se interrumpió)
+node migracion-adc-test.js --skip=10000
+
+# Solo verificar conteos sin migrar
+node migracion-adc-test.js --verify
+
+# Modo prueba (solo 1000 registros)
+node migracion-adc-test.js --test
+
+# Dry run (no inserta, solo muestra)
+node migracion-adc-test.js --dry-run
+```
+
+**Configuración:**
+- Lotes de 500 registros (balanceado por cantidad de campos)
+- Pausa de 3 segundos entre lotes
+- 5 reintentos con backoff exponencial
+- Timeout de 3 minutos por petición
+
+**Mapeo de Campos Clave:**
+- `numeroId` (Wix) → `orden_id` (PostgreSQL) - Contiene el UUID de HistoriaClinica._id
+- `documento` (Wix) → `numero_id` (PostgreSQL) - Documento del paciente
+- 64 campos de preguntas psicológicas (de*, an*, co*) se mapean directamente
 
 ---
 
@@ -212,6 +280,7 @@ Para mantener PostgreSQL sincronizado con Wix sin re-migrar todo:
 # Migrar solo registros nuevos desde una fecha
 node migracion-historia-clinica.js --desde=2025-12-25
 node migracion-formulario.js --desde=2025-12-25
+node migracion-adc-test.js --desde=2025-12-25
 ```
 
 **Frecuencia sugerida:** Ejecutar diariamente o semanalmente dependiendo del volumen.
@@ -246,6 +315,17 @@ export async function exportarTodoFormulario(skip = 0, limit = 1000, desde = nul
 
     // ... resto de la función
 }
+
+export async function exportarADCTEST(skip = 0, limit = 1000, desde = null) {
+    let query = wixData.query("ADCTEST");
+
+    if (desde) {
+        const fechaDesde = new Date(desde);
+        query = query.ge("_createdDate", fechaDesde);
+    }
+
+    // ... resto de la función
+}
 ```
 
 ### backend/http-functions.js
@@ -260,6 +340,12 @@ export async function get_exportarHistoriaClinica(request) {
 export async function get_exportarFormulario(request) {
     const { skip = '0', limit = '1000', desde = null } = request.query;
     const resultado = await exportarTodoFormulario(skipNum, limitNum, desde);
+    // ...
+}
+
+export async function get_exportarADCTEST(request) {
+    const { skip = '0', limit = '1000', desde = null } = request.query;
+    const resultado = await exportarADCTEST(skipNum, limitNum, desde);
     // ...
 }
 ```

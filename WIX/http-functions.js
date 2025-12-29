@@ -16,7 +16,7 @@ import { guardarMensajeWix } from 'backend/BotGuardarMensajesWix.jsw';
 import { obtenerFormularios, actualizarFormulario, obtenerFormularioPorIdGeneral, crearFormulario, crearHistoriaClinica } from 'backend/exposeDataBase';
 import { obtenerAudiometrias, actualizarAudiometria, crearAudiometria } from 'backend/exposeDataBase';
 import { obtenerVisuales, actualizarVisual, crearVisual } from 'backend/exposeDataBase';
-import { obtenerAdcTests, actualizarAdcTest, crearAdcTest } from 'backend/exposeDataBase';
+import { obtenerAdcTests, actualizarAdcTest, crearAdcTest, exportarADCTEST } from 'backend/exposeDataBase';
 import { obtenerEstadisticasConsultas, buscarPacientesMediData, obtenerDatosCompletosPaciente, obtenerHistoriaClinicaPorEmpresa, obtenerFormulariosPorIds } from 'backend/exposeDataBase';
 import {
   obtenerEstadisticasMedico,
@@ -1619,6 +1619,27 @@ export async function post_crearAdcTest(request) {
                 body: { error: resultado.error }
             });
         }
+    } catch (error) {
+        return serverError({
+            headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+            body: { error: error.message }
+        });
+    }
+}
+
+// ENDPOINT PARA EXPORTAR TODOS LOS ADCTEST (MIGRACIÓN)
+export async function get_exportarADCTEST(request) {
+    try {
+        const skip = parseInt(request.query.skip) || 0;
+        const limit = parseInt(request.query.limit) || 1000;
+        const desde = request.query.desde || null;
+
+        const resultado = await exportarADCTEST(skip, limit, desde);
+
+        return ok({
+            headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+            body: resultado
+        });
     } catch (error) {
         return serverError({
             headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },

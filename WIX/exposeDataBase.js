@@ -381,6 +381,58 @@ export async function actualizarAdcTest(_id, datos) {
     }
 }
 
+// FUNCIÓN PARA EXPORTAR TODOS LOS REGISTROS DE ADCTEST (PARA MIGRACIÓN)
+export async function exportarADCTEST(skip = 0, limit = 1000, desde = null) {
+    try {
+        console.log(`📦 Exportando ADCTEST: skip=${skip}, limit=${limit}, desde=${desde}`);
+
+        // Query para contar total
+        let countQuery = wixData.query("ADCTEST");
+        if (desde) {
+            const fechaDesde = new Date(desde);
+            countQuery = countQuery.ge("_createdDate", fechaDesde);
+        }
+        const countResult = await countQuery.limit(1).find();
+        const totalCount = countResult.totalCount;
+
+        // Query para obtener datos
+        let dataQuery = wixData.query("ADCTEST");
+        if (desde) {
+            const fechaDesde = new Date(desde);
+            dataQuery = dataQuery.ge("_createdDate", fechaDesde);
+        }
+
+        const result = await dataQuery
+            .ascending("_createdDate")
+            .skip(skip)
+            .limit(limit)
+            .find();
+
+        const hasMore = (skip + result.items.length) < totalCount;
+
+        console.log(`✅ Exportados ${result.items.length} de ${totalCount} registros ADCTEST`);
+
+        return {
+            success: true,
+            items: result.items,
+            count: result.items.length,
+            totalCount: totalCount,
+            skip: skip,
+            hasMore: hasMore,
+            nextSkip: hasMore ? skip + result.items.length : null
+        };
+    } catch (error) {
+        console.error("❌ Error exportando ADCTEST:", error);
+        return {
+            success: false,
+            error: error.message,
+            items: [],
+            count: 0,
+            totalCount: 0
+        };
+    }
+}
+
 // FUNCIÓN PARA BUSCAR PACIENTES EN HISTORIA CLÍNICA (MEDIDATA)
 export async function buscarPacientesMediData(termino) {
     try {
