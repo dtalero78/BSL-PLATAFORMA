@@ -190,6 +190,8 @@ const Auth = {
             // Redirigir según rol
             if (usuario.rol === 'admin') {
                 window.location.href = '/panel-admin.html';
+            } else if (usuario.rol === 'agente_chat') {
+                window.location.href = '/panel-agentes.html';
             } else {
                 window.location.href = '/panel-empresas.html';
             }
@@ -205,6 +207,8 @@ const Auth = {
     redirigirSegunRol(rol) {
         if (rol === 'admin') {
             window.location.href = '/panel-admin.html';
+        } else if (rol === 'agente_chat') {
+            window.location.href = '/panel-agentes.html';
         } else {
             window.location.href = '/panel-empresas.html';
         }
