@@ -1060,14 +1060,14 @@ const initDB = async () => {
             // Columna ya existe
         }
 
-        // Migración: actualizar constraint de rol para incluir 'empleado'
+        // Migración: actualizar constraint de rol para incluir 'empleado' y 'agente_chat'
         try {
             await pool.query(`
                 ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS usuarios_rol_check
             `);
             await pool.query(`
                 ALTER TABLE usuarios ADD CONSTRAINT usuarios_rol_check
-                CHECK (rol IN ('empresa', 'admin', 'empleado'))
+                CHECK (rol IN ('empresa', 'admin', 'empleado', 'agente_chat'))
             `);
         } catch (err) {
             // Constraint ya actualizada o no existe
@@ -1124,6 +1124,144 @@ const initDB = async () => {
         } catch (err) {
             // Índices ya existen
         }
+
+        // ==================== TABLAS SISTEMA MULTI-AGENTE WHATSAPP ====================
+
+        // Tabla de conversaciones de WhatsApp
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS conversaciones_whatsapp (
+                id SERIAL PRIMARY KEY,
+                celular VARCHAR(20) NOT NULL,
+                paciente_id VARCHAR(100),
+                asignado_a INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+                estado VARCHAR(20) NOT NULL DEFAULT 'nueva',
+                canal VARCHAR(10) NOT NULL DEFAULT 'bot',
+                bot_activo BOOLEAN NOT NULL DEFAULT true,
+                nivel_bot INTEGER DEFAULT 0,
+                nombre_paciente VARCHAR(200),
+                etiquetas TEXT[],
+                prioridad VARCHAR(10) DEFAULT 'normal',
+                fecha_inicio TIMESTAMP DEFAULT NOW(),
+                fecha_ultima_actividad TIMESTAMP DEFAULT NOW(),
+                fecha_asignacion TIMESTAMP,
+                fecha_cierre TIMESTAMP,
+                wix_chatbot_id VARCHAR(100),
+                wix_whp_id VARCHAR(100),
+                sincronizado_wix BOOLEAN DEFAULT false
+            )
+        `);
+
+        // Índices para conversaciones_whatsapp
+        try {
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_conv_celular ON conversaciones_whatsapp(celular)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_conv_asignado ON conversaciones_whatsapp(asignado_a)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_conv_estado ON conversaciones_whatsapp(estado)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_conv_ultima_actividad ON conversaciones_whatsapp(fecha_ultima_actividad DESC)`);
+            await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS unique_celular_activa ON conversaciones_whatsapp(celular) WHERE estado != 'cerrada'`);
+        } catch (err) {
+            // Índices ya existen
+        }
+
+        // Tabla de mensajes de WhatsApp
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS mensajes_whatsapp (
+                id SERIAL PRIMARY KEY,
+                conversacion_id INTEGER NOT NULL REFERENCES conversaciones_whatsapp(id) ON DELETE CASCADE,
+                direccion VARCHAR(10) NOT NULL,
+                contenido TEXT NOT NULL,
+                tipo_mensaje VARCHAR(20) DEFAULT 'text',
+                enviado_por_usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+                enviado_por_tipo VARCHAR(10),
+                sid_twilio VARCHAR(100),
+                timestamp TIMESTAMP DEFAULT NOW(),
+                leido_por_agente BOOLEAN DEFAULT false,
+                fecha_lectura TIMESTAMP,
+                sincronizado_wix BOOLEAN DEFAULT false
+            )
+        `);
+
+        // Índices para mensajes_whatsapp
+        try {
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_msg_conversacion ON mensajes_whatsapp(conversacion_id)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_msg_timestamp ON mensajes_whatsapp(timestamp DESC)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_msg_no_leido ON mensajes_whatsapp(conversacion_id, leido_por_agente) WHERE leido_por_agente = false`);
+        } catch (err) {
+            // Índices ya existen
+        }
+
+        // Tabla de estado de agentes
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS agentes_estado (
+                user_id INTEGER PRIMARY KEY REFERENCES usuarios(id) ON DELETE CASCADE,
+                estado VARCHAR(20) NOT NULL DEFAULT 'offline',
+                conversaciones_activas INTEGER DEFAULT 0,
+                max_conversaciones INTEGER DEFAULT 5,
+                ultima_actividad TIMESTAMP DEFAULT NOW(),
+                tiempo_sesion_inicio TIMESTAMP,
+                auto_asignar BOOLEAN DEFAULT true,
+                notificaciones_activas BOOLEAN DEFAULT true,
+                notas TEXT,
+                CONSTRAINT check_conversaciones CHECK (conversaciones_activas >= 0 AND conversaciones_activas <= max_conversaciones)
+            )
+        `);
+
+        // Índices para agentes_estado
+        try {
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_agente_estado ON agentes_estado(estado)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_agente_disponible ON agentes_estado(estado, auto_asignar) WHERE estado = 'disponible' AND auto_asignar = true`);
+        } catch (err) {
+            // Índices ya existen
+        }
+
+        // Tabla de transferencias de conversación
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS transferencias_conversacion (
+                id SERIAL PRIMARY KEY,
+                conversacion_id INTEGER NOT NULL REFERENCES conversaciones_whatsapp(id) ON DELETE CASCADE,
+                de_usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+                a_usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+                de_canal VARCHAR(10),
+                a_canal VARCHAR(10),
+                motivo TEXT,
+                fecha_transferencia TIMESTAMP DEFAULT NOW()
+            )
+        `);
+
+        // Índices para transferencias_conversacion
+        try {
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_transfer_conversacion ON transferencias_conversacion(conversacion_id)`);
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_transfer_fecha ON transferencias_conversacion(fecha_transferencia DESC)`);
+        } catch (err) {
+            // Índices ya existen
+        }
+
+        // Tabla de reglas de enrutamiento
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS reglas_enrutamiento (
+                id SERIAL PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                descripcion TEXT,
+                prioridad INTEGER DEFAULT 0,
+                activo BOOLEAN DEFAULT true,
+                condiciones JSONB NOT NULL,
+                asignar_a VARCHAR(20) NOT NULL,
+                agente_especifico_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+                etiqueta_auto TEXT,
+                prioridad_asignar VARCHAR(10) DEFAULT 'normal',
+                creado_por INTEGER REFERENCES usuarios(id),
+                fecha_creacion TIMESTAMP DEFAULT NOW(),
+                fecha_modificacion TIMESTAMP DEFAULT NOW()
+            )
+        `);
+
+        // Índices para reglas_enrutamiento
+        try {
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_reglas_prioridad ON reglas_enrutamiento(prioridad DESC) WHERE activo = true`);
+        } catch (err) {
+            // Índices ya existen
+        }
+
+        console.log('✅ Tablas de sistema multi-agente WhatsApp creadas');
 
         // Agregar columnas JSONB para configuración de empresas
         const empresasColumnsToAdd = [
@@ -1193,6 +1331,134 @@ async function hashPassword(password) {
 // Función para verificar password
 async function verificarPassword(password, hash) {
     return bcrypt.compare(password, hash);
+}
+
+// Función para obtener permisos de un usuario
+async function obtenerPermisosUsuario(userId) {
+    try {
+        const result = await pool.query(`
+            SELECT permiso FROM permisos_usuario
+            WHERE usuario_id = $1 AND activo = true
+        `, [userId]);
+
+        return result.rows.map(row => row.permiso);
+    } catch (error) {
+        console.error('Error obteniendo permisos:', error);
+        return [];
+    }
+}
+
+// ==================== FUNCIONES SISTEMA MULTI-AGENTE WHATSAPP ====================
+
+// Función para asignar conversación automáticamente (round-robin)
+async function asignarConversacionAutomatica(conversacionId) {
+    try {
+        console.log(`[Asignación] Buscando agente disponible para conversación ${conversacionId}`);
+
+        // Buscar agente disponible con menos carga
+        const agentes = await pool.query(`
+            SELECT user_id, conversaciones_activas, max_conversaciones
+            FROM agentes_estado
+            WHERE estado = 'disponible'
+                AND auto_asignar = true
+                AND conversaciones_activas < max_conversaciones
+                AND EXTRACT(EPOCH FROM (NOW() - ultima_actividad)) < 300
+            ORDER BY conversaciones_activas ASC, RANDOM()
+            LIMIT 1
+        `);
+
+        if (agentes.rows.length === 0) {
+            console.log('[Asignación] No hay agentes disponibles');
+            return null;
+        }
+
+        const agente = agentes.rows[0];
+
+        // Asignar conversación
+        await pool.query(`
+            UPDATE conversaciones_whatsapp
+            SET asignado_a = $1, fecha_asignacion = NOW(), estado = 'activa', canal = 'humano'
+            WHERE id = $2
+        `, [agente.user_id, conversacionId]);
+
+        // Incrementar contador
+        await pool.query(`
+            UPDATE agentes_estado
+            SET conversaciones_activas = conversaciones_activas + 1
+            WHERE user_id = $1
+        `, [agente.user_id]);
+
+        // Notificar al agente de la nueva conversación
+        notificarAgenteNuevaConversacion(agente.user_id, conversacionId);
+
+        console.log(`[Asignación] Conversación ${conversacionId} → Agente ${agente.user_id}`);
+
+        return agente.user_id;
+    } catch (error) {
+        console.error('[Asignación] Error en asignación automática:', error);
+        return null;
+    }
+}
+
+// Función para determinar si va al bot o agente humano
+async function determinarCanal(mensaje, celular, conversacion) {
+    try {
+        // Si ya está con agente y bot desactivado, mantener con agente
+        if (conversacion && conversacion.canal === 'humano' && conversacion.bot_activo === false) {
+            console.log(`[Enrutamiento] Conversación ${conversacion.id} ya está con agente humano`);
+            return 'humano';
+        }
+
+        // Aplicar reglas de enrutamiento por prioridad
+        const reglas = await pool.query(`
+            SELECT * FROM reglas_enrutamiento
+            WHERE activo = true
+            ORDER BY prioridad DESC
+        `);
+
+        for (const regla of reglas.rows) {
+            const condiciones = regla.condiciones;
+
+            // Evaluar keywords
+            if (condiciones.keywords && Array.isArray(condiciones.keywords)) {
+                const tieneKeyword = condiciones.keywords.some(kw =>
+                    mensaje.toLowerCase().includes(kw.toLowerCase())
+                );
+
+                if (tieneKeyword) {
+                    if (regla.asignar_a === 'agente_disponible') {
+                        console.log(`[Enrutamiento] Keyword detectada → AGENTE HUMANO`);
+                        return 'humano';
+                    } else if (regla.asignar_a === 'bot') {
+                        console.log(`[Enrutamiento] Keyword detectada → BOT`);
+                        return 'bot';
+                    }
+                }
+            }
+
+            // Evaluar horario (fuera de horario → bot)
+            if (condiciones.horario) {
+                const ahora = new Date();
+                const colombiaTime = new Date(ahora.toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+                const hora = colombiaTime.getHours();
+
+                const [horaInicio] = condiciones.horario.desde.split(':').map(Number);
+                const [horaFin] = condiciones.horario.hasta.split(':').map(Number);
+
+                if (hora < horaInicio || hora >= horaFin) {
+                    console.log(`[Enrutamiento] Fuera de horario (${hora}:00) → BOT`);
+                    return 'bot';
+                }
+            }
+        }
+
+        // Default: bot
+        console.log('[Enrutamiento] Sin reglas aplicables → BOT (default)');
+        return 'bot';
+    } catch (error) {
+        console.error('[Enrutamiento] Error determinando canal:', error);
+        return 'bot';
+    }
 }
 
 // Middleware de autenticación
@@ -1954,8 +2220,18 @@ const PERMISOS_EMPLEADO = [
     { codigo: 'EMP_ENLAZAR_FORMULARIO', nombre: 'Enlazar Formulario', descripcion: 'Vincular orden con formulario médico', categoria: 'Acciones' }
 ];
 
+// Lista de permisos para agentes de chat (rol: agente_chat)
+const PERMISOS_AGENTE_CHAT = [
+    { codigo: 'CHAT_VER_CONVERSACIONES', nombre: 'Ver Conversaciones', descripcion: 'Ver conversaciones asignadas al agente', categoria: 'Chat' },
+    { codigo: 'CHAT_RESPONDER', nombre: 'Responder Mensajes', descripcion: 'Enviar mensajes a pacientes por WhatsApp', categoria: 'Chat' },
+    { codigo: 'CHAT_TRANSFERIR', nombre: 'Transferir Conversación', descripcion: 'Transferir chat a otro agente', categoria: 'Chat' },
+    { codigo: 'CHAT_ACTIVAR_BOT', nombre: 'Activar/Desactivar Bot', descripcion: 'Control del bot automático por conversación', categoria: 'Chat' },
+    { codigo: 'CHAT_CERRAR', nombre: 'Cerrar Conversación', descripcion: 'Marcar conversación como cerrada', categoria: 'Chat' },
+    { codigo: 'CHAT_VER_TODAS', nombre: 'Ver Todas (Supervisor)', descripcion: 'Ver conversaciones de todos los agentes (supervisor)', categoria: 'Chat' }
+];
+
 // GET /api/admin/permisos/disponibles - Obtener lista de permisos disponibles
-// Query param: tipo = 'empresa' | 'empleado' (default: empresa)
+// Query param: tipo = 'empresa' | 'empleado' | 'agente_chat' (default: empresa)
 app.get('/api/admin/permisos/disponibles', authMiddleware, requireAdmin, (req, res) => {
     const { tipo } = req.query;
 
@@ -1963,6 +2239,11 @@ app.get('/api/admin/permisos/disponibles', authMiddleware, requireAdmin, (req, r
         res.json({
             success: true,
             permisos: PERMISOS_EMPLEADO
+        });
+    } else if (tipo === 'agente_chat') {
+        res.json({
+            success: true,
+            permisos: PERMISOS_AGENTE_CHAT
         });
     } else {
         res.json({
@@ -2010,10 +2291,11 @@ app.put('/api/admin/usuarios/:id/permisos', authMiddleware, requireAdmin, async 
             });
         }
 
-        // Validar que los permisos existen (aceptar tanto permisos de empresa como de empleado)
+        // Validar que los permisos existen (aceptar permisos de empresa, empleado y agente_chat)
         const permisosValidosEmpresa = PERMISOS_DISPONIBLES.map(p => p.codigo);
         const permisosValidosEmpleado = PERMISOS_EMPLEADO.map(p => p.codigo);
-        const todosPermisosValidos = [...permisosValidosEmpresa, ...permisosValidosEmpleado];
+        const permisosValidosAgenteChat = PERMISOS_AGENTE_CHAT.map(p => p.codigo);
+        const todosPermisosValidos = [...permisosValidosEmpresa, ...permisosValidosEmpleado, ...permisosValidosAgenteChat];
         const permisosInvalidos = permisos.filter(p => !todosPermisosValidos.includes(p));
         if (permisosInvalidos.length > 0) {
             return res.status(400).json({
@@ -2055,11 +2337,12 @@ app.put('/api/admin/usuarios/:id/permisos', authMiddleware, requireAdmin, async 
 // GET /api/auth/mis-permisos - Obtener permisos del usuario autenticado
 app.get('/api/auth/mis-permisos', authMiddleware, async (req, res) => {
     try {
-        // Los admins tienen todos los permisos (empresa + empleado)
+        // Los admins tienen todos los permisos (empresa + empleado + agente_chat)
         if (req.usuario.rol === 'admin') {
             const todosPermisos = [
                 ...PERMISOS_DISPONIBLES.map(p => p.codigo),
-                ...PERMISOS_EMPLEADO.map(p => p.codigo)
+                ...PERMISOS_EMPLEADO.map(p => p.codigo),
+                ...PERMISOS_AGENTE_CHAT.map(p => p.codigo)
             ];
             return res.json({
                 success: true,
@@ -9334,6 +9617,734 @@ app.get('/api/certificado-pdf/:id', async (req, res) => {
 });
 
 // ==========================================
+// ENDPOINTS SISTEMA MULTI-AGENTE WHATSAPP
+// ==========================================
+
+// GET /api/agentes/conversaciones - Listar conversaciones asignadas al agente
+app.get('/api/agentes/conversaciones', authMiddleware, async (req, res) => {
+    try {
+        const { estado, limit = 50, offset = 0 } = req.query;
+        const userId = req.usuario.id;
+
+        // Verificar permiso
+        const permisos = await obtenerPermisosUsuario(userId);
+        if (!permisos.includes('CHAT_VER_CONVERSACIONES')) {
+            return res.status(403).json({ success: false, message: 'Sin permiso para ver conversaciones' });
+        }
+
+        let query = `
+            SELECT c.*,
+                COUNT(m.id) FILTER (WHERE m.direccion = 'entrada' AND m.leido_por_agente = false) as mensajes_no_leidos,
+                (SELECT contenido FROM mensajes_whatsapp WHERE conversacion_id = c.id ORDER BY timestamp DESC LIMIT 1) as ultimo_mensaje,
+                (SELECT timestamp FROM mensajes_whatsapp WHERE conversacion_id = c.id ORDER BY timestamp DESC LIMIT 1) as timestamp_ultimo_mensaje
+            FROM conversaciones_whatsapp c
+            LEFT JOIN mensajes_whatsapp m ON c.id = m.conversacion_id
+            WHERE c.asignado_a = $1
+        `;
+
+        const params = [userId];
+
+        if (estado && estado !== 'todas') {
+            query += ` AND c.estado = $${params.length + 1}`;
+            params.push(estado);
+        }
+
+        query += ` GROUP BY c.id ORDER BY c.fecha_ultima_actividad DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+        params.push(parseInt(limit), parseInt(offset));
+
+        const result = await pool.query(query, params);
+
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.error('Error en /api/agentes/conversaciones:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/agentes/conversacion/:id/mensajes - Obtener mensajes de una conversación
+app.get('/api/agentes/conversacion/:id/mensajes', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { limit = 100, offset = 0 } = req.query;
+        const userId = req.usuario.id;
+
+        // Verificar permiso
+        const permisos = await obtenerPermisosUsuario(userId);
+        if (!permisos.includes('CHAT_VER_CONVERSACIONES')) {
+            return res.status(403).json({ success: false, message: 'Sin permiso para ver conversaciones' });
+        }
+
+        // Verificar que conversación está asignada al agente (o es admin)
+        const convResult = await pool.query(
+            'SELECT asignado_a FROM conversaciones_whatsapp WHERE id = $1',
+            [id]
+        );
+
+        if (convResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+        }
+
+        if (convResult.rows[0].asignado_a !== userId && req.usuario.rol !== 'admin') {
+            return res.status(403).json({ success: false, message: 'No autorizado para ver esta conversación' });
+        }
+
+        // Obtener mensajes
+        const mensajes = await pool.query(`
+            SELECT m.*, u.nombre_completo as agente_nombre
+            FROM mensajes_whatsapp m
+            LEFT JOIN usuarios u ON m.enviado_por_usuario_id = u.id
+            WHERE m.conversacion_id = $1
+            ORDER BY m.timestamp ASC
+            LIMIT $2 OFFSET $3
+        `, [id, parseInt(limit), parseInt(offset)]);
+
+        // Marcar mensajes como leídos
+        await pool.query(`
+            UPDATE mensajes_whatsapp
+            SET leido_por_agente = true, fecha_lectura = NOW()
+            WHERE conversacion_id = $1 AND direccion = 'entrada' AND leido_por_agente = false
+        `, [id]);
+
+        res.json({ success: true, data: mensajes.rows });
+    } catch (error) {
+        console.error('Error en /api/agentes/conversacion/:id/mensajes:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// POST /api/whatsapp/webhook - Recibe mensajes desde Wix
+app.post('/api/whatsapp/webhook', async (req, res) => {
+    try {
+        const { from, body, sid, timestamp, fromName } = req.body;
+
+        // Limpiar número
+        const celular = from.replace(/\D/g, '').replace(/^57/, '');
+
+        console.log(`[Webhook] Mensaje de ${celular}: ${body}`);
+
+        // 1. Buscar o crear conversación
+        let conversacion = await pool.query(
+            `SELECT * FROM conversaciones_whatsapp WHERE celular = $1 AND estado != 'cerrada' LIMIT 1`,
+            [celular]
+        );
+
+        if (conversacion.rows.length === 0) {
+            // Crear nueva conversación
+            const nuevoResult = await pool.query(`
+                INSERT INTO conversaciones_whatsapp (celular, nombre_paciente, estado, canal)
+                VALUES ($1, $2, 'nueva', 'bot')
+                RETURNING *
+            `, [celular, fromName || celular]);
+
+            conversacion = nuevoResult;
+        } else {
+            conversacion = { rows: conversacion.rows };
+        }
+
+        const conv = conversacion.rows[0];
+
+        // 2. Guardar mensaje entrante
+        await pool.query(`
+            INSERT INTO mensajes_whatsapp
+            (conversacion_id, direccion, contenido, sid_twilio, timestamp)
+            VALUES ($1, 'entrada', $2, $3, $4)
+        `, [conv.id, body, sid, timestamp || new Date()]);
+
+        // 3. Actualizar última actividad
+        await pool.query(`
+            UPDATE conversaciones_whatsapp
+            SET fecha_ultima_actividad = NOW()
+            WHERE id = $1
+        `, [conv.id]);
+
+        // 4. Determinar canal (bot vs humano)
+        const canal = await determinarCanal(body, celular, conv);
+
+        if (canal === 'humano' && !conv.asignado_a) {
+            // Asignar automáticamente
+            const agenteId = await asignarConversacionAutomatica(conv.id);
+
+            if (agenteId) {
+                res.json({
+                    success: true,
+                    canal: 'humano',
+                    asignado_a: agenteId,
+                    detener_bot: true
+                });
+                return;
+            }
+        }
+
+        // Si ya está asignado a agente, notificar
+        if (conv.asignado_a) {
+            notificarAgenteNuevoMensaje(conv.asignado_a, conv.id, body);
+
+            res.json({
+                success: true,
+                canal: 'humano',
+                asignado_a: conv.asignado_a,
+                detener_bot: true
+            });
+            return;
+        }
+
+        // Continuar con bot
+        res.json({
+            success: true,
+            canal: 'bot',
+            detener_bot: false
+        });
+
+    } catch (error) {
+        console.error('Error en webhook:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// POST /api/agentes/conversacion/:id/mensaje
+app.post('/api/agentes/conversacion/:id/mensaje', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { contenido } = req.body;
+        const userId = req.usuario.id;
+
+        if (!contenido || !contenido.trim()) {
+            return res.status(400).json({ success: false, message: 'Contenido vacío' });
+        }
+
+        // Verificar asignación
+        const conv = await pool.query(
+            'SELECT * FROM conversaciones_whatsapp WHERE id = $1',
+            [id]
+        );
+
+        if (conv.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+        }
+
+        if (conv.rows[0].asignado_a !== userId && req.usuario.rol !== 'admin') {
+            return res.status(403).json({ success: false, message: 'No autorizado' });
+        }
+
+        const conversacion = conv.rows[0];
+
+        // 1. Guardar mensaje en BD
+        const msgResult = await pool.query(`
+            INSERT INTO mensajes_whatsapp
+            (conversacion_id, direccion, contenido, enviado_por_usuario_id, enviado_por_tipo, timestamp)
+            VALUES ($1, 'salida', $2, $3, 'agente', NOW())
+            RETURNING *
+        `, [id, contenido.trim(), userId]);
+
+        // 2. Enviar por WhatsApp (usar función existente)
+        const numeroCompleto = `57${conversacion.celular}`;
+
+        // Llamar a Wix para enviar
+        try {
+            const wixResponse = await fetch('https://www.bsl.com.co/_functions/enviarMensajeAgente', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: numeroCompleto,
+                    message: contenido.trim()
+                })
+            });
+
+            if (!wixResponse.ok) {
+                console.error('Error enviando mensaje por Wix');
+            }
+        } catch (wixError) {
+            console.error('Error llamando a Wix:', wixError);
+        }
+
+        // 3. Actualizar última actividad
+        await pool.query(`
+            UPDATE conversaciones_whatsapp
+            SET fecha_ultima_actividad = NOW()
+            WHERE id = $1
+        `, [id]);
+
+        // 4. Marcar mensaje como sincronizado con Wix
+        await pool.query(`
+            UPDATE mensajes_whatsapp SET sincronizado_wix = true WHERE id = $1
+        `, [msgResult.rows[0].id]);
+
+        res.json({ success: true, data: msgResult.rows[0] });
+
+    } catch (error) {
+        console.error('Error enviando mensaje:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// PUT /api/agentes/estado
+app.put('/api/agentes/estado', authMiddleware, async (req, res) => {
+    try {
+        const { estado, notas } = req.body;
+        const userId = req.usuario.id;
+
+        if (!['disponible', 'ocupado', 'offline', 'ausente'].includes(estado)) {
+            return res.status(400).json({ success: false, message: 'Estado inválido' });
+        }
+
+        await pool.query(`
+            INSERT INTO agentes_estado (user_id, estado, notas, ultima_actividad)
+            VALUES ($1, $2, $3, NOW())
+            ON CONFLICT (user_id)
+            DO UPDATE SET estado = $2, notas = $3, ultima_actividad = NOW()
+        `, [userId, estado, notas]);
+
+        res.json({ success: true, message: 'Estado actualizado' });
+
+    } catch (error) {
+        console.error('Error actualizando estado:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// PUT /api/agentes/conversacion/:id/transferir
+app.put('/api/agentes/conversacion/:id/transferir', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { a_usuario_id, motivo } = req.body;
+        const userId = req.usuario.id;
+
+        // Verificar que usuario destino es agente_chat
+        const destino = await pool.query(
+            'SELECT rol FROM usuarios WHERE id = $1 AND estado = \'aprobado\'',
+            [a_usuario_id]
+        );
+
+        if (destino.rows.length === 0 || destino.rows[0].rol !== 'agente_chat') {
+            return res.status(400).json({ success: false, message: 'Usuario destino inválido' });
+        }
+
+        // Obtener conversación actual
+        const conv = await pool.query(
+            'SELECT * FROM conversaciones_whatsapp WHERE id = $1',
+            [id]
+        );
+
+        if (conv.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+        }
+
+        const conversacion = conv.rows[0];
+
+        // Verificar autorización
+        if (conversacion.asignado_a !== userId && req.usuario.rol !== 'admin') {
+            return res.status(403).json({ success: false, message: 'No autorizado' });
+        }
+
+        // Registrar transferencia
+        await pool.query(`
+            INSERT INTO transferencias_conversacion
+            (conversacion_id, de_usuario_id, a_usuario_id, de_canal, a_canal, motivo)
+            VALUES ($1, $2, $3, $4, 'humano', $5)
+        `, [id, conversacion.asignado_a, a_usuario_id, conversacion.canal, motivo]);
+
+        // Actualizar conversación
+        await pool.query(`
+            UPDATE conversaciones_whatsapp
+            SET asignado_a = $1, fecha_asignacion = NOW()
+            WHERE id = $2
+        `, [a_usuario_id, id]);
+
+        // Actualizar contadores de agentes
+        if (conversacion.asignado_a) {
+            await pool.query(`
+                UPDATE agentes_estado
+                SET conversaciones_activas = GREATEST(conversaciones_activas - 1, 0)
+                WHERE user_id = $1
+            `, [conversacion.asignado_a]);
+        }
+
+        await pool.query(`
+            UPDATE agentes_estado
+            SET conversaciones_activas = conversaciones_activas + 1
+            WHERE user_id = $1
+        `, [a_usuario_id]);
+
+        // Notificar al nuevo agente
+        notificarAgenteNuevaConversacion(a_usuario_id, id);
+
+        res.json({ success: true, message: 'Conversación transferida' });
+
+    } catch (error) {
+        console.error('Error transfiriendo conversación:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// PUT /api/agentes/conversacion/:id/bot
+app.put('/api/agentes/conversacion/:id/bot', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { bot_activo } = req.body;
+        const userId = req.usuario.id;
+
+        // Verificar asignación
+        const conv = await pool.query(
+            'SELECT * FROM conversaciones_whatsapp WHERE id = $1',
+            [id]
+        );
+
+        if (conv.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+        }
+
+        if (conv.rows[0].asignado_a !== userId && req.usuario.rol !== 'admin') {
+            return res.status(403).json({ success: false, message: 'No autorizado' });
+        }
+
+        // Actualizar bot_activo
+        await pool.query(`
+            UPDATE conversaciones_whatsapp
+            SET bot_activo = $1, canal = CASE WHEN $1 THEN 'bot' ELSE 'humano' END
+            WHERE id = $2
+        `, [bot_activo, id]);
+
+        res.json({ success: true, message: 'Bot actualizado' });
+
+    } catch (error) {
+        console.error('Error actualizando bot:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// PUT /api/agentes/conversacion/:id/cerrar
+app.put('/api/agentes/conversacion/:id/cerrar', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.usuario.id;
+
+        const conv = await pool.query(
+            'SELECT asignado_a FROM conversaciones_whatsapp WHERE id = $1',
+            [id]
+        );
+
+        if (conv.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+        }
+
+        if (conv.rows[0].asignado_a !== userId && req.usuario.rol !== 'admin') {
+            return res.status(403).json({ success: false, message: 'No autorizado' });
+        }
+
+        // Cerrar conversación
+        await pool.query(`
+            UPDATE conversaciones_whatsapp
+            SET estado = 'cerrada', fecha_cierre = NOW()
+            WHERE id = $1
+        `, [id]);
+
+        // Decrementar contador del agente
+        if (conv.rows[0].asignado_a) {
+            await pool.query(`
+                UPDATE agentes_estado
+                SET conversaciones_activas = GREATEST(conversaciones_activas - 1, 0)
+                WHERE user_id = $1
+            `, [conv.rows[0].asignado_a]);
+        }
+
+        res.json({ success: true, message: 'Conversación cerrada' });
+
+    } catch (error) {
+        console.error('Error cerrando conversación:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ==========================================
+// ENDPOINTS ADMINISTRACIÓN - Supervisión
+// ==========================================
+
+// GET /api/admin/agentes - Ver todos los agentes de chat
+app.get('/api/admin/agentes', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT u.id, u.nombre_completo, u.email,
+                   a.estado, a.conversaciones_activas, a.max_conversaciones,
+                   a.ultima_actividad, a.notas, a.auto_asignar
+            FROM usuarios u
+            LEFT JOIN agentes_estado a ON u.id = a.user_id
+            WHERE u.rol = 'agente_chat' AND u.estado = 'aprobado'
+            ORDER BY a.estado DESC NULLS LAST, a.conversaciones_activas ASC
+        `);
+
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.error('Error en /api/admin/agentes:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/admin/conversaciones - Ver todas las conversaciones
+app.get('/api/admin/conversaciones', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { estado, limit = 100, offset = 0 } = req.query;
+
+        let query = `
+            SELECT c.*,
+                u.nombre_completo as agente_nombre,
+                COUNT(m.id) FILTER (WHERE m.direccion = 'entrada' AND m.leido_por_agente = false) as mensajes_no_leidos,
+                (SELECT contenido FROM mensajes_whatsapp WHERE conversacion_id = c.id ORDER BY timestamp DESC LIMIT 1) as ultimo_mensaje,
+                (SELECT timestamp FROM mensajes_whatsapp WHERE conversacion_id = c.id ORDER BY timestamp DESC LIMIT 1) as timestamp_ultimo_mensaje
+            FROM conversaciones_whatsapp c
+            LEFT JOIN usuarios u ON c.asignado_a = u.id
+            LEFT JOIN mensajes_whatsapp m ON c.id = m.conversacion_id
+            WHERE 1=1
+        `;
+
+        const params = [];
+
+        if (estado && estado !== 'todas') {
+            query += ` AND c.estado = $${params.length + 1}`;
+            params.push(estado);
+        }
+
+        query += ` GROUP BY c.id, u.nombre_completo
+                   ORDER BY c.fecha_ultima_actividad DESC
+                   LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+        params.push(limit, offset);
+
+        const result = await pool.query(query, params);
+
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.error('Error en /api/admin/conversaciones:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// PUT /api/admin/asignar-conversacion/:id - Asignar conversación manualmente
+app.put('/api/admin/asignar-conversacion/:id', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { agente_id, forzar } = req.body;
+
+        // Verificar disponibilidad si no es forzado
+        if (!forzar) {
+            const agente = await pool.query(
+                'SELECT conversaciones_activas, max_conversaciones FROM agentes_estado WHERE user_id = $1',
+                [agente_id]
+            );
+
+            if (agente.rows.length === 0 || agente.rows[0].conversaciones_activas >= agente.rows[0].max_conversaciones) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Agente no disponible. Usa "forzar: true" para asignar de todos modos.'
+                });
+            }
+        }
+
+        // Obtener conversación actual
+        const convActual = await pool.query('SELECT asignado_a, canal FROM conversaciones_whatsapp WHERE id = $1', [id]);
+
+        if (convActual.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+        }
+
+        const agenteAnterior = convActual.rows[0].asignado_a;
+
+        // Actualizar asignación
+        await pool.query(`
+            UPDATE conversaciones_whatsapp
+            SET asignado_a = $1, fecha_asignacion = NOW(), estado = 'activa', canal = 'humano'
+            WHERE id = $2
+        `, [agente_id, id]);
+
+        // Decrementar contador del agente anterior
+        if (agenteAnterior) {
+            await pool.query(`
+                UPDATE agentes_estado
+                SET conversaciones_activas = GREATEST(conversaciones_activas - 1, 0)
+                WHERE user_id = $1
+            `, [agenteAnterior]);
+        }
+
+        // Incrementar contador del nuevo agente
+        await pool.query(`
+            INSERT INTO agentes_estado (user_id, conversaciones_activas)
+            VALUES ($1, 1)
+            ON CONFLICT (user_id)
+            DO UPDATE SET conversaciones_activas = agentes_estado.conversaciones_activas + 1
+        `, [agente_id]);
+
+        // Registrar transferencia
+        await pool.query(`
+            INSERT INTO transferencias_conversacion (conversacion_id, de_usuario_id, a_usuario_id, de_canal, a_canal, motivo)
+            VALUES ($1, $2, $3, $4, 'humano', 'Asignación manual por admin')
+        `, [id, agenteAnterior, agente_id, convActual.rows[0].canal || 'bot']);
+
+        // Notificar al nuevo agente
+        notificarAgenteNuevaConversacion(agente_id, id);
+
+        res.json({ success: true, message: 'Conversación asignada correctamente' });
+
+    } catch (error) {
+        console.error('Error asignando conversación:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET /api/admin/estadisticas-chat - Estadísticas generales
+app.get('/api/admin/estadisticas-chat', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        // Agentes online
+        const agentesOnline = await pool.query(`
+            SELECT COUNT(*) as total
+            FROM agentes_estado
+            WHERE estado IN ('disponible', 'ocupado')
+              AND EXTRACT(EPOCH FROM (NOW() - ultima_actividad)) < 300
+        `);
+
+        // Conversaciones activas
+        const conversacionesActivas = await pool.query(`
+            SELECT COUNT(*) as total
+            FROM conversaciones_whatsapp
+            WHERE estado = 'activa'
+        `);
+
+        // Tiempo respuesta promedio (últimas 24h)
+        const tiempoRespuesta = await pool.query(`
+            SELECT AVG(EXTRACT(EPOCH FROM (m2.timestamp - m1.timestamp))) as promedio_segundos
+            FROM mensajes_whatsapp m1
+            JOIN mensajes_whatsapp m2 ON m1.conversacion_id = m2.conversacion_id
+            WHERE m1.direccion = 'entrada'
+              AND m2.direccion = 'salida'
+              AND m2.timestamp > m1.timestamp
+              AND m2.timestamp - m1.timestamp < INTERVAL '1 hour'
+              AND m1.timestamp > NOW() - INTERVAL '24 hours'
+        `);
+
+        const promedioMinutos = tiempoRespuesta.rows[0].promedio_segundos
+            ? Math.round(tiempoRespuesta.rows[0].promedio_segundos / 60)
+            : 0;
+
+        res.json({
+            success: true,
+            data: {
+                agentes_online: parseInt(agentesOnline.rows[0].total) || 0,
+                conversaciones_activas: parseInt(conversacionesActivas.rows[0].total) || 0,
+                tiempo_respuesta_promedio_min: promedioMinutos
+            }
+        });
+    } catch (error) {
+        console.error('Error en /api/admin/estadisticas-chat:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ==========================================
+// SERVER-SENT EVENTS - Tiempo Real (Agentes)
+// ==========================================
+
+// Mapa para almacenar las conexiones SSE de los agentes de chat
+const sseClientesAgentes = new Map(); // userId -> response object
+
+// GET /api/whatsapp/stream - Conexión SSE para notificaciones en tiempo real
+app.get('/api/whatsapp/stream', authMiddleware, (req, res) => {
+    const userId = req.usuario.id;
+
+    // Configurar headers para SSE
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no' // Nginx compatibility
+    });
+
+    // Guardar conexión del cliente
+    sseClientesAgentes.set(userId, res);
+
+    console.log(`[SSE] Agente ${userId} conectado al stream`);
+
+    // Heartbeat cada 30 segundos para mantener la conexión viva
+    const heartbeatInterval = setInterval(() => {
+        res.write(': heartbeat\n\n');
+    }, 30000);
+
+    // Enviar confirmación inicial
+    res.write('event: connected\n');
+    res.write(`data: ${JSON.stringify({ message: 'Conectado al stream de notificaciones' })}\n\n`);
+
+    // Actualizar estado del agente a 'disponible' automáticamente
+    pool.query(`
+        INSERT INTO agentes_estado (user_id, estado, ultima_actividad)
+        VALUES ($1, 'disponible', NOW())
+        ON CONFLICT (user_id)
+        DO UPDATE SET estado = 'disponible', ultima_actividad = NOW()
+    `, [userId]).catch(err => console.error('[SSE] Error actualizando estado:', err));
+
+    // Cleanup cuando el cliente se desconecta
+    req.on('close', () => {
+        clearInterval(heartbeatInterval);
+        sseClientesAgentes.delete(userId);
+        console.log(`[SSE] Agente ${userId} desconectado del stream`);
+
+        // Marcar agente como offline
+        pool.query(`
+            UPDATE agentes_estado SET estado = 'offline', ultima_actividad = NOW()
+            WHERE user_id = $1
+        `, [userId]).catch(err => console.error('[SSE] Error marcando offline:', err));
+    });
+});
+
+// Funciones auxiliares para enviar notificaciones SSE
+function notificarAgenteNuevoMensaje(userId, conversacionId, contenido) {
+    const client = sseClientesAgentes.get(userId);
+    if (client) {
+        try {
+            client.write('event: nuevo_mensaje\n');
+            client.write(`data: ${JSON.stringify({
+                conversacion_id: conversacionId,
+                contenido: contenido,
+                timestamp: new Date().toISOString()
+            })}\n\n`);
+            console.log(`[SSE] Notificación de nuevo mensaje enviada a agente ${userId}`);
+        } catch (error) {
+            console.error(`[SSE] Error enviando notificación a agente ${userId}:`, error);
+            sseClientesAgentes.delete(userId);
+        }
+    }
+}
+
+function notificarAgenteNuevaConversacion(userId, conversacionId) {
+    const client = sseClientesAgentes.get(userId);
+    if (client) {
+        try {
+            client.write('event: nueva_conversacion\n');
+            client.write(`data: ${JSON.stringify({
+                conversacion_id: conversacionId,
+                timestamp: new Date().toISOString()
+            })}\n\n`);
+            console.log(`[SSE] Notificación de nueva conversación enviada a agente ${userId}`);
+        } catch (error) {
+            console.error(`[SSE] Error enviando notificación a agente ${userId}:`, error);
+            sseClientesAgentes.delete(userId);
+        }
+    }
+}
+
+function notificarAgenteConversacionCerrada(userId, conversacionId) {
+    const client = sseClientesAgentes.get(userId);
+    if (client) {
+        try {
+            client.write('event: conversacion_cerrada\n');
+            client.write(`data: ${JSON.stringify({
+                conversacion_id: conversacionId,
+                timestamp: new Date().toISOString()
+            })}\n\n`);
+            console.log(`[SSE] Notificación de conversación cerrada enviada a agente ${userId}`);
+        } catch (error) {
+            console.error(`[SSE] Error enviando notificación a agente ${userId}:`, error);
+            sseClientesAgentes.delete(userId);
+        }
+    }
+}
+
+// ==========================================
 // CRON JOB - Barrido NUBIA cada 5 minutos
 // ==========================================
 cron.schedule('*/5 * * * *', async () => {
@@ -9353,6 +10364,46 @@ cron.schedule('*/5 * * * *', async () => {
 });
 
 console.log('✅ Cron job configurado: Barrido NUBIA cada 5 minutos');
+
+// ==========================================
+// FUNCIÓN: Crear reglas de enrutamiento por defecto
+// ==========================================
+async function crearReglasEnrutamientoPorDefecto() {
+    try {
+        // Regla 1: Fuera de horario → bot
+        await pool.query(`
+            INSERT INTO reglas_enrutamiento (nombre, prioridad, condiciones, asignar_a, activo)
+            VALUES ('Fuera de horario laboral', 10,
+                    '{"horario": {"desde": "08:00", "hasta": "18:00"}}'::jsonb, 'bot', true)
+            ON CONFLICT DO NOTHING
+        `);
+
+        // Regla 2: Keywords urgentes → agente
+        await pool.query(`
+            INSERT INTO reglas_enrutamiento (nombre, prioridad, condiciones, asignar_a, etiqueta_auto, activo)
+            VALUES ('Emergencias', 20,
+                    '{"keywords": ["urgente", "emergencia", "ayuda", "problema grave"]}'::jsonb,
+                    'agente_disponible', 'URGENTE', true)
+            ON CONFLICT DO NOTHING
+        `);
+
+        // Regla 3: Hablar con humano → agente
+        await pool.query(`
+            INSERT INTO reglas_enrutamiento (nombre, prioridad, condiciones, asignar_a, activo)
+            VALUES ('Solicitar humano', 15,
+                    '{"keywords": ["hablar con persona", "asesor", "operador", "humano", "agente"]}'::jsonb,
+                    'agente_disponible', true)
+            ON CONFLICT DO NOTHING
+        `);
+
+        console.log('✅ Reglas de enrutamiento por defecto creadas');
+    } catch (error) {
+        console.error('❌ Error creando reglas de enrutamiento:', error);
+    }
+}
+
+// Inicializar reglas al arrancar el servidor
+crearReglasEnrutamientoPorDefecto();
 
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
