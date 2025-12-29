@@ -2185,7 +2185,7 @@ app.get('/api/admin/tablas/:nombre/datos', authMiddleware, requireAdmin, async (
 
 // Ruta principal - servir el formulario
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // ========== ENDPOINT SSE PARA NOTIFICACIONES EN TIEMPO REAL ==========
@@ -3914,6 +3914,7 @@ app.get('/api/ordenes', authMiddleware, async (req, res) => {
                    h."fechaAtencion", h."horaAtencion", h."examenes", h."ciudad", h."celular",
                    h."_createdDate", h."_updatedDate", h."fechaConsulta",
                    h."mdConceptoFinal", h."mdRecomendacionesMedicasAdicionales", h."mdObservacionesCertificado", h."mdObsParaMiDocYa",
+                   h."centro_de_costo",
                    (
                        SELECT foto_url FROM formularios
                        WHERE (wix_id = h."_id" OR numero_id = h."numeroId") AND foto_url IS NOT NULL
@@ -4093,6 +4094,7 @@ app.get('/api/ordenes-aprobador', async (req, res) => {
                    h."fechaAtencion", h."horaAtencion", h."examenes", h."ciudad", h."celular",
                    h."_createdDate", h."_updatedDate", h."fechaConsulta", h."aprobacion",
                    h."mdConceptoFinal", h."mdRecomendacionesMedicasAdicionales", h."mdObservacionesCertificado", h."mdObsParaMiDocYa",
+                   h."centro_de_costo",
                    (
                        SELECT foto_url FROM formularios
                        WHERE (wix_id = h."_id" OR numero_id = h."numeroId") AND foto_url IS NOT NULL
