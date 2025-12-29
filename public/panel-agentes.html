@@ -198,11 +198,11 @@
         // Auth Helper
         const Auth = {
             getToken() {
-                return localStorage.getItem('token');
+                return localStorage.getItem('bsl_auth_token');
             },
 
             getUsuario() {
-                const userData = localStorage.getItem('usuario');
+                const userData = localStorage.getItem('bsl_user');
                 return userData ? JSON.parse(userData) : null;
             },
 
@@ -222,8 +222,8 @@
                 const response = await fetch(url, { ...options, headers });
 
                 if (response.status === 401) {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('usuario');
+                    localStorage.removeItem('bsl_auth_token');
+                    localStorage.removeItem('bsl_user');
                     window.location.href = '/login.html';
                     throw new Error('Sesión expirada');
                 }
@@ -703,8 +703,8 @@
             if (eventSource) {
                 eventSource.close();
             }
-            localStorage.removeItem('token');
-            localStorage.removeItem('usuario');
+            localStorage.removeItem('bsl_auth_token');
+            localStorage.removeItem('bsl_user');
             window.location.href = '/login.html';
         }
 
