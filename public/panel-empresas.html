@@ -3397,14 +3397,20 @@
 
         // Función para determinar exámenes faltantes
         function obtenerExamenesFaltantes(orden) {
-            if (!orden.examenes) return [];
-
-            const examenesProgramados = orden.examenes.split(',').map(e => e.trim().toLowerCase());
             const faltantes = [];
 
-            // Lista de exámenes a verificar
+            // Para SITEL, SIEMPRE incluir Prueba ADC por defecto
+            if (codEmpresa === 'SITEL') {
+                faltantes.push('PRUEBA ADC');
+            }
+
+            // Si no hay exámenes programados, retornar solo ADC para SITEL
+            if (!orden.examenes) return faltantes;
+
+            const examenesProgramados = orden.examenes.split(',').map(e => e.trim().toLowerCase());
+
+            // Lista de exámenes a verificar (sin ADC ya que se agregó arriba para SITEL)
             const examenesMap = {
-                'adc': ['adc', 'virtual'],
                 'audiometría': ['audiometria', 'audiometría'],
                 'visiometría': ['visiometria', 'visiometría'],
                 'espirometría': ['espirometria', 'espirometría']
