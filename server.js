@@ -1556,6 +1556,17 @@ const requireAdmin = (req, res, next) => {
     next();
 };
 
+// Middleware para rutas que permiten admin o supervisor_chat
+const requireAdminOrSupervisor = (req, res, next) => {
+    if (!req.usuario || (req.usuario.rol !== 'admin' && req.usuario.rol !== 'supervisor_chat')) {
+        return res.status(403).json({
+            success: false,
+            message: 'Acceso denegado: se requiere rol de administrador o supervisor de chat'
+        });
+    }
+    next();
+};
+
 // ========== ENDPOINTS DE AUTENTICACIÓN ==========
 
 // POST /api/auth/registro - Registro de nuevo usuario
@@ -10060,7 +10071,7 @@ app.put('/api/agentes/conversacion/:id/cerrar', authMiddleware, async (req, res)
 // ==========================================
 
 // GET /api/admin/agentes - Ver todos los agentes de chat
-app.get('/api/admin/agentes', authMiddleware, requireAdmin, async (req, res) => {
+app.get('/api/admin/agentes', authMiddleware, requireAdminOrSupervisor, async (req, res) => {
     try {
         const result = await pool.query(`
             SELECT u.id, u.nombre_completo, u.email,
@@ -10080,7 +10091,7 @@ app.get('/api/admin/agentes', authMiddleware, requireAdmin, async (req, res) => 
 });
 
 // GET /api/admin/conversaciones - Ver todas las conversaciones
-app.get('/api/admin/conversaciones', authMiddleware, requireAdmin, async (req, res) => {
+app.get('/api/admin/conversaciones', authMiddleware, requireAdminOrSupervisor, async (req, res) => {
     try {
         const { estado, limit = 100, offset = 0 } = req.query;
 
@@ -10118,7 +10129,7 @@ app.get('/api/admin/conversaciones', authMiddleware, requireAdmin, async (req, r
 });
 
 // PUT /api/admin/asignar-conversacion/:id - Asignar conversación manualmente
-app.put('/api/admin/asignar-conversacion/:id', authMiddleware, requireAdmin, async (req, res) => {
+app.put('/api/admin/asignar-conversacion/:id', authMiddleware, requireAdminOrSupervisor, async (req, res) => {
     try {
         const { id } = req.params;
         const { agente_id, forzar } = req.body;
@@ -10189,7 +10200,7 @@ app.put('/api/admin/asignar-conversacion/:id', authMiddleware, requireAdmin, asy
 });
 
 // GET /api/admin/estadisticas-chat - Estadísticas generales
-app.get('/api/admin/estadisticas-chat', authMiddleware, requireAdmin, async (req, res) => {
+app.get('/api/admin/estadisticas-chat', authMiddleware, requireAdminOrSupervisor, async (req, res) => {
     try {
         // Agentes online
         const agentesOnline = await pool.query(`
