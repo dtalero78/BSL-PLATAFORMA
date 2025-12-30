@@ -10269,7 +10269,7 @@ app.get('/api/whatsapp/stream', async (req, res) => {
     // Verificar token
     let usuario;
     try {
-        const decoded = verificarToken(token);
+        const decoded = jwt.verify(token, JWT_SECRET);
         console.log('[SSE] Token decodificado, userId:', decoded.userId);
 
         const result = await pool.query('SELECT * FROM usuarios WHERE id = $1 AND activo = true', [decoded.userId]);
