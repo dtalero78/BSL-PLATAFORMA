@@ -1328,6 +1328,16 @@
                         <span id="rolBadge" style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;"></span>
                     </p>
                 </div>
+                <!-- Reasignar Empresa (solo visible si rol=empresa) -->
+                <div class="form-group" id="grupoReasignarEmpresa" style="display: none;">
+                    <label class="form-label">Código de Empresa Asignado</label>
+                    <select class="form-select" id="permisosEmpresaSelect">
+                        <option value="">Selecciona una empresa...</option>
+                    </select>
+                    <p style="font-size: 12px; color: var(--text-tertiary); margin-top: 6px;">
+                        Cambiar el código de empresa del usuario
+                    </p>
+                </div>
                 <!-- Permisos de Empresa (solo visible si rol=empresa) -->
                 <div class="form-group" id="seccionPermisosEmpresa" style="display: none;">
                     <label class="form-label">Permisos del Panel Empresas</label>
@@ -1895,9 +1905,20 @@
                 await cargarPermisosDisponibles();
             }
 
-            // Obtener permisos actuales del usuario
+            // Obtener datos completos del usuario (incluyendo codEmpresa)
+            let codEmpresaActual = '';
             let permisosActuales = [];
             try {
+                // Cargar datos del usuario
+                const userResponse = await Auth.fetchAuth(`/api/admin/usuarios/${id}`);
+                if (userResponse && userResponse.ok) {
+                    const userData = await userResponse.json();
+                    if (userData.success && userData.usuario) {
+                        codEmpresaActual = userData.usuario.cod_empresa || '';
+                    }
+                }
+
+                // Cargar permisos del usuario
                 const response = await Auth.fetchAuth(`/api/admin/usuarios/${id}/permisos`);
                 if (response && response.ok) {
                     const data = await response.json();
@@ -1906,16 +1927,22 @@
                     }
                 }
             } catch (error) {
-                console.error('Error cargando permisos del usuario:', error);
+                console.error('Error cargando datos del usuario:', error);
             }
 
             // Mostrar sección según rol
             const seccionEmpresa = document.getElementById('seccionPermisosEmpresa');
             const seccionEmpleado = document.getElementById('seccionPermisosEmpleado');
+            const grupoReasignarEmpresa = document.getElementById('grupoReasignarEmpresa');
 
             if (rol === 'empresa') {
                 seccionEmpresa.style.display = 'block';
                 seccionEmpleado.style.display = 'none';
+                grupoReasignarEmpresa.style.display = 'block';
+
+                // Poblar select de empresas y seleccionar la actual
+                const selectEmpresa = document.getElementById('permisosEmpresaSelect');
+                selectEmpresa.value = codEmpresaActual;
 
                 // Renderizar permisos de empresa
                 const containerEmpresa = document.getElementById('listaPermisosEmpresa');
@@ -1924,6 +1951,7 @@
             } else if (rol === 'empleado') {
                 seccionEmpresa.style.display = 'none';
                 seccionEmpleado.style.display = 'block';
+                grupoReasignarEmpresa.style.display = 'none';
 
                 // Separar permisos por categoría
                 const permisosNav = permisosDisponiblesEmpleado.filter(p => p.categoria === 'Navegación');
@@ -1940,6 +1968,7 @@
             } else if (rol === 'admin') {
                 seccionEmpresa.style.display = 'none';
                 seccionEmpleado.style.display = 'none';
+                grupoReasignarEmpresa.style.display = 'none';
             }
 
             document.getElementById('modalPermisos').classList.add('show');
@@ -1975,6 +2004,7 @@
             ];
 
             try {
+                // Actualizar permisos
                 const response = await Auth.fetchAuth(`/api/admin/usuarios/${usuarioPermisosId}/permisos`, {
                     method: 'PUT',
                     body: JSON.stringify({ permisos })
@@ -1982,12 +2012,35 @@
 
                 const data = await response.json();
 
-                if (data.success) {
-                    mostrarToast('Permisos actualizados correctamente', 'success');
-                    cerrarModal('modalPermisos');
-                } else {
+                if (!data.success) {
                     mostrarToast(data.message || 'Error al guardar permisos', 'error');
+                    return;
                 }
+
+                // Si el rol es empresa, actualizar también el codEmpresa si cambió
+                if (usuarioPermisosRol === 'empresa') {
+                    const nuevoCodempresa = document.getElementById('permisosEmpresaSelect').value;
+
+                    if (nuevoCodempresa) {
+                        const updateResponse = await Auth.fetchAuth(`/api/admin/usuarios/${usuarioPermisosId}/cod-empresa`, {
+                            method: 'PUT',
+                            body: JSON.stringify({ codEmpresa: nuevoCodempresa })
+                        });
+
+                        const updateData = await updateResponse.json();
+
+                        if (!updateData.success) {
+                            mostrarToast('Permisos guardados, pero error al actualizar empresa', 'warning');
+                            return;
+                        }
+                    }
+                }
+
+                mostrarToast('Permisos actualizados correctamente', 'success');
+                cerrarModal('modalPermisos');
+                // Recargar lista de usuarios si están en la vista de todos
+                if (tabActual === 'todos') cargarTodosUsuarios();
+
             } catch (error) {
                 console.error('Error guardando permisos:', error);
                 mostrarToast('Error de conexion', 'error');

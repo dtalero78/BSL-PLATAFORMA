@@ -2264,6 +2264,40 @@ app.get('/api/admin/permisos/disponibles', authMiddleware, requireAdmin, (req, r
     }
 });
 
+// GET /api/admin/usuarios/:id - Obtener datos de un usuario específico
+app.get('/api/admin/usuarios/:id', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(`
+            SELECT id, email, numero_documento, celular_whatsapp, nombre_completo,
+                   nombre_empresa, cod_empresa, rol, estado, fecha_registro,
+                   fecha_aprobacion, ultimo_login, activo
+            FROM usuarios
+            WHERE id = $1
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+
+        res.json({
+            success: true,
+            usuario: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error obteniendo usuario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener usuario'
+        });
+    }
+});
+
 // GET /api/admin/usuarios/:id/permisos - Obtener permisos de un usuario
 app.get('/api/admin/usuarios/:id/permisos', authMiddleware, requireAdmin, async (req, res) => {
     try {
@@ -2341,6 +2375,54 @@ app.put('/api/admin/usuarios/:id/permisos', authMiddleware, requireAdmin, async 
         res.status(500).json({
             success: false,
             message: 'Error al actualizar permisos'
+        });
+    }
+});
+
+// PUT /api/admin/usuarios/:id/cod-empresa - Actualizar cod_empresa de un usuario
+app.put('/api/admin/usuarios/:id/cod-empresa', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { codEmpresa } = req.body;
+
+        // Verificar que el usuario existe
+        const usuarioResult = await pool.query('SELECT id, email, rol FROM usuarios WHERE id = $1', [id]);
+        if (usuarioResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+
+        const usuario = usuarioResult.rows[0];
+
+        // Validar que el codEmpresa no esté vacío si el rol es empresa
+        if (usuario.rol === 'empresa' && !codEmpresa) {
+            return res.status(400).json({
+                success: false,
+                message: 'El código de empresa es requerido para usuarios de tipo Empresa'
+            });
+        }
+
+        // Actualizar cod_empresa
+        await pool.query(
+            'UPDATE usuarios SET cod_empresa = $1 WHERE id = $2',
+            [codEmpresa || null, id]
+        );
+
+        console.log(`🏢 Código de empresa actualizado para usuario ${id} (${usuario.email}): ${codEmpresa || 'NULL'} (por ${req.usuario.email})`);
+
+        res.json({
+            success: true,
+            message: 'Código de empresa actualizado correctamente',
+            codEmpresa: codEmpresa
+        });
+
+    } catch (error) {
+        console.error('Error actualizando código de empresa:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al actualizar código de empresa'
         });
     }
 });
