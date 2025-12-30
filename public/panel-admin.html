@@ -1466,6 +1466,7 @@
 
         function actualizarSelectoresEmpresa() {
             const selectAprobar = document.getElementById('aprobarEmpresaSelect');
+            const selectPermisos = document.getElementById('permisosEmpresaSelect');
             const selectCrear = document.getElementById('nuevoCodEmpresa');
 
             const options = empresasCache.map(e =>
@@ -1473,6 +1474,10 @@
             ).join('');
 
             selectAprobar.innerHTML = '<option value="">Selecciona una empresa...</option>' + options;
+
+            if (selectPermisos) {
+                selectPermisos.innerHTML = '<option value="">Selecciona una empresa...</option>' + options;
+            }
 
             if (selectCrear && selectCrear.tagName === 'INPUT') {
                 const newSelect = document.createElement('select');
@@ -1903,6 +1908,11 @@
             // Cargar permisos disponibles si no están cargados
             if (permisosDisponiblesEmpresa.length === 0 || permisosDisponiblesEmpleado.length === 0) {
                 await cargarPermisosDisponibles();
+            }
+
+            // Cargar empresas si no están cargadas (necesario para el select de reasignación)
+            if (empresasCache.length === 0) {
+                await cargarEmpresas();
             }
 
             // Obtener datos completos del usuario (incluyendo codEmpresa)
