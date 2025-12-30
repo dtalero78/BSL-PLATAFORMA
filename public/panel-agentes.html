@@ -266,9 +266,7 @@
             }
 
             const token = Auth.getToken();
-            eventSource = new EventSource(`/api/whatsapp/stream`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            eventSource = new EventSource(`/api/whatsapp/stream?token=${encodeURIComponent(token)}`);
 
             eventSource.addEventListener('connected', (e) => {
                 console.log('[SSE] Conectado:', JSON.parse(e.data));

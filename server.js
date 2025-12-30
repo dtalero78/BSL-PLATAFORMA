@@ -10255,8 +10255,28 @@ app.get('/api/admin/estadisticas-chat', authMiddleware, requireAdminOrSupervisor
 const sseClientesAgentes = new Map(); // userId -> response object
 
 // GET /api/whatsapp/stream - Conexión SSE para notificaciones en tiempo real
-app.get('/api/whatsapp/stream', authMiddleware, (req, res) => {
-    const userId = req.usuario.id;
+app.get('/api/whatsapp/stream', async (req, res) => {
+    // Autenticación por query string (EventSource no soporta headers)
+    const token = req.query.token || req.headers.authorization?.replace('Bearer ', '');
+
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'Token requerido' });
+    }
+
+    // Verificar token
+    let usuario;
+    try {
+        const decoded = verificarToken(token);
+        const result = await pool.query('SELECT * FROM usuarios WHERE id = $1 AND activo = true', [decoded.userId]);
+        if (result.rows.length === 0) {
+            return res.status(401).json({ success: false, message: 'Usuario no válido' });
+        }
+        usuario = result.rows[0];
+    } catch (error) {
+        return res.status(401).json({ success: false, message: 'Token inválido' });
+    }
+
+    const userId = usuario.id;
 
     // Configurar headers para SSE
     res.writeHead(200, {
