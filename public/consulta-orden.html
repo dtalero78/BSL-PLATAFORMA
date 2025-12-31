@@ -292,6 +292,24 @@
             font-weight: 500;
         }
 
+        /* Botón Certificado */
+        .btn-certificado {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 12px 24px;
+            background: #2563EB;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn-certificado:hover {
+            background: #1D4ED8;
+        }
+
         /* Alert */
         .alert {
             padding: 16px;
@@ -575,6 +593,13 @@
                                     <span>✓</span>
                                     <span>Todas las pruebas completadas</span>
                                 </span>
+                                ${isAtendido ? `
+                                <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${orden._id}"
+                                   target="_blank"
+                                   class="btn-certificado">
+                                    📄 Descargar Certificado
+                                </a>
+                                ` : ''}
                             </div>
                         </div>
                         `}
