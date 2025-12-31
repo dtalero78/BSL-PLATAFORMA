@@ -584,7 +584,8 @@
         }
 
         function generarPruebasPendientes(estadoPruebas, ordenId) {
-            const pendientes = [];
+            // Orden del circuito de pruebas
+            const ordenCircuito = ['formulario', 'adc', 'audiometria', 'visiometria'];
 
             const mapaPruebas = {
                 'formulario': { nombre: 'Formulario de Salud', url: `/?_id=${ordenId}` },
@@ -593,17 +594,18 @@
                 'visiometria': { nombre: 'Visiometría', url: `/visiometria-virtual.html?orden=${ordenId}` }
             };
 
-            Object.keys(mapaPruebas).forEach(key => {
+            // Buscar la PRIMERA prueba pendiente en el orden del circuito
+            for (const key of ordenCircuito) {
                 const prueba = estadoPruebas[key];
                 if (prueba.requerido && !prueba.completado) {
-                    pendientes.push({
+                    return [{
                         nombre: mapaPruebas[key].nombre,
                         url: mapaPruebas[key].url
-                    });
+                    }];
                 }
-            });
+            }
 
-            return pendientes;
+            return [];
         }
 
         function irAPrueba(url) {
