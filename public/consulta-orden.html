@@ -279,19 +279,6 @@
             text-align: center;
         }
 
-        /* Completado Badge */
-        .completado-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            background: #D1FAE5;
-            color: #059669;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
         /* Botón Certificado */
         .btn-certificado {
             display: inline-block;
@@ -589,15 +576,11 @@
                         ` : `
                         <div class="pruebas-section">
                             <div style="text-align: center; padding: 20px;">
-                                <span class="completado-badge">
-                                    <span>✓</span>
-                                    <span>Todas las pruebas completadas</span>
-                                </span>
                                 ${isAtendido ? `
                                 <a href="https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${orden._id}"
                                    target="_blank"
                                    class="btn-certificado">
-                                    📄 Descargar Certificado
+                                    Descargar Certificado
                                 </a>
                                 ` : ''}
                             </div>
