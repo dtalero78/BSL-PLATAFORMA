@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultar Orden - BSL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #F8FAFC;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #F1F5F9;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-tertiary: #94A3B8;
+            --border-color: #E2E8F0;
+            --accent-color: #0176D3;
+            --accent-hover: #014486;
+            --success-color: #10B981;
+            --success-bg: #D1FAE5;
+            --warning-color: #F59E0B;
+            --warning-bg: #FEF3C7;
+            --error-color: #DC2626;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo {
+            background: white;
+            width: 100px;
+            height: 100px;
+            border-radius: 20px;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .logo img {
+            max-width: 80px;
+            height: auto;
+        }
+
+        h1 {
+            color: white;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+
+        .search-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(1, 118, 211, 0.1);
+        }
+
+        .btn-search {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-search:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-search:disabled {
+            background: var(--text-tertiary);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-container {
+            display: none;
+        }
+
+        .results-container.show {
+            display: block;
+        }
+
+        .orden-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+
+        .orden-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .orden-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .orden-info h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .orden-meta {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.atendido {
+            background: var(--success-bg);
+            color: var(--success-color);
+        }
+
+        .status-badge.pendiente {
+            background: var(--warning-bg);
+            color: var(--warning-color);
+        }
+
+        .pruebas-section {
+            margin-top: 16px;
+        }
+
+        .pruebas-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .pruebas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
+        }
+
+        .prueba-tag {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .prueba-tag.completado {
+            background: var(--success-bg);
+            color: var(--success-color);
+        }
+
+        .prueba-tag.pendiente {
+            background: var(--warning-bg);
+            color: var(--warning-color);
+            cursor: pointer;
+        }
+
+        .prueba-tag.pendiente:hover {
+            background: #FDE68A;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .prueba-tag.pendiente.clickeable {
+            position: relative;
+        }
+
+        .prueba-tag.pendiente.clickeable::after {
+            content: '→';
+            margin-left: 6px;
+            font-weight: 700;
+        }
+
+        .hint-text {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state img {
+            width: 120px;
+            opacity: 0.5;
+            margin-bottom: 16px;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+        }
+
+        .alert-info {
+            background: #DBEAFE;
+            color: #1E40AF;
+            border: 1px solid #93C5FD;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 24px;
+            }
+
+            .search-card {
+                padding: 24px;
+            }
+
+            .orden-card {
+                padding: 20px;
+            }
+
+            .orden-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .pruebas-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="/bsl-logo.png" alt="BSL Logo">
+            </div>
+            <h1>Consultar Mi Orden</h1>
+            <p class="subtitle">Verifica el estado de tus exámenes médicos</p>
+        </div>
+
+        <!-- Formulario de búsqueda -->
+        <div class="search-card">
+            <form id="searchForm" onsubmit="buscarOrdenes(event)">
+                <div class="form-group">
+                    <label for="numeroDocumento">Número de Documento</label>
+                    <input
+                        type="text"
+                        id="numeroDocumento"
+                        placeholder="Ej: 1234567890"
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="celular">Número de Celular</label>
+                    <input
+                        type="tel"
+                        id="celular"
+                        placeholder="Ej: 3001234567"
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+
+                <button type="submit" class="btn-search" id="btnBuscar">
+                    Buscar Mis Órdenes
+                </button>
+            </form>
+        </div>
+
+        <!-- Contenedor de resultados -->
+        <div class="results-container" id="resultsContainer">
+            <div id="ordenesLista"></div>
+        </div>
+    </div>
+
+    <script>
+        let ordenes = [];
+
+        async function buscarOrdenes(event) {
+            event.preventDefault();
+
+            const numeroDocumento = document.getElementById('numeroDocumento').value.trim();
+            const celular = document.getElementById('celular').value.trim();
+            const btnBuscar = document.getElementById('btnBuscar');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const ordenesLista = document.getElementById('ordenesLista');
+
+            // Validar campos
+            if (!numeroDocumento || !celular) {
+                mostrarError('Por favor completa todos los campos');
+                return;
+            }
+
+            // Mostrar loading
+            btnBuscar.disabled = true;
+            btnBuscar.textContent = 'Buscando...';
+            ordenesLista.innerHTML = '<div class="loading"><div class="spinner"></div><p>Buscando tus órdenes...</p></div>';
+            resultsContainer.classList.add('show');
+
+            try {
+                const response = await fetch('/api/consulta-ordenes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        numeroDocumento,
+                        celular
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Error al buscar órdenes');
+                }
+
+                ordenes = data.ordenes;
+                renderOrdenes(ordenes);
+
+            } catch (error) {
+                console.error('Error:', error);
+                ordenesLista.innerHTML = `
+                    <div class="alert alert-error">
+                        ${error.message || 'No se encontraron órdenes con los datos proporcionados. Verifica tu número de documento y celular.'}
+                    </div>
+                `;
+            } finally {
+                btnBuscar.disabled = false;
+                btnBuscar.textContent = 'Buscar Mis Órdenes';
+            }
+        }
+
+        function renderOrdenes(ordenes) {
+            const ordenesLista = document.getElementById('ordenesLista');
+
+            if (ordenes.length === 0) {
+                ordenesLista.innerHTML = `
+                    <div class="empty-state">
+                        <p>No se encontraron órdenes</p>
+                    </div>
+                `;
+                return;
+            }
+
+            ordenesLista.innerHTML = ordenes.map(orden => {
+                const nombreCompleto = `${orden.primerNombre || ''} ${orden.segundoNombre || ''} ${orden.primerApellido || ''} ${orden.segundoApellido || ''}`.trim();
+                const fechaAtencion = orden.fechaAtencion ? formatearFecha(orden.fechaAtencion) : 'Pendiente';
+                const isAtendido = orden.atendido && orden.atendido.toUpperCase() === 'ATENDIDO';
+
+                // Generar tags de pruebas
+                const { completadas, pendientes } = generarTagsPruebas(orden.estadoPruebas, orden._id);
+
+                return `
+                    <div class="orden-card">
+                        <div class="orden-header">
+                            <div class="orden-info">
+                                <h3>${nombreCompleto}</h3>
+                                <div class="orden-meta">
+                                    <div><strong>Empresa:</strong> ${orden.empresa || 'N/A'}</div>
+                                    <div><strong>Cargo:</strong> ${orden.cargo || 'N/A'}</div>
+                                    <div><strong>Fecha de Atención:</strong> ${fechaAtencion}</div>
+                                </div>
+                            </div>
+                            <span class="status-badge ${isAtendido ? 'atendido' : 'pendiente'}">
+                                ${isAtendido ? 'Atendido' : 'Pendiente'}
+                            </span>
+                        </div>
+
+                        <div class="pruebas-section">
+                            ${completadas.length > 0 ? `
+                                <div class="pruebas-title" style="color: var(--success-color);">✓ Pruebas Completadas</div>
+                                <div class="pruebas-grid">${completadas.join('')}</div>
+                            ` : ''}
+
+                            ${pendientes.length > 0 ? `
+                                <div class="pruebas-title" style="color: var(--warning-color); margin-top: ${completadas.length > 0 ? '16px' : '0'};">
+                                    ⚠ Pruebas Pendientes
+                                </div>
+                                <div class="pruebas-grid">${pendientes.join('')}</div>
+                                <div class="hint-text">Haz clic en la primera prueba pendiente para continuar</div>
+                            ` : ''}
+
+                            ${completadas.length === 0 && pendientes.length === 0 ? `
+                                <div class="alert alert-info">
+                                    No hay pruebas registradas para esta orden
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function generarTagsPruebas(estadoPruebas, ordenId) {
+            const completadas = [];
+            const pendientes = [];
+
+            const mapaPruebas = {
+                'formulario': { nombre: 'Formulario', url: `/?_id=${ordenId}` },
+                'adc': { nombre: 'Pruebas ADC', url: `/adc.html?_id=${ordenId}` },
+                'audiometria': { nombre: 'Audiometría', url: `/audiometria.html?orden=${ordenId}` },
+                'visiometria': { nombre: 'Visiometría', url: `/visiometria.html?orden=${ordenId}` }
+            };
+
+            let numeroPendiente = 1;
+            let primeraPendiente = true;
+
+            Object.keys(mapaPruebas).forEach(key => {
+                const prueba = estadoPruebas[key];
+                if (!prueba.requerido) return;
+
+                const info = mapaPruebas[key];
+
+                if (prueba.completado) {
+                    completadas.push(`
+                        <div class="prueba-tag completado">
+                            ${info.nombre} ✓
+                        </div>
+                    `);
+                } else {
+                    const esClickeable = primeraPendiente;
+                    const clickHandler = esClickeable ? `onclick="irAPrueba('${info.url}')"` : '';
+                    const claseClickeable = esClickeable ? 'clickeable' : '';
+
+                    pendientes.push(`
+                        <div class="prueba-tag pendiente ${claseClickeable}" ${clickHandler}>
+                            ${numeroPendiente}. ${info.nombre}
+                        </div>
+                    `);
+
+                    numeroPendiente++;
+                    primeraPendiente = false;
+                }
+            });
+
+            return { completadas, pendientes };
+        }
+
+        function irAPrueba(url) {
+            window.location.href = url;
+        }
+
+        function formatearFecha(fechaISO) {
+            try {
+                const fecha = new Date(fechaISO);
+                return fecha.toLocaleDateString('es-CO', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return fechaISO;
+            }
+        }
+
+        function mostrarError(mensaje) {
+            const ordenesLista = document.getElementById('ordenesLista');
+            const resultsContainer = document.getElementById('resultsContainer');
+
+            ordenesLista.innerHTML = `
+                <div class="alert alert-error">
+                    ${mensaje}
+                </div>
+            `;
+            resultsContainer.classList.add('show');
+        }
+    </script>
+</body>
+</html>

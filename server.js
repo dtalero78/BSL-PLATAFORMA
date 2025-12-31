@@ -8468,6 +8468,152 @@ app.get('/api/estado-pruebas/:ordenId', async (req, res) => {
     }
 });
 
+// ========== CONSULTA PÚBLICA DE ÓRDENES ==========
+// GET /api/consulta-ordenes - Buscar órdenes por número de documento y celular
+app.post('/api/consulta-ordenes', async (req, res) => {
+    try {
+        const { numeroDocumento, celular } = req.body;
+
+        if (!numeroDocumento || !celular) {
+            return res.status(400).json({
+                success: false,
+                message: 'Número de documento y celular son requeridos'
+            });
+        }
+
+        // Buscar órdenes en HistoriaClinica
+        const ordenesResult = await pool.query(`
+            SELECT
+                "_id",
+                "primerNombre",
+                "segundoNombre",
+                "primerApellido",
+                "segundoApellido",
+                "numeroId",
+                "celular",
+                "empresa",
+                "codEmpresa",
+                "cargo",
+                "fechaAtencion",
+                "fechaConsulta",
+                "examenes",
+                "atendido",
+                "mdConceptoFinal",
+                "_createdDate"
+            FROM "HistoriaClinica"
+            WHERE "numeroId" = $1 AND "celular" = $2
+            ORDER BY "_createdDate" DESC
+        `, [numeroDocumento, celular]);
+
+        if (ordenesResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No se encontraron órdenes con los datos proporcionados'
+            });
+        }
+
+        // Para cada orden, obtener el estado de las pruebas
+        const ordenesConEstado = await Promise.all(
+            ordenesResult.rows.map(async (orden) => {
+                const examenesRequeridos = orden.examenes || '';
+                const examLower = examenesRequeridos.toLowerCase();
+
+                // Verificar formulario
+                let formularioResult = await pool.query(
+                    'SELECT id FROM formularios WHERE wix_id = $1',
+                    [orden._id]
+                );
+                if (formularioResult.rows.length === 0 && orden.numeroId) {
+                    formularioResult = await pool.query(
+                        'SELECT id FROM formularios WHERE numero_id = $1',
+                        [orden.numeroId]
+                    );
+                }
+                const tieneFormulario = formularioResult.rows.length > 0;
+
+                // Verificar audiometría
+                const audioResult = await pool.query(
+                    'SELECT id FROM audiometrias WHERE orden_id = $1',
+                    [orden._id]
+                );
+                const tieneAudiometria = audioResult.rows.length > 0;
+
+                // Verificar pruebas ADC
+                const adcResult = await pool.query(
+                    'SELECT id FROM "pruebasADC" WHERE orden_id = $1',
+                    [orden._id]
+                );
+                const tieneADC = adcResult.rows.length > 0;
+
+                // Verificar visiometría
+                const visioResult = await pool.query(
+                    'SELECT id FROM visiometrias WHERE orden_id = $1',
+                    [orden._id]
+                );
+                const visioVirtualResult = await pool.query(
+                    'SELECT id FROM visiometrias_virtual WHERE orden_id = $1',
+                    [orden._id]
+                );
+                const tieneVisiometria = visioResult.rows.length > 0 || visioVirtualResult.rows.length > 0;
+
+                // Determinar qué pruebas son requeridas
+                const requiereAudiometria = examLower.includes('audiometr');
+                const requiereVisiometria = examLower.includes('visiometr') || examLower.includes('optometr');
+                const requiereADC = true;
+
+                return {
+                    _id: orden._id,
+                    primerNombre: orden.primerNombre,
+                    segundoNombre: orden.segundoNombre,
+                    primerApellido: orden.primerApellido,
+                    segundoApellido: orden.segundoApellido,
+                    numeroId: orden.numeroId,
+                    celular: orden.celular,
+                    empresa: orden.empresa,
+                    codEmpresa: orden.codEmpresa,
+                    cargo: orden.cargo,
+                    fechaAtencion: orden.fechaAtencion,
+                    fechaConsulta: orden.fechaConsulta,
+                    examenes: orden.examenes,
+                    atendido: orden.atendido,
+                    mdConceptoFinal: orden.mdConceptoFinal,
+                    fechaCreacion: orden._createdDate,
+                    estadoPruebas: {
+                        formulario: {
+                            completado: tieneFormulario,
+                            requerido: true
+                        },
+                        audiometria: {
+                            completado: tieneAudiometria,
+                            requerido: requiereAudiometria
+                        },
+                        visiometria: {
+                            completado: tieneVisiometria,
+                            requerido: requiereVisiometria
+                        },
+                        adc: {
+                            completado: tieneADC,
+                            requerido: requiereADC
+                        }
+                    }
+                };
+            })
+        );
+
+        res.json({
+            success: true,
+            ordenes: ordenesConEstado
+        });
+
+    } catch (error) {
+        console.error('❌ Error consultando órdenes:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al consultar órdenes'
+        });
+    }
+});
+
 // Enviar link de prueba por WhatsApp
 app.post('/api/enviar-link-prueba', async (req, res) => {
     try {
