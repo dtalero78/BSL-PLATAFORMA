@@ -321,6 +321,15 @@ function sendWhatsAppMessage(toNumber, messageBody) {
 // Notificar al coordinador de agendamiento sobre nueva orden
 async function notificarCoordinadorNuevaOrden(orden) {
     try {
+        // VALIDACIÓN: Solo notificar si es modalidad PRESENCIAL y ciudad diferente a Bogotá y Barranquilla
+        const modalidadPresencial = !orden.modalidad || orden.modalidad === 'presencial';
+        const ciudadExcluida = ['Bogotá', 'Barranquilla'].includes(orden.ciudad);
+
+        if (!modalidadPresencial || ciudadExcluida) {
+            console.log(`⏭️ No se notifica al coordinador - Modalidad: ${orden.modalidad || 'presencial'}, Ciudad: ${orden.ciudad}`);
+            return;
+        }
+
         const coordinadorCelular = process.env.COORDINADOR_CELULAR;
 
         if (!coordinadorCelular) {
