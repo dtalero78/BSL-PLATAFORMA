@@ -4257,6 +4257,353 @@ app.post('/api/ordenes', async (req, res) => {
     }
 });
 
+// POST /api/ordenes/previsualizar-csv - Previsualizar órdenes desde CSV antes de importar
+app.post('/api/ordenes/previsualizar-csv', upload.single('archivo'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No se ha subido ningún archivo'
+            });
+        }
+
+        console.log('');
+        console.log('═══════════════════════════════════════════════════════════');
+        console.log('👁️  PREVISUALIZACIÓN CSV DE ÓRDENES');
+        console.log('═══════════════════════════════════════════════════════════');
+
+        // Parsear CSV desde buffer
+        const csvContent = req.file.buffer.toString('utf-8');
+        const lines = csvContent.split('\n').filter(line => line.trim());
+
+        if (lines.length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'El archivo CSV está vacío o solo tiene encabezados'
+            });
+        }
+
+        // Obtener encabezados (primera línea) y normalizarlos
+        const headersRaw = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+
+        // Mapeo de nombres alternativos a nombres estándar
+        const headerMapping = {
+            'Fecha Atención': 'fechaAtencion',
+            'Fecha Atencion': 'fechaAtencion',
+            'fecha_atencion': 'fechaAtencion',
+            'Hora Atención': 'horaAtencion',
+            'Hora Atencion': 'horaAtencion',
+            'hora_atencion': 'horaAtencion',
+            'primer_nombre': 'primerNombre',
+            'segundo_nombre': 'segundoNombre',
+            'primer_apellido': 'primerApellido',
+            'segundo_apellido': 'segundoApellido',
+            'numero_id': 'numeroId',
+            'tipo_examen': 'tipoExamen',
+            'nombres': 'primerNombre',
+            'apellidos': 'primerApellido',
+            'cod_empresa': 'codEmpresa',
+            // Mapeos para plantilla de agendamiento
+            'NOMBRE': 'primerNombre',
+            'APELLIDOS': 'primerApellido',
+            'NÚMERO DE DOCUMENTO': 'numeroId',
+            'NUMERO DE DOCUMENTO': 'numeroId',
+            'NÚMERO DE CONTACTO': 'celular',
+            'NUMERO DE CONTACTO': 'celular',
+            'CORREO ELECTRONICO': 'correo',
+            'CORREO ELECTRÓNICO': 'correo',
+            'DIRECCIÓN': 'direccion',
+            'DIRECCION': 'direccion',
+            'FECHA': 'fechaAtencion',
+            'HORA': 'horaAtencion',
+            'EMPRESA': 'empresa',
+            'TIPO DE EXAMEN': 'tipoExamen',
+            'ROL': 'cargo',
+            'OBSERVACION': 'examenes',
+            'OBSERVACIÓN': 'examenes'
+        };
+
+        // Normalizar headers
+        const headers = headersRaw.map(h => headerMapping[h] || h);
+        console.log('📋 Encabezados normalizados:', headers);
+
+        // Campos requeridos
+        const camposRequeridos = ['numeroId', 'primerNombre', 'primerApellido', 'codEmpresa'];
+        const camposFaltantes = camposRequeridos.filter(c => !headers.includes(c));
+
+        if (camposFaltantes.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `Faltan campos requeridos en el CSV: ${camposFaltantes.join(', ')}`
+            });
+        }
+
+        // Previsualizar cada fila (desde la segunda línea)
+        const registros = [];
+        const errores = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            try {
+                // Parsear línea CSV
+                const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+
+                // Crear objeto con los valores
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] !== undefined && values[index] !== '' ? values[index] : null;
+                });
+
+                // Ignorar filas vacías o con datos inválidos
+                const valoresNoVacios = values.filter(v => v && v.trim() !== '' && v.trim() !== 'CC');
+                if (valoresNoVacios.length === 0) {
+                    console.log(`   ⏭️  Fila ${i + 1} ignorada (vacía)`);
+                    continue;
+                }
+
+                // Validar campos mínimos
+                if (!row.numeroId || !row.primerNombre || !row.primerApellido || !row.codEmpresa) {
+                    errores.push({
+                        fila: i + 1,
+                        error: 'Falta información requerida',
+                        datos: row
+                    });
+                    continue;
+                }
+
+                // Normalizar fecha si existe
+                let fechaFormateada = null;
+                if (row.fechaAtencion) {
+                    let fechaNormalizada = row.fechaAtencion.trim();
+
+                    if (fechaNormalizada.includes('/')) {
+                        const partes = fechaNormalizada.split('/');
+                        if (partes.length === 3) {
+                            const primero = parseInt(partes[0]);
+                            const segundo = parseInt(partes[1]);
+                            const anio = partes[2];
+
+                            if (segundo > 12) {
+                                fechaNormalizada = `${anio}-${partes[0].padStart(2, '0')}-${partes[1].padStart(2, '0')}`;
+                            } else if (primero > 12) {
+                                fechaNormalizada = `${anio}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+                            } else {
+                                fechaNormalizada = `${anio}-${partes[0].padStart(2, '0')}-${partes[1].padStart(2, '0')}`;
+                            }
+                        }
+                    }
+                    fechaFormateada = fechaNormalizada;
+                }
+
+                registros.push({
+                    fila: i + 1,
+                    numeroId: row.numeroId,
+                    primerNombre: row.primerNombre,
+                    segundoNombre: row.segundoNombre,
+                    primerApellido: row.primerApellido,
+                    segundoApellido: row.segundoApellido,
+                    celular: row.celular,
+                    correo: row.correo,
+                    direccion: row.direccion,
+                    cargo: row.cargo,
+                    ciudad: row.ciudad,
+                    fechaAtencion: fechaFormateada,
+                    horaAtencion: row.horaAtencion || '08:00',
+                    empresa: row.empresa || row.codEmpresa,
+                    tipoExamen: row.tipoExamen,
+                    medico: row.medico,
+                    codEmpresa: row.codEmpresa,
+                    examenes: row.examenes
+                });
+
+            } catch (error) {
+                errores.push({
+                    fila: i + 1,
+                    error: error.message
+                });
+            }
+        }
+
+        console.log(`✅ Previsualización completada: ${registros.length} registros válidos`);
+
+        res.json({
+            success: true,
+            total: registros.length,
+            registros: registros,
+            errores: errores
+        });
+
+    } catch (error) {
+        console.error('❌ Error en previsualización CSV:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error procesando el archivo CSV',
+            error: error.message
+        });
+    }
+});
+
+// POST /api/ordenes/importar-desde-preview - Importar órdenes aprobadas desde preview
+app.post('/api/ordenes/importar-desde-preview', async (req, res) => {
+    try {
+        const { registros } = req.body;
+
+        if (!registros || !Array.isArray(registros) || registros.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No se recibieron registros para importar'
+            });
+        }
+
+        console.log('');
+        console.log('═══════════════════════════════════════════════════════════');
+        console.log('✅ IMPORTACIÓN APROBADA DESDE PREVIEW');
+        console.log('═══════════════════════════════════════════════════════════');
+
+        const resultados = {
+            total: registros.length,
+            exitosos: 0,
+            errores: [],
+            ordenesCreadas: []
+        };
+
+        for (const registro of registros) {
+            try {
+                // Generar ID único para la orden
+                const ordenId = `orden_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+                // Parsear fecha de atención
+                let fechaAtencionParsed = null;
+                if (registro.fechaAtencion && registro.horaAtencion) {
+                    const fechaObj = construirFechaAtencionColombia(registro.fechaAtencion, registro.horaAtencion);
+                    if (fechaObj) {
+                        fechaAtencionParsed = fechaObj;
+                    }
+                }
+
+                // Insertar en PostgreSQL
+                const insertQuery = `
+                    INSERT INTO "HistoriaClinica" (
+                        "_id", "numeroId", "primerNombre", "segundoNombre",
+                        "primerApellido", "segundoApellido",
+                        "celular", "cargo", "ciudad", "fechaAtencion",
+                        "empresa", "tipoExamen", "medico", "atendido",
+                        "codEmpresa", "examenes", "_createdDate", "_updatedDate"
+                    ) VALUES (
+                        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW()
+                    )
+                    RETURNING "_id"
+                `;
+
+                const insertValues = [
+                    ordenId,
+                    registro.numeroId,
+                    registro.primerNombre,
+                    registro.segundoNombre || null,
+                    registro.primerApellido,
+                    registro.segundoApellido || null,
+                    registro.celular || null,
+                    registro.cargo || null,
+                    registro.ciudad || null,
+                    fechaAtencionParsed,
+                    registro.empresa || registro.codEmpresa,
+                    registro.tipoExamen || null,
+                    registro.medico || null,
+                    'PENDIENTE',
+                    registro.codEmpresa,
+                    registro.examenes || null
+                ];
+
+                await pool.query(insertQuery, insertValues);
+
+                // Sincronizar con Wix
+                try {
+                    let examenesArray = [];
+                    if (registro.examenes) {
+                        examenesArray = registro.examenes
+                            .split(/[;,]/)
+                            .map(e => e.trim())
+                            .filter(e => e.length > 0);
+                    }
+
+                    const wixPayload = {
+                        _id: ordenId,
+                        numeroId: registro.numeroId,
+                        primerNombre: registro.primerNombre,
+                        segundoNombre: registro.segundoNombre || '',
+                        primerApellido: registro.primerApellido,
+                        segundoApellido: registro.segundoApellido || '',
+                        celular: registro.celular || '',
+                        codEmpresa: registro.codEmpresa,
+                        empresa: registro.empresa || registro.codEmpresa,
+                        cargo: registro.cargo || '',
+                        ciudad: registro.ciudad || '',
+                        tipoExamen: registro.tipoExamen || '',
+                        medico: registro.medico || '',
+                        fechaAtencion: fechaAtencionParsed ? fechaAtencionParsed.toISOString() : null,
+                        horaAtencion: registro.horaAtencion || '',
+                        atendido: 'PENDIENTE',
+                        examenes: examenesArray
+                    };
+
+                    const wixResponse = await fetch('https://www.bsl.com.co/_functions/crearHistoriaClinica', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(wixPayload)
+                    });
+
+                    if (wixResponse.ok) {
+                        console.log(`✅ ${registro.primerNombre} ${registro.primerApellido} (${registro.numeroId}) - Sincronizado con Wix`);
+                    } else {
+                        console.log(`⚠️ ${registro.primerNombre} ${registro.primerApellido} - PostgreSQL OK, Wix falló`);
+                    }
+
+                } catch (wixError) {
+                    console.log(`⚠️ ${registro.primerNombre} ${registro.primerApellido} - PostgreSQL OK, Wix error: ${wixError.message}`);
+                }
+
+                resultados.exitosos++;
+                resultados.ordenesCreadas.push({
+                    _id: ordenId,
+                    numeroId: registro.numeroId,
+                    nombre: `${registro.primerNombre} ${registro.primerApellido}`
+                });
+
+            } catch (error) {
+                console.error(`❌ Error en registro ${registro.numeroId}:`, error.message);
+                resultados.errores.push({
+                    numeroId: registro.numeroId,
+                    error: error.message
+                });
+            }
+        }
+
+        console.log('');
+        console.log('═══════════════════════════════════════════════════════════');
+        console.log(`📊 RESUMEN: ${resultados.exitosos}/${resultados.total} órdenes importadas`);
+        if (resultados.errores.length > 0) {
+            console.log(`⚠️ Errores: ${resultados.errores.length}`);
+        }
+        console.log('═══════════════════════════════════════════════════════════');
+
+        res.json({
+            success: true,
+            message: `Se importaron ${resultados.exitosos} de ${resultados.total} órdenes`,
+            resultados
+        });
+
+    } catch (error) {
+        console.error('❌ Error al importar desde preview:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al importar las órdenes',
+            error: error.message
+        });
+    }
+});
+
 // POST /api/ordenes/importar-csv - Importar órdenes desde CSV
 app.post('/api/ordenes/importar-csv', upload.single('archivo'), async (req, res) => {
     try {
@@ -4309,7 +4656,25 @@ app.post('/api/ordenes/importar-csv', upload.single('archivo'), async (req, res)
             'tipo_examen': 'tipoExamen',
             'nombres': 'primerNombre',
             'apellidos': 'primerApellido',
-            'cod_empresa': 'codEmpresa'
+            'cod_empresa': 'codEmpresa',
+            // Mapeos para plantilla de agendamiento
+            'NOMBRE': 'primerNombre',
+            'APELLIDOS': 'primerApellido',
+            'NÚMERO DE DOCUMENTO': 'numeroId',
+            'NUMERO DE DOCUMENTO': 'numeroId',
+            'NÚMERO DE CONTACTO': 'celular',
+            'NUMERO DE CONTACTO': 'celular',
+            'CORREO ELECTRONICO': 'correo',
+            'CORREO ELECTRÓNICO': 'correo',
+            'DIRECCIÓN': 'direccion',
+            'DIRECCION': 'direccion',
+            'FECHA': 'fechaAtencion',
+            'HORA': 'horaAtencion',
+            'EMPRESA': 'empresa',
+            'TIPO DE EXAMEN': 'tipoExamen',
+            'ROL': 'cargo',
+            'OBSERVACION': 'examenes',
+            'OBSERVACIÓN': 'examenes'
         };
 
         // Normalizar headers
@@ -4333,8 +4698,6 @@ app.post('/api/ordenes/importar-csv', upload.single('archivo'), async (req, res)
             const line = lines[i].trim();
             if (!line) continue;
 
-            resultados.total++;
-
             try {
                 // Parsear línea CSV (split simple por coma, luego limpiar comillas)
                 const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
@@ -4345,22 +4708,21 @@ app.post('/api/ordenes/importar-csv', upload.single('archivo'), async (req, res)
                     row[header] = values[index] !== undefined ? values[index] : null;
                 });
 
-                console.log(`   Fila ${i + 1} parseada:`, JSON.stringify(row));
-
-                // Validar campos requeridos
-                if (!row.numeroId || !row.primerNombre || !row.primerApellido || !row.codEmpresa) {
-                    const faltantes = [];
-                    if (!row.numeroId) faltantes.push('numeroId');
-                    if (!row.primerNombre) faltantes.push('primerNombre');
-                    if (!row.primerApellido) faltantes.push('primerApellido');
-                    if (!row.codEmpresa) faltantes.push('codEmpresa');
-                    resultados.errores.push({
-                        fila: i + 1,
-                        error: `Faltan campos requeridos: ${faltantes.join(', ')}`,
-                        datos: row
-                    });
+                // Ignorar filas vacías o con datos inválidos
+                const valoresNoVacios = values.filter(v => v && v.trim() !== '' && v.trim() !== 'CC');
+                if (valoresNoVacios.length === 0) {
+                    console.log(`   ⏭️  Fila ${i + 1} ignorada (vacía o solo tiene valores irrelevantes)`);
                     continue;
                 }
+
+                // Ignorar filas sin campos mínimos requeridos
+                if (!row.numeroId || !row.primerNombre || !row.primerApellido || !row.codEmpresa) {
+                    console.log(`   ⏭️  Fila ${i + 1} ignorada (faltan campos requeridos):`, JSON.stringify(row));
+                    continue;
+                }
+
+                resultados.total++;
+                console.log(`   ✅ Fila ${i + 1} parseada:`, JSON.stringify(row));
 
                 // Generar ID único para la orden
                 const ordenId = `orden_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

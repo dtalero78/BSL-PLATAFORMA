@@ -18,9 +18,6 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: #F3F4F6;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
         }
 
@@ -29,8 +26,9 @@
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             padding: 40px;
-            max-width: 600px;
+            max-width: 1400px;
             width: 100%;
+            margin: 0 auto;
         }
 
         h1 {
@@ -131,7 +129,6 @@
             cursor: pointer;
             transition: all 0.2s;
             border: none;
-            width: 100%;
         }
 
         .btn-primary {
@@ -139,7 +136,7 @@
             color: white;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background: #014486;
         }
 
@@ -148,88 +145,23 @@
             cursor: not-allowed;
         }
 
+        .btn-success {
+            background: #22C55E;
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #16A34A;
+        }
+
         .btn-secondary {
             background: #F3F4F6;
             color: #374151;
-            margin-top: 12px;
+            margin-left: 12px;
         }
 
         .btn-secondary:hover {
             background: #E5E7EB;
-        }
-
-        .results {
-            margin-top: 24px;
-            padding: 20px;
-            border-radius: 12px;
-            display: none;
-        }
-
-        .results.success {
-            background: #F0FDF4;
-            border: 1px solid #86EFAC;
-            display: block;
-        }
-
-        .results.error {
-            background: #FEF2F2;
-            border: 1px solid #FECACA;
-            display: block;
-        }
-
-        .results-title {
-            font-weight: 600;
-            font-size: 16px;
-            margin-bottom: 12px;
-        }
-
-        .results.success .results-title {
-            color: #166534;
-        }
-
-        .results.error .results-title {
-            color: #991B1B;
-        }
-
-        .results-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1F2937;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #6B7280;
-        }
-
-        .errors-list {
-            background: white;
-            border-radius: 8px;
-            padding: 12px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .error-item {
-            font-size: 13px;
-            color: #991B1B;
-            padding: 8px 0;
-            border-bottom: 1px solid #FEE2E2;
-        }
-
-        .error-item:last-child {
-            border-bottom: none;
         }
 
         .format-info {
@@ -282,6 +214,137 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Preview Table Styles */
+        .preview-section {
+            display: none;
+            margin-top: 24px;
+        }
+
+        .preview-section.active {
+            display: block;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: #F8FAFC;
+            border-radius: 8px;
+        }
+
+        .preview-stats {
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .preview-stats strong {
+            color: #0176D3;
+            font-size: 18px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background: #F9FAFB;
+            z-index: 10;
+        }
+
+        th {
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #E5E7EB;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #F3F4F6;
+        }
+
+        tr:hover {
+            background: #F9FAFB;
+        }
+
+        .editable-cell {
+            cursor: pointer;
+            min-width: 100px;
+            position: relative;
+        }
+
+        .editable-cell:hover {
+            background: #EFF6FF;
+        }
+
+        .cell-input {
+            width: 100%;
+            padding: 4px 8px;
+            border: 1px solid #0176D3;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .cell-input:focus {
+            outline: none;
+            border-color: #014486;
+        }
+
+        .fila-column {
+            color: #6B7280;
+            font-weight: 500;
+            width: 50px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #F0FDF4;
+            border: 1px solid #86EFAC;
+            color: #166534;
+        }
+
+        .alert-error {
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: #991B1B;
+        }
+
+        .alert-warning {
+            background: #FFFBEB;
+            border: 1px solid #FDE68A;
+            color: #92400E;
+        }
     </style>
 </head>
 <body>
@@ -289,71 +352,125 @@
         <h1>Subir Lote de Órdenes</h1>
         <p class="subtitle">Importa múltiples órdenes desde un archivo CSV</p>
 
-        <div class="format-info">
-            <div class="format-title">Formato del CSV</div>
-            <div class="format-fields">
-                <span class="required">numeroId*</span>,
-                <span class="required">primerNombre*</span> o "nombres",
-                segundoNombre,
-                <span class="required">primerApellido*</span> o "apellidos",
-                segundoApellido,
-                celular, cargo, ciudad, fechaAtencion o "Fecha Atención" (YYYY-MM-DD, DD/MM/YYYY o MM/DD/YYYY), horaAtencion o "Hora Atención" (HH:MM), empresa, tipoExamen, medico, atendido,
-                <span class="required">codEmpresa*</span>, examenes
+        <div id="uploadSection">
+            <div class="format-info">
+                <div class="format-title">Formato del CSV</div>
+                <div class="format-fields">
+                    <span class="required">numeroId*</span>,
+                    <span class="required">primerNombre*</span> o "nombres" o "NOMBRE",
+                    segundoNombre,
+                    <span class="required">primerApellido*</span> o "apellidos" o "APELLIDOS",
+                    segundoApellido,
+                    celular, cargo, ciudad, fechaAtencion o "FECHA" (YYYY-MM-DD, DD/MM/YYYY o MM/DD/YYYY), horaAtencion o "HORA" (HH:MM), empresa, tipoExamen, medico,
+                    <span class="required">codEmpresa*</span>, examenes o "OBSERVACION"
+                </div>
             </div>
-        </div>
 
-        <div class="upload-zone" id="uploadZone">
-            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            <div class="upload-text">Haz clic o arrastra tu archivo CSV aquí</div>
-            <div class="upload-hint">Solo archivos .csv</div>
-        </div>
-
-        <input type="file" id="fileInput" class="file-input" accept=".csv">
-
-        <div class="selected-file" id="selectedFile" style="display: none;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-            </svg>
-            <span class="file-name" id="fileName"></span>
-            <button class="remove-file" id="removeFile">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
+            <div class="upload-zone" id="uploadZone">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
+                <div class="upload-text">Haz clic o arrastra tu archivo CSV aquí</div>
+                <div class="upload-hint">Solo archivos .csv</div>
+            </div>
+
+            <input type="file" id="fileInput" class="file-input" accept=".csv">
+
+            <div class="selected-file" id="selectedFile" style="display: none;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span class="file-name" id="fileName"></span>
+                <button class="remove-file" id="removeFile">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <span>Procesando archivo...</span>
+            </div>
+
+            <button class="btn btn-primary" id="previewBtn" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                Previsualizar Datos
             </button>
+
+            <a href="/ordenes.html" class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                </svg>
+                Volver a Órdenes
+            </a>
         </div>
 
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <span>Procesando archivo...</span>
-        </div>
+        <div class="preview-section" id="previewSection">
+            <div class="preview-header">
+                <div class="preview-stats">
+                    <strong id="totalRegistros">0</strong> registros encontrados
+                </div>
+                <div>
+                    <button class="btn btn-primary" id="editNewFile">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Subir Otro Archivo
+                    </button>
+                </div>
+            </div>
 
-        <button class="btn btn-primary" id="uploadBtn" disabled>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            Subir e Importar
-        </button>
+            <div id="alertContainer"></div>
 
-        <a href="/ordenes.html" class="btn btn-secondary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="19" y1="12" x2="5" y2="12"/>
-                <polyline points="12 19 5 12 12 5"/>
-            </svg>
-            Volver a Órdenes
-        </a>
+            <div class="table-container">
+                <table id="previewTable">
+                    <thead>
+                        <tr>
+                            <th class="fila-column">#</th>
+                            <th>Número ID</th>
+                            <th>Primer Nombre</th>
+                            <th>Segundo Nombre</th>
+                            <th>Primer Apellido</th>
+                            <th>Segundo Apellido</th>
+                            <th>Celular</th>
+                            <th>Correo</th>
+                            <th>Cargo</th>
+                            <th>Ciudad</th>
+                            <th>Fecha Atención</th>
+                            <th>Hora</th>
+                            <th>Empresa</th>
+                            <th>Tipo Examen</th>
+                            <th>Código Empresa</th>
+                            <th>Exámenes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="previewTableBody">
+                    </tbody>
+                </table>
+            </div>
 
-        <div class="results" id="results">
-            <div class="results-title" id="resultsTitle"></div>
-            <div class="results-stats" id="resultsStats"></div>
-            <div class="errors-list" id="errorsList" style="display: none;"></div>
+            <div class="action-buttons">
+                <button class="btn btn-success" id="approveBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Aprobar e Importar (<span id="countRegistros">0</span> registros)
+                </button>
+                <button class="btn btn-secondary" id="cancelPreview">
+                    Cancelar
+                </button>
+            </div>
         </div>
     </div>
 
@@ -363,11 +480,18 @@
         const selectedFile = document.getElementById('selectedFile');
         const fileName = document.getElementById('fileName');
         const removeFile = document.getElementById('removeFile');
-        const uploadBtn = document.getElementById('uploadBtn');
+        const previewBtn = document.getElementById('previewBtn');
         const loading = document.getElementById('loading');
-        const results = document.getElementById('results');
+        const uploadSection = document.getElementById('uploadSection');
+        const previewSection = document.getElementById('previewSection');
+        const previewTableBody = document.getElementById('previewTableBody');
+        const approveBtn = document.getElementById('approveBtn');
+        const editNewFile = document.getElementById('editNewFile');
+        const cancelPreview = document.getElementById('cancelPreview');
+        const alertContainer = document.getElementById('alertContainer');
 
         let currentFile = null;
+        let registrosData = [];
 
         // Click en zona de upload
         uploadZone.addEventListener('click', () => fileInput.click());
@@ -405,9 +529,7 @@
             fileName.textContent = file.name;
             uploadZone.style.display = 'none';
             selectedFile.style.display = 'flex';
-            uploadBtn.disabled = false;
-            results.className = 'results';
-            results.style.display = 'none';
+            previewBtn.disabled = false;
         }
 
         // Remover archivo
@@ -416,22 +538,21 @@
             fileInput.value = '';
             uploadZone.style.display = 'block';
             selectedFile.style.display = 'none';
-            uploadBtn.disabled = true;
+            previewBtn.disabled = true;
         });
 
-        // Subir archivo
-        uploadBtn.addEventListener('click', async () => {
+        // Previsualizar archivo
+        previewBtn.addEventListener('click', async () => {
             if (!currentFile) return;
 
-            uploadBtn.disabled = true;
+            previewBtn.disabled = true;
             loading.classList.add('active');
-            results.style.display = 'none';
 
             try {
                 const formData = new FormData();
                 formData.append('archivo', currentFile);
 
-                const response = await fetch('/api/ordenes/importar-csv', {
+                const response = await fetch('/api/ordenes/previsualizar-csv', {
                     method: 'POST',
                     body: formData
                 });
@@ -441,48 +562,167 @@
                 loading.classList.remove('active');
 
                 if (data.success) {
-                    results.className = 'results success';
-                    document.getElementById('resultsTitle').textContent = 'Importación completada';
-                    document.getElementById('resultsStats').innerHTML = `
-                        <div class="stat">
-                            <div class="stat-value">${data.resultados.total}</div>
-                            <div class="stat-label">Total</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" style="color: #22C55E;">${data.resultados.exitosos}</div>
-                            <div class="stat-label">Exitosos</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" style="color: #DC2626;">${data.resultados.errores.length}</div>
-                            <div class="stat-label">Errores</div>
-                        </div>
-                    `;
-
-                    if (data.resultados.errores.length > 0) {
-                        const errorsList = document.getElementById('errorsList');
-                        errorsList.style.display = 'block';
-                        errorsList.innerHTML = data.resultados.errores.map(e =>
-                            `<div class="error-item">Fila ${e.fila}: ${e.error}</div>`
-                        ).join('');
-                    } else {
-                        document.getElementById('errorsList').style.display = 'none';
-                    }
+                    registrosData = data.registros;
+                    renderPreviewTable(data.registros);
+                    showPreviewSection(data);
                 } else {
-                    results.className = 'results error';
-                    document.getElementById('resultsTitle').textContent = 'Error en la importación';
-                    document.getElementById('resultsStats').innerHTML = `<p style="color: #991B1B;">${data.message}</p>`;
-                    document.getElementById('errorsList').style.display = 'none';
+                    alert('Error: ' + data.message);
+                    previewBtn.disabled = false;
                 }
 
             } catch (error) {
                 loading.classList.remove('active');
-                results.className = 'results error';
-                document.getElementById('resultsTitle').textContent = 'Error de conexión';
-                document.getElementById('resultsStats').innerHTML = `<p style="color: #991B1B;">${error.message}</p>`;
-                document.getElementById('errorsList').style.display = 'none';
+                alert('Error de conexión: ' + error.message);
+                previewBtn.disabled = false;
+            }
+        });
+
+        function renderPreviewTable(registros) {
+            previewTableBody.innerHTML = '';
+
+            registros.forEach((reg, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="fila-column">${reg.fila}</td>
+                    <td class="editable-cell" data-field="numeroId" data-index="${index}">${reg.numeroId || ''}</td>
+                    <td class="editable-cell" data-field="primerNombre" data-index="${index}">${reg.primerNombre || ''}</td>
+                    <td class="editable-cell" data-field="segundoNombre" data-index="${index}">${reg.segundoNombre || ''}</td>
+                    <td class="editable-cell" data-field="primerApellido" data-index="${index}">${reg.primerApellido || ''}</td>
+                    <td class="editable-cell" data-field="segundoApellido" data-index="${index}">${reg.segundoApellido || ''}</td>
+                    <td class="editable-cell" data-field="celular" data-index="${index}">${reg.celular || ''}</td>
+                    <td class="editable-cell" data-field="correo" data-index="${index}">${reg.correo || ''}</td>
+                    <td class="editable-cell" data-field="cargo" data-index="${index}">${reg.cargo || ''}</td>
+                    <td class="editable-cell" data-field="ciudad" data-index="${index}">${reg.ciudad || ''}</td>
+                    <td class="editable-cell" data-field="fechaAtencion" data-index="${index}">${reg.fechaAtencion || ''}</td>
+                    <td class="editable-cell" data-field="horaAtencion" data-index="${index}">${reg.horaAtencion || ''}</td>
+                    <td class="editable-cell" data-field="empresa" data-index="${index}">${reg.empresa || ''}</td>
+                    <td class="editable-cell" data-field="tipoExamen" data-index="${index}">${reg.tipoExamen || ''}</td>
+                    <td class="editable-cell" data-field="codEmpresa" data-index="${index}">${reg.codEmpresa || ''}</td>
+                    <td class="editable-cell" data-field="examenes" data-index="${index}">${reg.examenes || ''}</td>
+                `;
+                previewTableBody.appendChild(row);
+            });
+
+            // Agregar event listeners para edición inline
+            document.querySelectorAll('.editable-cell').forEach(cell => {
+                cell.addEventListener('click', function() {
+                    makeEditable(this);
+                });
+            });
+        }
+
+        function makeEditable(cell) {
+            if (cell.querySelector('input')) return;
+
+            const currentValue = cell.textContent;
+            const field = cell.dataset.field;
+            const index = cell.dataset.index;
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'cell-input';
+            input.value = currentValue;
+
+            cell.textContent = '';
+            cell.appendChild(input);
+            input.focus();
+
+            const saveValue = () => {
+                const newValue = input.value.trim();
+                cell.textContent = newValue;
+                registrosData[index][field] = newValue;
+            };
+
+            input.addEventListener('blur', saveValue);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    saveValue();
+                }
+                if (e.key === 'Escape') {
+                    cell.textContent = currentValue;
+                }
+            });
+        }
+
+        function showPreviewSection(data) {
+            uploadSection.style.display = 'none';
+            previewSection.classList.add('active');
+            document.getElementById('totalRegistros').textContent = data.total;
+            document.getElementById('countRegistros').textContent = data.total;
+
+            if (data.errores && data.errores.length > 0) {
+                showAlert('warning', `Se encontraron ${data.errores.length} registros con errores que fueron omitidos.`);
+            }
+        }
+
+        function showAlert(type, message) {
+            alertContainer.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        }
+
+        // Aprobar e importar
+        approveBtn.addEventListener('click', async () => {
+            if (registrosData.length === 0) {
+                alert('No hay registros para importar');
+                return;
             }
 
-            uploadBtn.disabled = false;
+            if (!confirm(`¿Estás seguro de importar ${registrosData.length} registros?`)) {
+                return;
+            }
+
+            approveBtn.disabled = true;
+            loading.classList.add('active');
+            loading.querySelector('span').textContent = 'Importando registros...';
+
+            try {
+                const response = await fetch('/api/ordenes/importar-desde-preview', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ registros: registrosData })
+                });
+
+                const data = await response.json();
+
+                loading.classList.remove('active');
+
+                if (data.success) {
+                    showAlert('success', `✅ Importación completada: ${data.resultados.exitosos} de ${data.resultados.total} registros importados`);
+
+                    setTimeout(() => {
+                        window.location.href = '/ordenes.html';
+                    }, 2000);
+                } else {
+                    showAlert('error', 'Error: ' + data.message);
+                    approveBtn.disabled = false;
+                }
+
+            } catch (error) {
+                loading.classList.remove('active');
+                showAlert('error', 'Error de conexión: ' + error.message);
+                approveBtn.disabled = false;
+            }
+        });
+
+        // Editar nuevo archivo
+        editNewFile.addEventListener('click', () => {
+            previewSection.classList.remove('active');
+            uploadSection.style.display = 'block';
+            currentFile = null;
+            fileInput.value = '';
+            uploadZone.style.display = 'block';
+            selectedFile.style.display = 'none';
+            previewBtn.disabled = true;
+            registrosData = [];
+            alertContainer.innerHTML = '';
+        });
+
+        // Cancelar preview
+        cancelPreview.addEventListener('click', () => {
+            if (confirm('¿Seguro que quieres cancelar? Se perderán los cambios realizados.')) {
+                window.location.href = '/ordenes.html';
+            }
         });
     </script>
 </body>
