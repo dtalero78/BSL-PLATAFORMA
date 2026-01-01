@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel RIPS - BSL Plataforma</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .tab.active {
+            color: #667eea;
+            background: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            font-size: 20px;
+            color: #2d3748;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 12px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+
+        .alert-info {
+            background: #e0f2fe;
+            border: 1px solid #7dd3fc;
+            color: #0c4a6e;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            color: #92400e;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            color: #065f46;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .json-preview {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 500px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Panel de Generación RIPS</h1>
+            <p>Registro Individual de Prestación de Servicios de Salud - Resolución 2275 de 2023</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="cambiarTab(0)">
+                📊 Configuración de Exámenes
+            </button>
+            <button class="tab" onclick="cambiarTab(1)">
+                🚀 Generar RIPS
+            </button>
+            <button class="tab" onclick="cambiarTab(2)">
+                📁 Histórico
+            </button>
+        </div>
+
+        <!-- TAB 1: Configuración de Exámenes -->
+        <div class="tab-content active" id="tab-examenes">
+            <div class="section">
+                <h2>⚙️ Configuración de Exámenes</h2>
+                <p style="color: #6c757d; margin-bottom: 20px;">
+                    Configure los códigos CUPS, grupos de servicio y precios para cada examen que ofrece BSL.
+                    Estos datos son obligatorios para generar los archivos RIPS.
+                </p>
+
+                <div class="alert alert-info">
+                    <span>ℹ️</span>
+                    <div>
+                        <strong>Importante:</strong> Todos los exámenes deben tener código CUPS configurado para poder generar RIPS.
+                        Los códigos CUPS deben obtenerse de las tablas oficiales SISPRO del Ministerio de Salud.
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-success" onclick="guardarExamenes()">
+                        💾 Guardar Cambios
+                    </button>
+                    <button class="btn btn-secondary" onclick="cargarExamenes()">
+                        🔄 Recargar
+                    </button>
+                </div>
+
+                <table id="tabla-examenes">
+                    <thead>
+                        <tr>
+                            <th>Nombre del Examen</th>
+                            <th style="width: 150px">Código CUPS</th>
+                            <th style="width: 120px">Grupo</th>
+                            <th style="width: 150px">Precio ($)</th>
+                            <th style="width: 100px">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="examenes-tbody">
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                <div class="loading active">
+                                    <div class="spinner"></div>
+                                    <p>Cargando exámenes...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 2: Generar RIPS -->
+        <div class="tab-content" id="tab-generar">
+            <div class="section">
+                <h2>🚀 Generar Archivo RIPS</h2>
+                <p style="color: #6c757d; margin-bottom: 20px;">
+                    Genere el archivo RIPS en formato JSON para un periodo específico.
+                    El sistema incluirá todos los pacientes atendidos en el rango de fechas seleccionado.
+                </p>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fecha-inicio">Fecha Inicio</label>
+                        <input type="date" id="fecha-inicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fecha-fin">Fecha Fin</label>
+                        <input type="date" id="fecha-fin" required>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="generarRIPS()">
+                        📋 Generar RIPS
+                    </button>
+                </div>
+
+                <div id="resultado-generacion" style="margin-top: 30px; display: none;">
+                    <div class="stat-grid" id="stats-rips"></div>
+
+                    <div id="errores-rips" style="display: none;"></div>
+
+                    <h3 style="margin-bottom: 16px;">Vista Previa JSON</h3>
+                    <div class="json-preview" id="json-preview"></div>
+
+                    <div class="actions">
+                        <button class="btn btn-success" onclick="descargarRIPS()">
+                            💾 Descargar JSON
+                        </button>
+                        <button class="btn btn-primary" onclick="exportarRIPS()">
+                            📤 Guardar Exportación
+                        </button>
+                    </div>
+                </div>
+
+                <div class="loading" id="loading-generar">
+                    <div class="spinner"></div>
+                    <p>Generando archivo RIPS...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Histórico -->
+        <div class="tab-content" id="tab-historico">
+            <div class="section">
+                <h2>📁 Histórico de Exportaciones</h2>
+                <p style="color: #6c757d; margin-bottom: 20px;">
+                    Consulte y descargue archivos RIPS generados anteriormente.
+                </p>
+
+                <button class="btn btn-secondary" onclick="cargarHistorico()" style="margin-bottom: 20px;">
+                    🔄 Actualizar
+                </button>
+
+                <table id="tabla-historico">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Periodo</th>
+                            <th>Fecha Generación</th>
+                            <th>Registros</th>
+                            <th>Pacientes</th>
+                            <th>Estado</th>
+                            <th>Usuario</th>
+                            <th style="width: 150px">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historico-tbody">
+                        <tr>
+                            <td colspan="8" class="empty-state">
+                                <div class="loading active">
+                                    <div class="spinner"></div>
+                                    <p>Cargando histórico...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado global
+        let examenes = [];
+        let ripsGenerado = null;
+
+        // Verificar autenticación
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        // Cambiar entre tabs
+        function cambiarTab(index) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach((tab, i) => {
+                if (i === index) {
+                    tab.classList.add('active');
+                    contents[i].classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                    contents[i].classList.remove('active');
+                }
+            });
+
+            // Cargar datos al cambiar a tab
+            if (index === 0) cargarExamenes();
+            if (index === 2) cargarHistorico();
+        }
+
+        // FUNCIONES TAB 1: Configuración de Exámenes
+        async function cargarExamenes() {
+            try {
+                const response = await fetch('/api/rips/examenes', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    examenes = data.data;
+                    renderizarTablaExamenes();
+                }
+            } catch (error) {
+                console.error('Error cargando exámenes:', error);
+                alert('Error al cargar exámenes');
+            }
+        }
+
+        function renderizarTablaExamenes() {
+            const tbody = document.getElementById('examenes-tbody');
+
+            if (examenes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="empty-state">
+                            <p>No hay exámenes configurados</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = examenes.map((examen, index) => `
+                <tr>
+                    <td><strong>${examen.nombre}</strong></td>
+                    <td>
+                        <input type="text"
+                               value="${examen.codigo_cups || ''}"
+                               placeholder="Ej: 890314"
+                               onchange="actualizarExamen(${index}, 'codigo_cups', this.value)">
+                    </td>
+                    <td>
+                        <select onchange="actualizarExamen(${index}, 'grupo_servicio', this.value)">
+                            <option value="">Seleccionar</option>
+                            <option value="01" ${examen.grupo_servicio === '01' ? 'selected' : ''}>01 - Consulta</option>
+                            <option value="03" ${examen.grupo_servicio === '03' ? 'selected' : ''}>03 - Apoyo diagnóstico</option>
+                            <option value="04" ${examen.grupo_servicio === '04' ? 'selected' : ''}>04 - Quirúrgico</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number"
+                               value="${examen.precio || 0}"
+                               min="0"
+                               step="1000"
+                               onchange="actualizarExamen(${index}, 'precio', this.value)">
+                    </td>
+                    <td>
+                        ${examen.codigo_cups ?
+                            '<span class="badge badge-success">✓ Configurado</span>' :
+                            '<span class="badge badge-warning">⚠️ Sin CUPS</span>'
+                        }
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function actualizarExamen(index, campo, valor) {
+            examenes[index][campo] = valor;
+        }
+
+        async function guardarExamenes() {
+            try {
+                const promises = examenes.map(examen =>
+                    fetch(`/api/rips/examenes/${examen.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            codigo_cups: examen.codigo_cups,
+                            grupo_servicio: examen.grupo_servicio,
+                            precio: examen.precio,
+                            descripcion: examen.descripcion
+                        })
+                    })
+                );
+
+                await Promise.all(promises);
+                alert('✅ Exámenes guardados correctamente');
+                cargarExamenes();
+            } catch (error) {
+                console.error('Error guardando exámenes:', error);
+                alert('❌ Error al guardar exámenes');
+            }
+        }
+
+        // FUNCIONES TAB 2: Generar RIPS
+        async function generarRIPS() {
+            const fechaInicio = document.getElementById('fecha-inicio').value;
+            const fechaFin = document.getElementById('fecha-fin').value;
+
+            if (!fechaInicio || !fechaFin) {
+                alert('Por favor seleccione ambas fechas');
+                return;
+            }
+
+            const loading = document.getElementById('loading-generar');
+            const resultado = document.getElementById('resultado-generacion');
+
+            loading.classList.add('active');
+            resultado.style.display = 'none';
+
+            try {
+                const response = await fetch(
+                    `/api/rips/generar?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`,
+                    { headers: { 'Authorization': `Bearer ${token}` } }
+                );
+
+                const data = await response.json();
+
+                if (data.success) {
+                    ripsGenerado = data;
+                    mostrarResultado(data);
+                } else {
+                    // Hay errores de exámenes sin CUPS
+                    mostrarErroresCUPS(data.errores);
+                }
+            } catch (error) {
+                console.error('Error generando RIPS:', error);
+                alert('Error al generar RIPS');
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        function mostrarResultado(data) {
+            const resultado = document.getElementById('resultado-generacion');
+            const stats = document.getElementById('stats-rips');
+            const preview = document.getElementById('json-preview');
+
+            // Stats
+            stats.innerHTML = `
+                <div class="stat-card">
+                    <div class="label">Total Pacientes</div>
+                    <div class="value">${data.metadata.totalPacientes}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Total Consultas</div>
+                    <div class="value">${data.metadata.totalConsultas}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Total Registros</div>
+                    <div class="value">${data.metadata.totalRegistros}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Periodo</div>
+                    <div class="value" style="font-size: 14px;">${data.metadata.periodoInicio} al ${data.metadata.periodoFin}</div>
+                </div>
+            `;
+
+            // Preview JSON (limitado)
+            const jsonStr = JSON.stringify(data.rips, null, 2);
+            preview.textContent = jsonStr.length > 10000
+                ? jsonStr.substring(0, 10000) + '\n\n... (JSON truncado, descargue el archivo completo)'
+                : jsonStr;
+
+            resultado.style.display = 'block';
+        }
+
+        function mostrarErroresCUPS(errores) {
+            const erroresDiv = document.getElementById('errores-rips');
+            const resultado = document.getElementById('resultado-generacion');
+
+            if (!errores || errores.length === 0) {
+                erroresDiv.style.display = 'none';
+                return;
+            }
+
+            const examenesUnicos = new Set();
+            errores.forEach(error => {
+                error.examenesNoConfigurados.forEach(ex => examenesUnicos.add(ex));
+            });
+
+            erroresDiv.innerHTML = `
+                <div class="alert alert-error">
+                    <span>❌</span>
+                    <div>
+                        <strong>No se puede generar RIPS</strong><br>
+                        Los siguientes exámenes no tienen código CUPS configurado:
+                        <ul style="margin-top: 8px; padding-left: 20px;">
+                            ${Array.from(examenesUnicos).map(ex => `<li>${ex}</li>`).join('')}
+                        </ul>
+                        <p style="margin-top: 12px;">
+                            Por favor, configure los códigos CUPS en la pestaña
+                            <a href="#" onclick="cambiarTab(0); return false;" style="color: #991b1b; text-decoration: underline;">
+                                <strong>Configuración de Exámenes</strong>
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            erroresDiv.style.display = 'block';
+            resultado.style.display = 'block';
+        }
+
+        function descargarRIPS() {
+            if (!ripsGenerado) return;
+
+            const blob = new Blob([JSON.stringify(ripsGenerado.rips, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `RIPS_${ripsGenerado.metadata.periodoInicio}_${ripsGenerado.metadata.periodoFin}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        async function exportarRIPS() {
+            if (!ripsGenerado) return;
+
+            const fechaInicio = document.getElementById('fecha-inicio').value;
+            const fechaFin = document.getElementById('fecha-fin').value;
+
+            try {
+                const response = await fetch('/api/rips/exportar', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fecha_inicio: fechaInicio, fecha_fin: fechaFin })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`✅ ${data.message}\n\nID de exportación: ${data.exportacionId}`);
+                    cambiarTab(2); // Ir a histórico
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error exportando RIPS:', error);
+                alert('Error al guardar exportación');
+            }
+        }
+
+        // FUNCIONES TAB 3: Histórico
+        async function cargarHistorico() {
+            try {
+                const response = await fetch('/api/rips/exportaciones', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    renderizarHistorico(data.data);
+                }
+            } catch (error) {
+                console.error('Error cargando histórico:', error);
+                alert('Error al cargar histórico');
+            }
+        }
+
+        function renderizarHistorico(exportaciones) {
+            const tbody = document.getElementById('historico-tbody');
+
+            if (exportaciones.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <p>No hay exportaciones RIPS aún</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = exportaciones.map(exp => {
+                const fecha = new Date(exp.fecha_generacion).toLocaleString('es-CO');
+                const periodo = `${exp.periodo_inicio} - ${exp.periodo_fin}`;
+
+                let estadoBadge = '';
+                if (exp.estado === 'generado') {
+                    estadoBadge = '<span class="badge badge-success">✓ Generado</span>';
+                } else if (exp.estado === 'generado_con_advertencias') {
+                    estadoBadge = '<span class="badge badge-warning">⚠️ Con advertencias</span>';
+                } else {
+                    estadoBadge = `<span class="badge badge-error">${exp.estado}</span>`;
+                }
+
+                return `
+                    <tr>
+                        <td><strong>#${exp.id}</strong></td>
+                        <td>${periodo}</td>
+                        <td>${fecha}</td>
+                        <td>${exp.total_registros}</td>
+                        <td>${exp.total_pacientes}</td>
+                        <td>${estadoBadge}</td>
+                        <td>${exp.usuario_generador}</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;"
+                                    onclick="descargarExportacion(${exp.id})">
+                                📥 Descargar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function descargarExportacion(id) {
+            try {
+                window.open(`/api/rips/exportaciones/${id}/download`, '_blank');
+            } catch (error) {
+                console.error('Error descargando exportación:', error);
+                alert('Error al descargar archivo');
+            }
+        }
+
+        // Inicialización
+        window.addEventListener('DOMContentLoaded', () => {
+            cargarExamenes();
+
+            // Setear fecha de hoy por defecto
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('fecha-fin').value = hoy;
+
+            // Primer día del mes
+            const primerDia = new Date();
+            primerDia.setDate(1);
+            document.getElementById('fecha-inicio').value = primerDia.toISOString().split('T')[0];
+        });
+    </script>
+</body>
+</html>
