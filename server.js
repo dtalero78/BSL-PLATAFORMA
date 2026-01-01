@@ -318,6 +318,57 @@ function sendWhatsAppMessage(toNumber, messageBody) {
     });
 }
 
+// Notificar al coordinador de agendamiento sobre nueva orden
+async function notificarCoordinadorNuevaOrden(orden) {
+    try {
+        const coordinadorCelular = process.env.COORDINADOR_CELULAR;
+
+        if (!coordinadorCelular) {
+            console.log('⚠️ No hay coordinador configurado para notificaciones');
+            return;
+        }
+
+        // Construir nombre completo del paciente
+        const nombreCompleto = [
+            orden.primerNombre,
+            orden.segundoNombre,
+            orden.primerApellido,
+            orden.segundoApellido
+        ].filter(Boolean).join(' ');
+
+        // Formatear fecha
+        const fechaFormateada = orden.fechaAtencion ?
+            new Date(orden.fechaAtencion).toLocaleDateString('es-CO', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }) : 'No definida';
+
+        // Construir mensaje
+        const mensaje = `🆕 *Nueva Orden de Examen*
+
+📋 *Empresa:* ${orden.codEmpresa}
+🏥 *Tipo de Examen:* ${orden.tipoExamen || 'No especificado'}
+
+👤 *Paciente:* ${nombreCompleto}
+🆔 *Documento:* ${orden.numeroId}
+📱 *Celular:* ${orden.celular}
+🏙️ *Ciudad:* ${orden.ciudad}
+
+📅 *Fecha programada:* ${fechaFormateada}
+⏰ *Hora:* ${orden.horaAtencion || 'No definida'}
+🩺 *Modalidad:* ${orden.modalidad === 'presencial' ? 'Presencial' : 'Virtual'}
+
+🆔 *ID Orden:* ${orden._id}`;
+
+        await sendWhatsAppMessage(coordinadorCelular, mensaje);
+        console.log('✅ Notificación enviada al coordinador:', coordinadorCelular);
+    } catch (error) {
+        console.error('❌ Error notificando al coordinador:', error.message);
+        // No bloquear si falla la notificación
+    }
+}
+
 // Configuración de números de alerta por empresa
 const NUMEROS_ALERTA_POR_EMPRESA = {
     "SIIGO": [
@@ -4051,7 +4102,7 @@ app.post('/api/ordenes', async (req, res) => {
         const pgResult = await pool.query(insertQuery, insertValues);
         console.log('✅ PostgreSQL: Orden guardada con _id:', wixId);
 
-        // Disparar webhook a Make.com (async, no bloquea) para enviar WhatsApp
+        // Disparar webhook a Make.com (async, no bloquea) para enviar WhatsApp al paciente
         dispararWebhookMake({
             _id: wixId,
             celular,
@@ -4063,6 +4114,23 @@ app.post('/api/ordenes', async (req, res) => {
             fechaAtencion,
             horaAtencion,
             medico,
+            modalidad
+        });
+
+        // Notificar al coordinador de agendamiento (async, no bloquea)
+        notificarCoordinadorNuevaOrden({
+            _id: wixId,
+            numeroId,
+            primerNombre,
+            segundoNombre,
+            primerApellido,
+            segundoApellido,
+            celular,
+            ciudad,
+            codEmpresa,
+            tipoExamen,
+            fechaAtencion,
+            horaAtencion,
             modalidad
         });
 
