@@ -2451,10 +2451,13 @@
         function generarOpcionesHora() {
             let opciones = '';
             for (let hora = 6; hora <= 22; hora++) {
-                const horaStr = `${String(hora).padStart(2, '0')}:00`;
-                const hora12 = hora > 12 ? hora - 12 : hora;
-                const ampm = hora >= 12 ? 'PM' : 'AM';
-                opciones += `<option value="${horaStr}">${hora12}:00 ${ampm}</option>`;
+                for (let minuto = 0; minuto < 60; minuto += 30) {
+                    const horaStr = `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
+                    const hora12 = hora > 12 ? hora - 12 : hora;
+                    const minutoStr = String(minuto).padStart(2, '0');
+                    const ampm = hora >= 12 ? 'PM' : 'AM';
+                    opciones += `<option value="${horaStr}">${hora12}:${minutoStr} ${ampm}</option>`;
+                }
             }
             return opciones;
         }
