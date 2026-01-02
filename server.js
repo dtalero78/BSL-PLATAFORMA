@@ -363,7 +363,11 @@ function sendWhatsAppMessage(toNumber, messageBody) {
 // Notificar al coordinador de agendamiento sobre nueva orden
 async function notificarCoordinadorNuevaOrden(orden) {
     try {
-        // VALIDACIÓN: Solo notificar si es modalidad PRESENCIAL y ciudad diferente a Bogotá y Barranquilla
+        // VALIDACIÓN: Solo notificar si cumple TODAS las condiciones:
+        // 1. Modalidad PRESENCIAL
+        // 2. Ciudad diferente a Bogotá y Barranquilla
+        // 3. Empresa diferente a SANITHELP-JJ
+
         const modalidadPresencial = !orden.modalidad || orden.modalidad === 'presencial';
 
         // Normalizar ciudad para comparación (sin acentos, minúsculas)
@@ -375,8 +379,11 @@ async function notificarCoordinadorNuevaOrden(orden) {
         const ciudadesExcluidas = ['bogota', 'barranquilla'];
         const ciudadExcluida = ciudadesExcluidas.includes(ciudadNormalizada);
 
-        if (!modalidadPresencial || ciudadExcluida) {
-            console.log(`⏭️ No se notifica al coordinador - Modalidad: ${orden.modalidad || 'presencial'}, Ciudad: ${orden.ciudad}`);
+        // Excluir empresa SANITHELP-JJ
+        const empresaExcluida = orden.codEmpresa === 'SANITHELP-JJ';
+
+        if (!modalidadPresencial || ciudadExcluida || empresaExcluida) {
+            console.log(`⏭️ No se notifica al coordinador - Modalidad: ${orden.modalidad || 'presencial'}, Ciudad: ${orden.ciudad}, Empresa: ${orden.codEmpresa}`);
             return;
         }
 
