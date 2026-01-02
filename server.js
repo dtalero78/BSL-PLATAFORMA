@@ -7262,7 +7262,7 @@ app.get('/api/empresas/codigo/:codEmpresa', async (req, res) => {
 // ============================================
 
 const facturacionRoutes = require('./routes/facturacion');
-app.use('/api/facturacion', authMiddleware, facturacionRoutes);
+app.use('/api/facturacion', facturacionRoutes);
 
 // ==================== CALENDARIO ENDPOINTS ====================
 
