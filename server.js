@@ -602,7 +602,9 @@ const initDB = async () => {
             'diagnostico_cancer VARCHAR(10)',
             'enfermedades_laborales VARCHAR(10)',
             'enfermedad_osteomuscular VARCHAR(10)',
-            'enfermedad_autoinmune VARCHAR(10)'
+            'enfermedad_autoinmune VARCHAR(10)',
+            // Timestamp columns
+            'updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
         ];
 
         for (const column of columnsToAdd) {

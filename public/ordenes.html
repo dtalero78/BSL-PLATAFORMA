@@ -4906,37 +4906,20 @@
             contentDiv.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loading-spinner"></div></div>';
 
             try {
-                // Construir query params
+                // Usar el endpoint de preview de facturación
                 const params = new URLSearchParams({
-                    codEmpresa,
-                    atendido: 'true',
-                    pagado: 'false'
+                    codEmpresa
                 });
 
-                if (fechaDesde) params.append('fechaDesde', fechaDesde);
-                if (fechaHasta) params.append('fechaHasta', fechaHasta);
+                if (fechaDesde) params.append('fechaInicio', fechaDesde);
+                if (fechaHasta) params.append('fechaFin', fechaHasta);
 
-                const response = await fetch(`/api/historia-clinica?${params.toString()}`);
+                const response = await fetch(`/api/facturacion/preview?${params.toString()}`);
 
                 if (!response.ok) throw new Error('Error al cargar preview');
 
-                const { data } = await response.json();
-
-                // Contar exámenes por tipo
-                const examenesPorTipo = {};
-                let totalExamenes = 0;
-
-                data.forEach(paciente => {
-                    if (paciente.examenes) {
-                        const examenesArray = paciente.examenes.split(',').map(e => e.trim());
-                        examenesArray.forEach(examen => {
-                            if (examen) {
-                                examenesPorTipo[examen] = (examenesPorTipo[examen] || 0) + 1;
-                                totalExamenes++;
-                            }
-                        });
-                    }
-                });
+                const result = await response.json();
+                const { totalExamenes, totalPacientes, totalMonto, examenesPorTipo } = result.data;
 
                 // Renderizar preview
                 if (totalExamenes === 0) {
@@ -4946,26 +4929,39 @@
                         </div>
                     `;
                 } else {
+                    const formatter = new Intl.NumberFormat('es-CO', {
+                        style: 'currency',
+                        currency: 'COP',
+                        minimumFractionDigits: 0
+                    });
+
                     let html = `
                         <div style="margin-bottom: 16px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                 <span style="font-weight: 600; color: var(--text-primary);">Total de Exámenes:</span>
                                 <span style="font-weight: 700; color: var(--medical-primary); font-size: 18px;">${totalExamenes}</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                 <span style="font-weight: 600; color: var(--text-primary);">Pacientes:</span>
-                                <span style="font-weight: 600; color: var(--text-secondary);">${data.length}</span>
+                                <span style="font-weight: 600; color: var(--text-secondary);">${totalPacientes}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 2px solid var(--border-color);">
+                                <span style="font-weight: 700; color: var(--text-primary); font-size: 16px;">Total a Facturar:</span>
+                                <span style="font-weight: 700; color: var(--success-green); font-size: 20px;">${formatter.format(totalMonto)}</span>
                             </div>
                         </div>
                         <div style="border-top: 1px solid var(--border-color); padding-top: 12px;">
                             <div style="font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">Detalle por Examen:</div>
                     `;
 
-                    Object.entries(examenesPorTipo).sort((a, b) => b[1] - a[1]).forEach(([examen, cantidad]) => {
+                    Object.entries(examenesPorTipo).sort((a, b) => b[1].cantidad - a[1].cantidad).forEach(([examen, info]) => {
                         html += `
-                            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
-                                <span style="color: var(--text-secondary);">${examen}</span>
-                                <span style="font-weight: 600; color: var(--text-primary);">${cantidad}</span>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-subtle);">
+                                <div style="flex: 1;">
+                                    <div style="color: var(--text-primary); font-weight: 500;">${examen}</div>
+                                    <div style="color: var(--text-secondary); font-size: 12px;">${info.cantidad} × ${formatter.format(info.precio)}</div>
+                                </div>
+                                <span style="font-weight: 700; color: var(--text-primary);">${formatter.format(info.subtotal)}</span>
                             </div>
                         `;
                     });
