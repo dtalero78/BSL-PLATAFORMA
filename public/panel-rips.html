@@ -4,7 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel RIPS - BSL Plataforma</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            /* Medical Color Palette - Profesional y confiable */
+            --medical-primary: #0C4A6E;
+            --medical-secondary: #0EA5E9;
+            --success-green: #059669;
+            --warning-amber: #F59E0B;
+            --error-red: #DC2626;
+            --info-blue: #3B82F6;
+
+            /* Neutrals refinados */
+            --bg-primary: #F8FAFC;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #F1F5F9;
+            --bg-input: #FFFFFF;
+            --surface-elevated: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #94A3B8;
+            --border-color: #E2E8F0;
+            --border-subtle: #F1F5F9;
+
+            /* Legacy compatibility */
+            --accent-color: #0C4A6E;
+            --accent-hover: #0A3A54;
+            --text-tertiary: #94A3B8;
+            --border-light: #E2E8F0;
+
+            /* Shadows */
+            --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+            --shadow-md: 0 4px 6px rgba(15, 23, 42, 0.1), 0 2px 4px rgba(15, 23, 42, 0.06);
+            --shadow-lg: 0 10px 15px rgba(15, 23, 42, 0.1), 0 4px 6px rgba(15, 23, 42, 0.05);
+            --shadow-xl: 0 20px 25px rgba(15, 23, 42, 0.1), 0 10px 10px rgba(15, 23, 42, 0.04);
+
+            /* Spacing */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-2xl: 48px;
+
+            /* Border radius */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #111827;
+            --bg-secondary: #1F2937;
+            --bg-tertiary: #374151;
+            --bg-input: #374151;
+            --text-primary: #F9FAFB;
+            --text-secondary: #D1D5DB;
+            --text-tertiary: #9CA3AF;
+            --border-color: #374151;
+            --border-light: #4B5563;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,177 +78,505 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f5f7fa;
-            padding: 20px;
+            font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        /* ========== LAYOUT ========== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 24px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: visible;
+            transition: width 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+            z-index: 150;
+        }
+
+        .sidebar.collapsed {
+            width: 68px;
+        }
+
+        .sidebar-logo {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 16px;
+            text-align: center;
+            transition: padding 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-logo {
+            padding: 0 10px 24px;
+        }
+
+        .sidebar-logo img {
+            max-width: 140px;
+            height: auto;
+            transition: max-width 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-logo img {
+            max-width: 44px;
+        }
+
+        /* Toggle Button */
+        .sidebar-toggle {
+            position: absolute;
+            top: 50%;
+            right: -14px;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 200;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--bg-tertiary);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+        }
+
+        .sidebar-toggle i {
+            width: 16px;
+            height: 16px;
+            color: var(--text-secondary);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-toggle i {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-nav {
+            padding: 0 12px;
+        }
+
+        .sidebar.collapsed .sidebar-nav {
+            padding: 0 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            margin-bottom: 4px;
+            white-space: nowrap;
             overflow: hidden;
         }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
+        .sidebar.collapsed .nav-item {
+            padding: 10px;
+            justify-content: center;
         }
 
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 8px;
+        .nav-item span {
+            opacity: 1;
+            transition: opacity 0.2s ease;
         }
 
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
+        .sidebar.collapsed .nav-item span {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
         }
 
-        .tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 2px solid #e9ecef;
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
         }
 
-        .tab {
-            flex: 1;
-            padding: 16px 24px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: 500;
-            color: #6c757d;
-            transition: all 0.2s;
+        .nav-item.active {
+            background: #EFF6FF;
+            color: #2563EB;
+        }
+
+        [data-theme="dark"] .nav-item.active {
+            background: #1E3A5F;
+            color: #60A5FA;
+        }
+
+        .nav-item i {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2;
+            flex-shrink: 0;
+        }
+
+        /* Tooltip para sidebar colapsado */
+        .sidebar.collapsed .nav-item {
             position: relative;
         }
 
+        .sidebar.collapsed .nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            margin-left: 10px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            z-index: 200;
+        }
+
+        .sidebar.collapsed .nav-item:hover::after {
+            opacity: 1;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 240px;
+            right: 0;
+            height: 64px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 100;
+            transition: left 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .sidebar.collapsed ~ .top-bar,
+        body.sidebar-collapsed .top-bar {
+            left: 68px;
+        }
+
+        .top-bar-search {
+            position: relative;
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .top-bar-search input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-family: 'Figtree', sans-serif;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .top-bar-search input:focus {
+            outline: none;
+            border-color: var(--medical-primary);
+            box-shadow: 0 0 0 3px rgba(12, 74, 110, 0.1);
+            background: var(--bg-secondary);
+        }
+
+        .top-bar-search input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .top-bar-search i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--border-color);
+        }
+
+        .theme-toggle i {
+            width: 18px;
+            height: 18px;
+            color: var(--text-secondary);
+        }
+
+        .theme-toggle span {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 32px 40px;
+            padding-top: 96px;
+            transition: margin-left 0.3s ease;
+        }
+
+        body.sidebar-collapsed .main-content {
+            margin-left: 68px;
+        }
+
+        /* ========== HEADER ========== */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-header-left h1 {
+            font-family: 'Figtree', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--medical-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .page-header-left h1 i {
+            width: 24px;
+            height: 24px;
+            stroke: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .page-header-left p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-left: 34px;
+            font-weight: 500;
+        }
+
+        /* ========== TABS ========== */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-tertiary);
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: 'Figtree', sans-serif;
+        }
+
         .tab:hover {
-            background: #e9ecef;
-            color: #495057;
+            color: var(--text-primary);
         }
 
         .tab.active {
-            color: #667eea;
-            background: white;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-sm);
         }
 
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #667eea;
-        }
-
+        /* ========== TAB CONTENT ========== */
         .tab-content {
             display: none;
-            padding: 30px;
         }
 
         .tab-content.active {
             display: block;
         }
 
-        .section {
-            margin-bottom: 30px;
-        }
-
-        .section h2 {
-            font-size: 20px;
-            color: #2d3748;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        /* ========== BUTTONS ========== */
         .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            font-family: 'Figtree', sans-serif;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: var(--spacing-sm);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:active {
+            transform: translateY(0);
         }
 
         .btn-primary {
-            background: #667eea;
+            background: var(--medical-primary);
             color: white;
         }
 
         .btn-primary:hover {
-            background: #5568d3;
+            background: #0A3A54;
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--medical-primary);
         }
 
         .btn-success {
-            background: #10b981;
+            background: var(--success-green);
             color: white;
         }
 
         .btn-success:hover {
-            background: #059669;
+            background: #047857;
         }
 
         .btn-danger {
-            background: #ef4444;
+            background: var(--error-red);
             color: white;
         }
 
         .btn-danger:hover {
-            background: #dc2626;
+            background: #B91C1C;
         }
 
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
+        /* ========== TABLE ========== */
+        .table-container {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
 
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        table {
+        .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 16px;
-            background: white;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            overflow: hidden;
         }
 
-        thead {
-            background: #f8f9fa;
+        .data-table thead {
+            background: var(--bg-tertiary);
+            border-bottom: 2px solid var(--border-color);
         }
 
-        th {
-            padding: 12px;
+        .data-table th {
+            font-family: 'Figtree', sans-serif;
+            padding: 16px 20px;
             text-align: left;
-            font-weight: 600;
-            color: #495057;
-            font-size: 13px;
+            font-size: 12px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
         }
 
-        td {
-            padding: 12px;
-            border-top: 1px solid #e9ecef;
+        .data-table tbody tr {
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background 0.15s ease;
         }
 
-        tbody tr:hover {
-            background: #f8f9fa;
+        .data-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .data-table td {
+            padding: 18px 20px;
+            font-size: 14px;
+            color: var(--text-primary);
+            vertical-align: middle;
+        }
+
+        /* ========== FORM STYLES ========== */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 14px;
         }
 
         input[type="text"],
@@ -191,11 +585,14 @@
         select,
         textarea {
             width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
+            padding: 12px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
             font-size: 14px;
-            font-family: inherit;
+            font-family: 'Figtree', sans-serif;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
         }
 
         input[type="text"]:focus,
@@ -204,31 +601,15 @@
         select:focus,
         textarea:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--medical-primary);
+            box-shadow: 0 0 0 3px rgba(12, 74, 110, 0.1);
+            background: var(--bg-secondary);
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 500;
-            color: #495057;
-            font-size: 14px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
+        /* ========== ALERTS ========== */
         .alert {
             padding: 16px;
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             margin-bottom: 20px;
             display: flex;
             align-items: start;
@@ -236,29 +617,30 @@
         }
 
         .alert-info {
-            background: #e0f2fe;
-            border: 1px solid #7dd3fc;
-            color: #0c4a6e;
+            background: #E0F2FE;
+            border: 1px solid #7DD3FC;
+            color: #0C4A6E;
         }
 
         .alert-warning {
-            background: #fef3c7;
-            border: 1px solid #fbbf24;
-            color: #92400e;
+            background: #FEF3C7;
+            border: 1px solid #FBBF24;
+            color: #92400E;
         }
 
         .alert-error {
-            background: #fee2e2;
-            border: 1px solid #fca5a5;
-            color: #991b1b;
+            background: #FEE2E2;
+            border: 1px solid #FCA5A5;
+            color: #991B1B;
         }
 
         .alert-success {
-            background: #d1fae5;
-            border: 1px solid #6ee7b7;
-            color: #065f46;
+            background: #D1FAE5;
+            border: 1px solid #6EE7B7;
+            color: #065F46;
         }
 
+        /* ========== BADGES ========== */
         .badge {
             display: inline-block;
             padding: 4px 10px;
@@ -268,33 +650,67 @@
         }
 
         .badge-success {
-            background: #d1fae5;
-            color: #065f46;
+            background: #D1FAE5;
+            color: #065F46;
         }
 
         .badge-warning {
-            background: #fef3c7;
-            color: #92400e;
+            background: #FEF3C7;
+            color: #92400E;
         }
 
         .badge-error {
-            background: #fee2e2;
-            color: #991b1b;
+            background: #FEE2E2;
+            color: #991B1B;
         }
 
-        .json-preview {
-            background: #1e293b;
-            color: #e2e8f0;
+        /* ========== STATS ========== */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
             padding: 20px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* ========== JSON PREVIEW ========== */
+        .json-preview {
+            background: #1E293B;
+            color: #E2E8F0;
+            padding: 20px;
+            border-radius: var(--radius-md);
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
             font-size: 13px;
             max-height: 500px;
             overflow: auto;
             white-space: pre-wrap;
             word-wrap: break-word;
+            box-shadow: var(--shadow-md);
         }
 
+        /* ========== LOADING STATE ========== */
         .loading {
             display: none;
             text-align: center;
@@ -306,8 +722,8 @@
         }
 
         .spinner {
-            border: 4px solid #f3f4f6;
-            border-top: 4px solid #667eea;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--medical-primary);
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -320,221 +736,365 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* ========== EMPTY STATE ========== */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #6c757d;
+            color: var(--text-secondary);
         }
 
-        .empty-state svg {
-            width: 80px;
-            height: 80px;
+        .empty-state-icon {
+            font-size: 48px;
             margin-bottom: 16px;
-            opacity: 0.3;
+            opacity: 0.5;
         }
 
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #e9ecef;
-        }
-
-        .stat-card .label {
-            font-size: 12px;
-            color: #6c757d;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-
-        .stat-card .value {
-            font-size: 24px;
+        .empty-state-title {
+            font-size: 16px;
             font-weight: 600;
-            color: #2d3748;
+            color: var(--text-primary);
+            margin-bottom: 4px;
         }
 
+        .empty-state-text {
+            font-size: 14px;
+        }
+
+        /* ========== ACTIONS ========== */
         .actions {
             display: flex;
             gap: 8px;
             justify-content: flex-end;
             margin-top: 20px;
         }
+
+        /* ========== SECTION ========== */
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-description {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        /* ========== MOBILE STYLES ========== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                display: none;
+            }
+
+            .top-bar {
+                left: 0;
+                padding: 0 16px;
+                gap: 12px;
+            }
+
+            .top-bar-search {
+                flex: 1;
+                width: auto;
+            }
+
+            .theme-toggle span {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px 16px;
+                padding-top: 84px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header-left h1 {
+                font-size: 28px;
+            }
+
+            .page-header-left p {
+                font-size: 14px;
+                margin-left: 0;
+            }
+
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
+    <script src="https://unpkg.com/feather-icons"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📋 Panel de Generación RIPS</h1>
-            <p>Registro Individual de Prestación de Servicios de Salud - Resolución 2275 de 2023</p>
-        </div>
-
-        <div class="tabs">
-            <button class="tab active" onclick="cambiarTab(0)">
-                📊 Configuración de Exámenes
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+                <i data-feather="chevron-left"></i>
             </button>
-            <button class="tab" onclick="cambiarTab(1)">
-                🚀 Generar RIPS
-            </button>
-            <button class="tab" onclick="cambiarTab(2)">
-                📁 Histórico
-            </button>
-        </div>
-
-        <!-- TAB 1: Configuración de Exámenes -->
-        <div class="tab-content active" id="tab-examenes">
-            <div class="section">
-                <h2>⚙️ Configuración de Exámenes</h2>
-                <p style="color: #6c757d; margin-bottom: 20px;">
-                    Configure los códigos CUPS, grupos de servicio y precios para cada examen que ofrece BSL.
-                    Estos datos son obligatorios para generar los archivos RIPS.
-                </p>
-
-                <div class="alert alert-info">
-                    <span>ℹ️</span>
-                    <div>
-                        <strong>Importante:</strong> Todos los exámenes deben tener código CUPS configurado para poder generar RIPS.
-                        Los códigos CUPS deben obtenerse de las tablas oficiales SISPRO del Ministerio de Salud.
-                    </div>
-                </div>
-
-                <div class="actions">
-                    <button class="btn btn-success" onclick="guardarExamenes()">
-                        💾 Guardar Cambios
-                    </button>
-                    <button class="btn btn-secondary" onclick="cargarExamenes()">
-                        🔄 Recargar
-                    </button>
-                </div>
-
-                <table id="tabla-examenes">
-                    <thead>
-                        <tr>
-                            <th>Nombre del Examen</th>
-                            <th style="width: 150px">Código CUPS</th>
-                            <th style="width: 120px">Grupo</th>
-                            <th style="width: 150px">Precio ($)</th>
-                            <th style="width: 100px">Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="examenes-tbody">
-                        <tr>
-                            <td colspan="5" class="empty-state">
-                                <div class="loading active">
-                                    <div class="spinner"></div>
-                                    <p>Cargando exámenes...</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="sidebar-logo">
+                <img src="/bsl-logo.png" alt="BSL - Bienestar & Salud Laboral">
             </div>
+            <nav class="sidebar-nav">
+                <a href="/ordenes.html" class="nav-item" data-tooltip="Ordenes">
+                    <i data-feather="clipboard-list"></i>
+                    <span>Ordenes</span>
+                </a>
+                <a href="/nueva-orden.html" class="nav-item" data-tooltip="Nueva Orden">
+                    <i data-feather="plus-circle"></i>
+                    <span>Nueva Orden</span>
+                </a>
+                <a href="/subir-lote.html" target="_blank" class="nav-item" data-tooltip="Subir Lote">
+                    <i data-feather="upload"></i>
+                    <span>Subir Lote</span>
+                </a>
+                <a href="/medicos.html" class="nav-item" data-tooltip="Médicos">
+                    <i data-feather="users"></i>
+                    <span>Médicos</span>
+                </a>
+                <a href="/examenes.html" class="nav-item" data-tooltip="Exámenes">
+                    <i data-feather="activity"></i>
+                    <span>Exámenes</span>
+                </a>
+                <a href="/empresas.html" class="nav-item" data-tooltip="Empresas">
+                    <i data-feather="briefcase"></i>
+                    <span>Empresas</span>
+                </a>
+                <a href="/panel-admin.html" class="nav-item" data-tooltip="Panel Admin">
+                    <i data-feather="settings"></i>
+                    <span>Panel Admin</span>
+                </a>
+                <a href="/panel-rips.html" class="nav-item active" data-tooltip="Panel RIPS">
+                    <i data-feather="file-text"></i>
+                    <span>Panel RIPS</span>
+                </a>
+                <a href="https://bsl-plataforma.com/panel-empresas.html" class="nav-item" target="_blank" data-tooltip="Panel Empresas">
+                    <i data-feather="grid"></i>
+                    <span>Panel Empresas</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-search">
+                <i data-feather="search"></i>
+                <input type="text" placeholder="Buscar en panel RIPS...">
+            </div>
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+                <i data-feather="moon" id="themeIcon"></i>
+                <span id="themeText">Dark</span>
+            </button>
         </div>
 
-        <!-- TAB 2: Generar RIPS -->
-        <div class="tab-content" id="tab-generar">
-            <div class="section">
-                <h2>🚀 Generar Archivo RIPS</h2>
-                <p style="color: #6c757d; margin-bottom: 20px;">
-                    Genere el archivo RIPS en formato JSON para un periodo específico.
-                    El sistema incluirá todos los pacientes atendidos en el rango de fechas seleccionado.
-                </p>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="fecha-inicio">Fecha Inicio</label>
-                        <input type="date" id="fecha-inicio" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="fecha-fin">Fecha Fin</label>
-                        <input type="date" id="fecha-fin" required>
-                    </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <h1>
+                        <i data-feather="file-text"></i>
+                        Panel de Generación RIPS
+                    </h1>
+                    <p>Registro Individual de Prestación de Servicios de Salud - Resolución 2275 de 2023</p>
                 </div>
+            </div>
 
-                <div class="actions">
-                    <button class="btn btn-primary" onclick="generarRIPS()">
-                        📋 Generar RIPS
-                    </button>
-                </div>
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="cambiarTab(0)">
+                    Configuración de Exámenes
+                </button>
+                <button class="tab" onclick="cambiarTab(1)">
+                    Generar RIPS
+                </button>
+                <button class="tab" onclick="cambiarTab(2)">
+                    Histórico
+                </button>
+            </div>
 
-                <div id="resultado-generacion" style="margin-top: 30px; display: none;">
-                    <div class="stat-grid" id="stats-rips"></div>
+            <!-- TAB 1: Configuración de Exámenes -->
+            <div class="tab-content active" id="tab-examenes">
+                <div class="section">
+                    <p class="section-description">
+                        Configure los códigos CUPS, grupos de servicio y precios para cada examen que ofrece BSL.
+                        Estos datos son obligatorios para generar los archivos RIPS.
+                    </p>
 
-                    <div id="errores-rips" style="display: none;"></div>
-
-                    <h3 style="margin-bottom: 16px;">Vista Previa JSON</h3>
-                    <div class="json-preview" id="json-preview"></div>
+                    <div class="alert alert-info">
+                        <span>ℹ️</span>
+                        <div>
+                            <strong>Importante:</strong> Todos los exámenes deben tener código CUPS configurado para poder generar RIPS.
+                            Los códigos CUPS deben obtenerse de las tablas oficiales SISPRO del Ministerio de Salud.
+                        </div>
+                    </div>
 
                     <div class="actions">
-                        <button class="btn btn-success" onclick="descargarRIPS()">
-                            💾 Descargar JSON
+                        <button class="btn btn-success" onclick="guardarExamenes()">
+                            💾 Guardar Cambios
                         </button>
-                        <button class="btn btn-primary" onclick="exportarRIPS()">
-                            📤 Guardar Exportación
+                        <button class="btn btn-secondary" onclick="cargarExamenes()">
+                            🔄 Recargar
                         </button>
                     </div>
-                </div>
 
-                <div class="loading" id="loading-generar">
-                    <div class="spinner"></div>
-                    <p>Generando archivo RIPS...</p>
+                    <div class="table-container" style="margin-top: 20px;">
+                        <table class="data-table" id="tabla-examenes">
+                            <thead>
+                                <tr>
+                                    <th>Nombre del Examen</th>
+                                    <th style="width: 150px">Código CUPS</th>
+                                    <th style="width: 120px">Grupo</th>
+                                    <th style="width: 150px">Precio ($)</th>
+                                    <th style="width: 100px">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="examenes-tbody">
+                                <tr>
+                                    <td colspan="5" class="empty-state">
+                                        <div class="loading active">
+                                            <div class="spinner"></div>
+                                            <p>Cargando exámenes...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- TAB 3: Histórico -->
-        <div class="tab-content" id="tab-historico">
-            <div class="section">
-                <h2>📁 Histórico de Exportaciones</h2>
-                <p style="color: #6c757d; margin-bottom: 20px;">
-                    Consulte y descargue archivos RIPS generados anteriormente.
-                </p>
+            <!-- TAB 2: Generar RIPS -->
+            <div class="tab-content" id="tab-generar">
+                <div class="section">
+                    <p class="section-description">
+                        Genere el archivo RIPS en formato JSON para un periodo específico.
+                        El sistema incluirá todos los pacientes atendidos en el rango de fechas seleccionado.
+                    </p>
 
-                <button class="btn btn-secondary" onclick="cargarHistorico()" style="margin-bottom: 20px;">
-                    🔄 Actualizar
-                </button>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fecha-inicio">Fecha Inicio</label>
+                            <input type="date" id="fecha-inicio" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fecha-fin">Fecha Fin</label>
+                            <input type="date" id="fecha-fin" required>
+                        </div>
+                    </div>
 
-                <table id="tabla-historico">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Periodo</th>
-                            <th>Fecha Generación</th>
-                            <th>Registros</th>
-                            <th>Pacientes</th>
-                            <th>Estado</th>
-                            <th>Usuario</th>
-                            <th style="width: 150px">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historico-tbody">
-                        <tr>
-                            <td colspan="8" class="empty-state">
-                                <div class="loading active">
-                                    <div class="spinner"></div>
-                                    <p>Cargando histórico...</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                    <div class="actions">
+                        <button class="btn btn-primary" onclick="generarRIPS()">
+                            📋 Generar RIPS
+                        </button>
+                    </div>
+
+                    <div id="resultado-generacion" style="margin-top: 30px; display: none;">
+                        <div class="stat-grid" id="stats-rips"></div>
+
+                        <div id="errores-rips" style="display: none;"></div>
+
+                        <h3 style="margin-bottom: 16px; color: var(--text-primary);">Vista Previa JSON</h3>
+                        <div class="json-preview" id="json-preview"></div>
+
+                        <div class="actions">
+                            <button class="btn btn-success" onclick="descargarRIPS()">
+                                💾 Descargar JSON
+                            </button>
+                            <button class="btn btn-primary" onclick="exportarRIPS()">
+                                📤 Guardar Exportación
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="loading" id="loading-generar">
+                        <div class="spinner"></div>
+                        <p>Generando archivo RIPS...</p>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <!-- TAB 3: Histórico -->
+            <div class="tab-content" id="tab-historico">
+                <div class="section">
+                    <p class="section-description">
+                        Consulte y descargue archivos RIPS generados anteriormente.
+                    </p>
+
+                    <button class="btn btn-secondary" onclick="cargarHistorico()" style="margin-bottom: 20px;">
+                        🔄 Actualizar
+                    </button>
+
+                    <div class="table-container">
+                        <table class="data-table" id="tabla-historico">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Periodo</th>
+                                    <th>Fecha Generación</th>
+                                    <th>Registros</th>
+                                    <th>Pacientes</th>
+                                    <th>Estado</th>
+                                    <th>Usuario</th>
+                                    <th style="width: 150px">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historico-tbody">
+                                <tr>
+                                    <td colspan="8" class="empty-state">
+                                        <div class="loading active">
+                                            <div class="spinner"></div>
+                                            <p>Cargando histórico...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script src="/js/auth.js"></script>
     <script>
+        // Initialize feather icons
+        feather.replace();
+
         // Estado global
         let examenes = [];
         let ripsGenerado = null;
         let usuarioActual = null;
+
+        // Sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const body = document.body;
+            sidebar.classList.toggle('collapsed');
+            body.classList.toggle('sidebar-collapsed');
+            feather.replace();
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.removeAttribute('data-theme');
+                themeIcon.setAttribute('data-feather', 'moon');
+                themeText.textContent = 'Dark';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                themeIcon.setAttribute('data-feather', 'sun');
+                themeText.textContent = 'Light';
+            }
+
+            feather.replace();
+        }
 
         // Cambiar entre tabs
         function cambiarTab(index) {
@@ -696,6 +1256,10 @@
             const resultado = document.getElementById('resultado-generacion');
             const stats = document.getElementById('stats-rips');
             const preview = document.getElementById('json-preview');
+            const erroresDiv = document.getElementById('errores-rips');
+
+            // Ocultar errores si hubo alguno previo
+            erroresDiv.style.display = 'none';
 
             // Stats
             stats.innerHTML = `
@@ -885,6 +1449,9 @@
             // Proteger página - solo admin puede acceder
             usuarioActual = await Auth.protegerPagina(['admin']);
             if (!usuarioActual) return;
+
+            // Initialize feather icons
+            feather.replace();
 
             cargarExamenes();
 
