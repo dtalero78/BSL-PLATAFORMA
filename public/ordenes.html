@@ -4866,8 +4866,8 @@
 
                 if (!response.ok) throw new Error('Error al cargar empresas');
 
-                const data = await response.json();
-                const empresas = data.empresas || data; // Manejar ambos formatos
+                const result = await response.json();
+                const empresas = result.data || result.empresas || result; // Manejar múltiples formatos
                 const select = document.getElementById('factura-empresa');
 
                 // Limpiar opciones excepto la primera
