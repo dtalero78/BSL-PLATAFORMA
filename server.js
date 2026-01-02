@@ -7257,6 +7257,13 @@ app.get('/api/empresas/codigo/:codEmpresa', async (req, res) => {
     }
 });
 
+// ============================================
+// ENDPOINTS PARA FACTURACIÓN CON ALEGRA
+// ============================================
+
+const facturacionRoutes = require('./routes/facturacion');
+app.use('/api/facturacion', authMiddleware, facturacionRoutes);
+
 // ==================== CALENDARIO ENDPOINTS ====================
 
 // GET /api/calendario/mes - Obtener conteo de citas por día del mes
