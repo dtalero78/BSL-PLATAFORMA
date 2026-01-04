@@ -578,6 +578,11 @@
             color: var(--info-color);
         }
 
+        .role-badge.usuario_ips {
+            background: #F3E8FF;
+            color: #6B21A8;
+        }
+
         /* Action Buttons */
         .action-buttons {
             display: flex;
@@ -1136,6 +1141,10 @@
                                 <option value="">Todos los roles</option>
                                 <option value="empresa">Empresa</option>
                                 <option value="admin">Admin</option>
+                                <option value="empleado">Empleado</option>
+                                <option value="usuario_ips">Usuario IPS</option>
+                                <option value="agente_chat">Agente Chat</option>
+                                <option value="supervisor_chat">Supervisor Chat</option>
                             </select>
                             <button class="btn-primary" onclick="abrirModalCrear()">+ Nuevo Usuario</button>
                         </div>
@@ -1253,6 +1262,7 @@
                             <option value="admin">Administrador</option>
                             <option value="agente_chat">Agente de Chat</option>
                             <option value="supervisor_chat">Supervisor de Chat</option>
+                            <option value="usuario_ips">Usuario IPS</option>
                         </select>
                     </div>
                 </div>
@@ -1290,6 +1300,7 @@
                         <option value="admin">Administrador</option>
                         <option value="agente_chat">Agente de Chat</option>
                         <option value="supervisor_chat">Supervisor de Chat</option>
+                        <option value="usuario_ips">Usuario IPS</option>
                     </select>
                 </div>
                 <div class="form-group" id="grupoEmpresaAprobar" style="display: none;">
@@ -1902,7 +1913,8 @@
             const rolesConfig = {
                 'empresa': { text: 'Empresa', bg: '#DBEAFE', color: '#1E40AF' },
                 'empleado': { text: 'Empleado', bg: '#FEF3C7', color: '#92400E' },
-                'admin': { text: 'Administrador', bg: '#D1FAE5', color: '#065F46' }
+                'admin': { text: 'Administrador', bg: '#D1FAE5', color: '#065F46' },
+                'usuario_ips': { text: 'Usuario IPS', bg: '#F3E8FF', color: '#6B21A8' }
             };
             const rolConfig = rolesConfig[rol] || { text: rol, bg: '#E5E7EB', color: '#374151' };
             rolBadge.textContent = rolConfig.text;
