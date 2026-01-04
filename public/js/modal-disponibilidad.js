@@ -15,12 +15,16 @@ const diasNombres = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Vier
 window.abrirModalTiempoConsultaGlobal = function() {
     // Esperar a que el modal esté cargado en el DOM
     const modal = document.getElementById('modalTiempoConsulta');
-    if (!modal) {
+    const modalContainer = document.getElementById('modal-disponibilidad-container');
+
+    if (!modal || !modalContainer) {
         // Si el modal aún no está cargado, esperar un momento y reintentar
         setTimeout(window.abrirModalTiempoConsultaGlobal, 100);
         return false;
     }
 
+    // Mostrar el contenedor y el modal
+    modalContainer.style.display = 'block';
     modal.classList.add('active');
     document.getElementById('disponibilidadGuardada').classList.remove('show');
     poblarSelectMedicosDisponibilidad();
@@ -39,9 +43,18 @@ window.abrirModalTiempoConsulta = function() {
 };
 
 window.cerrarModalTiempoConsulta = function() {
-    document.getElementById('modalTiempoConsulta').classList.remove('active');
-    document.getElementById('selectMedicoDisponibilidad').value = '';
-    document.getElementById('contenidoDisponibilidad').style.display = 'none';
+    const modal = document.getElementById('modalTiempoConsulta');
+    const modalContainer = document.getElementById('modal-disponibilidad-container');
+
+    if (modal) modal.classList.remove('active');
+    if (modalContainer) modalContainer.style.display = 'none';
+
+    const selectMedico = document.getElementById('selectMedicoDisponibilidad');
+    const contenidoDisp = document.getElementById('contenidoDisponibilidad');
+
+    if (selectMedico) selectMedico.value = '';
+    if (contenidoDisp) contenidoDisp.style.display = 'none';
+
     window.medicoSeleccionadoId = null;
     window.modalidadActual = 'presencial';
     window.disponibilidadPorModalidad = { presencial: {}, virtual: {} };
@@ -475,6 +488,7 @@ window.guardarDisponibilidad = async function() {
                 // Crear contenedor si no existe
                 modalContainer = document.createElement('div');
                 modalContainer.id = 'modal-disponibilidad-container';
+                modalContainer.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 2000; display: none;';
                 document.body.appendChild(modalContainer);
             }
             modalContainer.innerHTML = html;
