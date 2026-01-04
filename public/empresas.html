@@ -892,10 +892,18 @@
 
         // Cargar empresas al iniciar
         document.addEventListener('DOMContentLoaded', () => {
+        // Proteger página con autenticación
+        Auth.protegerPagina(["admin","ADMIN"]).then(usuarioActual => {
+            if (!usuarioActual) return; // Redirigido a login
+
+            // Usuario autenticado, continuar con inicialización
+            console.log('Usuario autenticado:', usuarioActual.nombre);
+
             feather.replace();
             cargarEmpresas();
             cargarExamenesDisponibles();
             cargarCiudadesDisponibles();
+        }); // Fin Auth.protegerPagina
         });
 
         // Cargar exámenes del servidor
@@ -1263,6 +1271,9 @@
             }
         });
     </script>
+    <!-- Sistema de autenticación -->
+    <script src="/js/auth.js"></script>
+
     <!-- Cargar componentes compartidos -->
     <script src="/js/modal-disponibilidad.js"></script>
     <script src="/js/load-sidebar.js"></script>

@@ -1433,11 +1433,19 @@
         const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
         document.addEventListener('DOMContentLoaded', () => {
+        // Proteger página con autenticación
+        Auth.protegerPagina(["admin","ADMIN"]).then(usuarioActual => {
+            if (!usuarioActual) return; // Redirigido a login
+
+            // Usuario autenticado, continuar con inicialización
+            console.log('Usuario autenticado:', usuarioActual.nombre);
+
             feather.replace();
             cargarMedicos();
             cargarExamenesDisponibles();
             renderCalendario();
             cargarCitasMes();
+        }); // Fin Auth.protegerPagina
         });
 
         async function cargarExamenesDisponibles() {
@@ -2062,6 +2070,9 @@
             group.classList.toggle('open');
         }
     </script>
+
+    <!-- Sistema de autenticación -->
+    <script src="/js/auth.js"></script>
 
     <!-- Cargar componentes compartidos -->
     <script src="/js/load-sidebar.js"></script>
