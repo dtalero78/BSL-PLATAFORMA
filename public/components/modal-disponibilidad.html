@@ -1,6 +1,6 @@
 <!-- Modal Disponibilidad Médicos -->
-<div id="modalTiempoConsulta" class="modal">
-    <div class="modal-content" style="max-width: 550px;">
+<div id="modalTiempoConsulta" class="modal-overlay">
+    <div class="modal" style="max-width: 550px;">
         <div class="modal-header">
             <h2 class="modal-title">Configurar Disponibilidad</h2>
             <button class="modal-close" onclick="cerrarModalTiempoConsulta()">&times;</button>
@@ -65,9 +65,42 @@
 </div>
 
 <style>
-    /* Override z-index para que el modal aparezca sobre el sidebar */
-    #modalTiempoConsulta.modal {
-        z-index: 2000 !important;
+    /* Modal overlay que aparece desde la derecha */
+    #modalTiempoConsulta.modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 2000;
+        display: none;
+        justify-content: flex-end;
+    }
+
+    #modalTiempoConsulta.modal-overlay.active {
+        display: flex;
+    }
+
+    #modalTiempoConsulta .modal {
+        background: #F5F5F5;
+        width: 100%;
+        max-width: 550px;
+        height: 100vh;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+        animation: slideInRight 0.3s ease-out;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+        }
+        to {
+            transform: translateX(0);
+        }
     }
 
     /* Estilos para disponibilidad de médicos */
