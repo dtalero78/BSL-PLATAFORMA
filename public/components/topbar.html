@@ -2,7 +2,7 @@
 <div class="top-bar">
     <div class="top-bar-search">
         <i data-feather="search"></i>
-        <input type="text" id="globalSearchInput" placeholder="Buscar órdenes por nombre, cédula o empresa..." onkeypress="buscarGlobal(event)">
+        <input type="text" id="searchInput" placeholder="Buscar órdenes por nombre, cédula o empresa...">
     </div>
     <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" style="display: none;">
         <i data-feather="moon" id="themeIcon"></i>
@@ -11,16 +11,8 @@
 </div>
 
 <script>
-// Función de búsqueda global
-function buscarGlobal(event) {
-    if (event.key === 'Enter') {
-        const query = document.getElementById('globalSearchInput').value.trim();
-        if (query) {
-            // Redirigir a ordenes.html con el parámetro de búsqueda
-            window.location.href = `/ordenes.html?search=${encodeURIComponent(query)}`;
-        }
-    }
-}
+// Nota: El event listener 'input' se conecta desde cada página (ej: ordenes.html línea 4705)
+// No usar onkeypress inline para evitar errores de "function not defined"
 
 // Toggle theme (dark/light mode)
 function toggleTheme() {
