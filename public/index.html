@@ -39,7 +39,7 @@
 
         <!-- Question counter -->
         <div class="question-counter">
-            <span id="currentQuestion">1</span> → <span id="totalQuestions">56</span>
+            <span id="currentQuestion">1</span> → <span id="totalQuestions">58</span>
         </div>
 
         <form id="formularioMedico">
@@ -181,8 +181,29 @@
                 </div>
             </div>
 
-            <!-- 16. Estatura -->
+            <!-- 16. Celular -->
             <div class="question-slide" data-question="16">
+                <div class="question-content">
+                    <label class="question-label">¿Cuál es tu número de celular?</label>
+                    <input type="tel" name="celular" id="celular" class="question-input" required placeholder="3001234567" maxlength="15">
+                    <small style="color: #64748B; display: block; margin-top: 8px;">Ingresa 10 dígitos sin espacios ni guiones</small>
+                </div>
+            </div>
+
+            <!-- 17. Confirmar Celular -->
+            <div class="question-slide" data-question="17">
+                <div class="question-content">
+                    <label class="question-label">Confirma tu número de celular</label>
+                    <input type="tel" name="celular_confirmacion" id="celular_confirmacion" class="question-input" required placeholder="3001234567" maxlength="15">
+                    <small style="color: #64748B; display: block; margin-top: 8px;">Vuelve a escribir el mismo número</small>
+                    <div id="celular-error" style="color: #DC2626; margin-top: 8px; display: none; font-size: 14px;">
+                        ⚠️ Los números no coinciden
+                    </div>
+                </div>
+            </div>
+
+            <!-- 18. Estatura -->
+            <div class="question-slide" data-question="18">
                 <div class="question-content">
                     <label class="question-label">¿Cuál es tu estatura?</label>
                     <select name="estatura" class="question-select" required>
@@ -204,16 +225,16 @@
                 </div>
             </div>
 
-            <!-- 17. Peso -->
-            <div class="question-slide" data-question="17">
+            <!-- 19. Peso -->
+            <div class="question-slide" data-question="19">
                 <div class="question-content">
                     <label class="question-label">¿Cuánto pesas? (en kg)</label>
                     <input type="text" name="peso" class="question-input" required placeholder="Ej: 70.5" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?">
                 </div>
             </div>
 
-            <!-- 18. Ejercicio -->
-            <div class="question-slide" data-question="18">
+            <!-- 20. Ejercicio -->
+            <div class="question-slide" data-question="20">
                 <div class="question-content">
                     <label class="question-label">¿Con qué frecuencia haces ejercicio?</label>
                     <div class="options-grid">
@@ -237,8 +258,8 @@
                 </div>
             </div>
 
-            <!-- 19. Cirugía Ocular -->
-            <div class="question-slide" data-question="19">
+            <!-- 21. Cirugía Ocular -->
+            <div class="question-slide" data-question="21">
                 <div class="question-content">
                     <label class="question-label">¿Has tenido alguna cirugía ocular?</label>
                     <div class="options-grid options-si-no">
@@ -254,8 +275,8 @@
                 </div>
             </div>
 
-            <!-- 20. Consumo Licor -->
-            <div class="question-slide" data-question="20">
+            <!-- 22. Consumo Licor -->
+            <div class="question-slide" data-question="22">
                 <div class="question-content">
                     <label class="question-label">¿Con qué frecuencia consumes licor?</label>
                     <div class="options-grid">

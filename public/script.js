@@ -395,6 +395,20 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
                 break;
 
+            case 'celular_confirmacion':
+                const celularInput = document.querySelector('input[name="celular"]');
+                const celularOriginal = celularInput ? celularInput.value.replace(/\D/g, '') : '';
+                const confirmacionLimpia = value.replace(/\D/g, '');
+
+                if (confirmacionLimpia.length < 10) {
+                    return { valid: false, message: 'El celular debe tener al menos 10 dígitos' };
+                }
+
+                if (confirmacionLimpia !== celularOriginal) {
+                    return { valid: false, message: 'Los números no coinciden' };
+                }
+                break;
+
             case 'hijos':
                 const hijos = parseInt(value);
                 if (isNaN(hijos) || hijos < 0 || hijos > 20) {
@@ -638,8 +652,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // Convertir todos los campos
         for (let [key, value] of formData.entries()) {
-            // Saltar el campo de foto (file) por ahora
-            if (key !== 'foto') {
+            // Saltar el campo de foto (file) y celular_confirmacion (solo validación)
+            if (key !== 'foto' && key !== 'celular_confirmacion') {
                 // Normalizar peso: convertir coma a punto para decimales
                 if (key === 'peso' && typeof value === 'string') {
                     value = value.replace(',', '.');
@@ -1000,6 +1014,52 @@ document.addEventListener('DOMContentLoaded', async function() {
                 this.dataset.valid = 'false';
             } else {
                 showFieldSuccess(this);
+                this.dataset.valid = 'true';
+            }
+        });
+    }
+
+    // VALIDACIÓN DE CONFIRMACIÓN DE CELULAR
+    const celularConfirmacionInput = form.querySelector('[name="celular_confirmacion"]');
+    if (celularConfirmacionInput) {
+        celularConfirmacionInput.addEventListener('input', function() {
+            // Solo permitir números
+            this.value = this.value.replace(/\D/g, '');
+
+            // Mostrar/ocultar mensaje de error en tiempo real
+            const celularOriginal = celularInput ? celularInput.value.replace(/\D/g, '') : '';
+            const confirmacion = this.value.replace(/\D/g, '');
+            const errorDiv = document.getElementById('celular-error');
+
+            if (confirmacion.length >= 10 && confirmacion !== celularOriginal) {
+                if (errorDiv) errorDiv.style.display = 'block';
+                this.dataset.valid = 'false';
+            } else {
+                if (errorDiv) errorDiv.style.display = 'none';
+                this.dataset.valid = confirmacion.length >= 10 ? 'true' : 'false';
+            }
+        });
+
+        celularConfirmacionInput.addEventListener('blur', function() {
+            const celularOriginal = celularInput ? celularInput.value.replace(/\D/g, '') : '';
+            const confirmacion = this.value.trim().replace(/\D/g, '');
+            const errorDiv = document.getElementById('celular-error');
+
+            if (confirmacion.length < 10) {
+                showFieldError(this, 'El número de celular debe tener al menos 10 dígitos');
+                if (errorDiv) errorDiv.style.display = 'none';
+                this.dataset.valid = 'false';
+            } else if (confirmacion.length > 15) {
+                showFieldError(this, 'El número de celular no puede tener más de 15 dígitos');
+                if (errorDiv) errorDiv.style.display = 'none';
+                this.dataset.valid = 'false';
+            } else if (confirmacion !== celularOriginal) {
+                showFieldError(this, 'Los números no coinciden');
+                if (errorDiv) errorDiv.style.display = 'block';
+                this.dataset.valid = 'false';
+            } else {
+                showFieldSuccess(this);
+                if (errorDiv) errorDiv.style.display = 'none';
                 this.dataset.valid = 'true';
             }
         });
