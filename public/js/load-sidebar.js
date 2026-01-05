@@ -39,9 +39,9 @@ window.toggleSidebar = function() {
                     sidebar.classList.add('collapsed');
                 }
 
-                // Reemplazar iconos con versiones animadas
-                if (typeof window.replaceFeatherIcons === 'function') {
-                    window.replaceFeatherIcons();
+                // Reemplazar iconos de feather
+                if (typeof feather !== 'undefined') {
+                    feather.replace();
                 }
 
                 // Agregar event listener para el botón "Fijar Tiempo"
