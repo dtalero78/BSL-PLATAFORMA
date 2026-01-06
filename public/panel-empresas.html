@@ -4642,7 +4642,7 @@
             select.innerHTML = '<option value="">Cargando turnos disponibles...</option>';
 
             try {
-                const response = await fetch(`/api/turnos-disponibles?fecha=${fecha}&modalidad=${modalidadActual}`);
+                const response = await fetch(`/api/turnos-disponibles?fecha=${fecha}&modalidad=${modalidadActual}&codEmpresa=${encodeURIComponent(codEmpresa)}`);
                 const result = await response.json();
 
                 if (result.success && result.turnos && result.turnos.length > 0) {
@@ -5055,7 +5055,7 @@
             select.innerHTML = '<option value="">Cargando turnos disponibles...</option>';
 
             try {
-                const response = await fetch(`/api/turnos-disponibles?fecha=${fecha}&modalidad=${modalidadExpirado}`);
+                const response = await fetch(`/api/turnos-disponibles?fecha=${fecha}&modalidad=${modalidadExpirado}&codEmpresa=${encodeURIComponent(codEmpresa)}`);
                 const result = await response.json();
 
                 if (result.success && result.turnos && result.turnos.length > 0) {

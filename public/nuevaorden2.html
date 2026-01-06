@@ -872,6 +872,30 @@
             }
         }
 
+        // Función para obtener codEmpresa actual basado en parámetros de URL
+        function obtenerCodempresaActual() {
+            const empresasEspeciales = {
+                'DeStori': 'STORI',
+                'EVERTEC': 'EVERTEC',
+                'rippling': 'RIPPLING',
+                'ripplingperiodico': 'RIPPLING',
+                'ripplingegreso': 'RIPPLING',
+                'ATR': 'ATR'
+            };
+
+            if (refEmpresa && empresasEspeciales[refEmpresa]) {
+                return empresasEspeciales[refEmpresa];
+            }
+
+            // Si viene de Wix (Calendly) es PARTICULAR
+            if (wixCedula) {
+                return 'PARTICULAR';
+            }
+
+            // Por defecto SANITHELP-JJ
+            return 'SANITHELP-JJ';
+        }
+
         // Cargar meses disponibles
         function cargarMeses() {
             const select = document.getElementById('mes');
@@ -940,7 +964,8 @@
 
             try {
                 // Consultar turnos disponibles para modalidad virtual
-                const response = await fetch(`/api/turnos-disponibles?fecha=${fecha}&modalidad=virtual`);
+                const codEmpresaActual = obtenerCodempresaActual();
+                const response = await fetch(`/api/turnos-disponibles?fecha=${fecha}&modalidad=virtual&codEmpresa=${encodeURIComponent(codEmpresaActual)}`);
                 const result = await response.json();
 
                 if (!result.success) {
@@ -1561,7 +1586,8 @@
 
             try {
                 // Consultar turnos disponibles para modalidad virtual
-                const response = await fetch(`/api/turnos-disponibles?fecha=${fecha}&modalidad=virtual`);
+                const codEmpresaActual = obtenerCodempresaActual();
+                const response = await fetch(`/api/turnos-disponibles?fecha=${fecha}&modalidad=virtual&codEmpresa=${encodeURIComponent(codEmpresaActual)}`);
                 const result = await response.json();
 
                 if (!result.success || !result.turnos || result.turnos.length === 0) {

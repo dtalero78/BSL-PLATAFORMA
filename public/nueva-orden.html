@@ -1126,7 +1126,8 @@
             select.innerHTML = '<option value="">Cargando horarios...</option>';
 
             try {
-                const response = await fetch(`/api/horarios-disponibles?fecha=${fecha}&medico=${encodeURIComponent(medico)}&modalidad=${modalidad}`);
+                const codEmpresa = document.getElementById('selectEmpresa').value || '';
+                const response = await fetch(`/api/horarios-disponibles?fecha=${fecha}&medico=${encodeURIComponent(medico)}&modalidad=${modalidad}&codEmpresa=${encodeURIComponent(codEmpresa)}`);
                 const result = await response.json();
 
                 if (result.success) {

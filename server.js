@@ -3978,17 +3978,22 @@ app.post('/api/ordenes', async (req, res) => {
                 }
 
                 // Verificar que no tenga cita a esa hora
-                const citaExistente = await pool.query(`
-                    SELECT COUNT(*) as total
-                    FROM "HistoriaClinica"
-                    WHERE "fechaAtencion" >= $1::timestamp
-                      AND "fechaAtencion" < ($1::timestamp + interval '1 day')
-                      AND "medico" = $2
-                      AND "horaAtencion" = $3
-                `, [fechaAtencion, med.nombre, horaAtencion]);
-
-                if (parseInt(citaExistente.rows[0].total) === 0) {
+                // EXCEPCIÓN: KM2 puede asignar médico aunque el turno esté ocupado
+                if (codEmpresa === 'KM2') {
                     medicosDisponibles.push(med.nombre);
+                } else {
+                    const citaExistente = await pool.query(`
+                        SELECT COUNT(*) as total
+                        FROM "HistoriaClinica"
+                        WHERE "fechaAtencion" >= $1::timestamp
+                          AND "fechaAtencion" < ($1::timestamp + interval '1 day')
+                          AND "medico" = $2
+                          AND "horaAtencion" = $3
+                    `, [fechaAtencion, med.nombre, horaAtencion]);
+
+                    if (parseInt(citaExistente.rows[0].total) === 0) {
+                        medicosDisponibles.push(med.nombre);
+                    }
                 }
             }
 
@@ -7379,7 +7384,7 @@ app.get('/api/calendario/dia', async (req, res) => {
 // GET /api/horarios-disponibles - Obtener horarios disponibles para un médico en una fecha y modalidad
 app.get('/api/horarios-disponibles', async (req, res) => {
     try {
-        const { fecha, medico, modalidad = 'presencial' } = req.query;
+        const { fecha, medico, modalidad = 'presencial', codEmpresa } = req.query;
 
         if (!fecha || !medico) {
             return res.status(400).json({
@@ -7478,11 +7483,15 @@ app.get('/api/horarios-disponibles', async (req, res) => {
                     const horaStr = `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
 
                     // Verificar si este horario está ocupado
-                    const ocupado = horasOcupadas.some(horaOcupada => {
-                        if (!horaOcupada) return false;
-                        const horaOcupadaNorm = horaOcupada.substring(0, 5);
-                        return horaOcupadaNorm === horaStr;
-                    });
+                    // EXCEPCIÓN: KM2 puede agendar en cualquier turno aunque esté ocupado
+                    let ocupado = false;
+                    if (codEmpresa !== 'KM2') {
+                        ocupado = horasOcupadas.some(horaOcupada => {
+                            if (!horaOcupada) return false;
+                            const horaOcupadaNorm = horaOcupada.substring(0, 5);
+                            return horaOcupadaNorm === horaStr;
+                        });
+                    }
 
                     horariosDisponibles.push({
                         hora: horaStr,
@@ -7519,7 +7528,7 @@ app.get('/api/horarios-disponibles', async (req, res) => {
 // Este endpoint consolida la disponibilidad de todos los médicos excepto NUBIA
 app.get('/api/turnos-disponibles', async (req, res) => {
     try {
-        const { fecha, modalidad = 'presencial' } = req.query;
+        const { fecha, modalidad = 'presencial', codEmpresa } = req.query;
 
         if (!fecha) {
             return res.status(400).json({
@@ -7606,7 +7615,9 @@ app.get('/api/turnos-disponibles', async (req, res) => {
                 for (let hora = rango.horaInicio; hora < rango.horaFin; hora++) {
                     for (let minuto = 0; minuto < 60; minuto += tiempoConsulta) {
                         const horaStr = `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
-                        const ocupado = horasOcupadas.includes(horaStr);
+
+                        // EXCEPCIÓN: KM2 puede agendar en cualquier turno aunque esté ocupado
+                        const ocupado = (codEmpresa === 'KM2') ? false : horasOcupadas.includes(horaStr);
 
                         if (!turnosPorHora[horaStr]) {
                             turnosPorHora[horaStr] = [];
