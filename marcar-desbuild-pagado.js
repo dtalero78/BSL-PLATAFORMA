@@ -1,5 +1,5 @@
 /**
- * Script para marcar todas las órdenes de MASIN como pagadas
+ * Script para marcar todas las órdenes de DESBUILD como pagadas
  */
 
 require('dotenv').config();
@@ -16,31 +16,31 @@ const pool = new Pool({
     }
 });
 
-async function marcarMasinPagado() {
+async function marcarDesbuildPagado() {
     try {
-        console.log('🔍 Buscando órdenes de MASIN pendientes de pago...');
+        console.log('🔍 Buscando órdenes de DESBUILD pendientes de pago...');
 
         // Primero consultar cuántas hay
         const consulta = await pool.query(`
             SELECT COUNT(*) as total
             FROM "HistoriaClinica"
-            WHERE "codEmpresa" = 'MASIN'
+            WHERE "empresa" ILIKE '%desbuild%'
             AND (pagado IS NULL OR pagado = false)
         `);
 
         const total = parseInt(consulta.rows[0].total);
-        console.log(`📊 Total de órdenes de MASIN sin pagar: ${total}`);
+        console.log(`📊 Total de órdenes de DESBUILD sin pagar: ${total}`);
 
         if (total === 0) {
-            console.log('✅ No hay órdenes pendientes de pago para MASIN');
+            console.log('✅ No hay órdenes pendientes de pago para DESBUILD');
             process.exit(0);
         }
 
         // Mostrar algunas órdenes de ejemplo
         const ejemplos = await pool.query(`
-            SELECT _id, "primerNombre", "primerApellido", "fechaAtencion"
+            SELECT _id, "primerNombre", "primerApellido", "fechaAtencion", "empresa"
             FROM "HistoriaClinica"
-            WHERE "codEmpresa" = 'MASIN'
+            WHERE "empresa" ILIKE '%desbuild%'
             AND (pagado IS NULL OR pagado = false)
             ORDER BY "fechaAtencion" DESC
             LIMIT 5
@@ -48,7 +48,7 @@ async function marcarMasinPagado() {
 
         console.log('\n📋 Ejemplos de órdenes a marcar como pagadas:');
         ejemplos.rows.forEach(orden => {
-            console.log(`  - ${orden._id}: ${orden.primerNombre} ${orden.primerApellido} (${orden.fechaAtencion})`);
+            console.log(`  - ${orden._id}: ${orden.primerNombre} ${orden.primerApellido} - ${orden.empresa} (${orden.fechaAtencion})`);
         });
 
         console.log('\n🔄 Actualizando órdenes...');
@@ -57,21 +57,21 @@ async function marcarMasinPagado() {
         const resultado = await pool.query(`
             UPDATE "HistoriaClinica"
             SET pagado = true
-            WHERE "codEmpresa" = 'MASIN'
+            WHERE "empresa" ILIKE '%desbuild%'
             AND (pagado IS NULL OR pagado = false)
         `);
 
-        console.log(`✅ ${resultado.rowCount} órdenes de MASIN marcadas como pagadas`);
+        console.log(`✅ ${resultado.rowCount} órdenes de DESBUILD marcadas como pagadas`);
 
         // Verificar
         const verificacion = await pool.query(`
             SELECT COUNT(*) as pendientes
             FROM "HistoriaClinica"
-            WHERE "codEmpresa" = 'MASIN'
+            WHERE "empresa" ILIKE '%desbuild%'
             AND (pagado IS NULL OR pagado = false)
         `);
 
-        console.log(`\n✓ Órdenes pendientes de MASIN restantes: ${verificacion.rows[0].pendientes}`);
+        console.log(`\n✓ Órdenes pendientes de DESBUILD restantes: ${verificacion.rows[0].pendientes}`);
 
     } catch (error) {
         console.error('❌ Error:', error.message);
@@ -81,4 +81,4 @@ async function marcarMasinPagado() {
     }
 }
 
-marcarMasinPagado();
+marcarDesbuildPagado();
