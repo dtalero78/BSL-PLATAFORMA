@@ -1412,12 +1412,16 @@
                         </td>
                         <td>
                             <div class="actions-cell" onclick="event.stopPropagation()">
-                                <button class="btn-action atender" onclick="marcarAtendido('${p._id}')" ${isAtendido ? 'disabled' : ''}>
-                                    ✓ Atender
-                                </button>
-                                <button class="btn-action cobrar" onclick="marcarCobrar('${p._id}')" ${!isAtendido || isPagado ? 'disabled' : ''}>
-                                    💬 Confirmar
-                                </button>
+                                ${!isAtendido ? `
+                                    <button class="btn-action atender" onclick="marcarAtendido('${p._id}')">
+                                        Atender
+                                    </button>
+                                ` : ''}
+                                ${isAtendido && !isPagado ? `
+                                    <button class="btn-action cobrar" onclick="marcarCobrar('${p._id}')">
+                                        Confirmar
+                                    </button>
+                                ` : ''}
                             </div>
                         </td>
                     </tr>
@@ -1672,11 +1676,11 @@
             `;
 
             footer.innerHTML = `
-                <button class="btn btn-primary" onclick="enviarMensajeModal()">📩 Enviar Mensaje</button>
-                <button class="btn btn-success" onclick="marcarAtendidoModal()" ${isAtendido ? 'disabled' : ''}>✓ Atender</button>
-                <button class="btn btn-warning" onclick="marcarCobrarModal()" ${!isAtendido || isPagado ? 'disabled' : ''}>💬 Confirmar</button>
-                <button class="btn btn-secondary" onclick="editarOrdenModal()">✏️ Editar</button>
-                <button class="btn btn-danger" onclick="eliminarPacienteModal()">🗑 Eliminar</button>
+                <button class="btn btn-primary" onclick="enviarMensajeModal()">Enviar Mensaje</button>
+                ${!isAtendido ? `<button class="btn btn-success" onclick="marcarAtendidoModal()">Atender</button>` : ''}
+                ${isAtendido && !isPagado ? `<button class="btn btn-warning" onclick="marcarCobrarModal()">Confirmar</button>` : ''}
+                <button class="btn btn-secondary" onclick="editarOrdenModal()">Editar</button>
+                <button class="btn btn-danger" onclick="eliminarPacienteModal()">Eliminar</button>
                 <button class="btn btn-secondary" onclick="cerrarModalDetalles()">Cerrar</button>
             `;
 
