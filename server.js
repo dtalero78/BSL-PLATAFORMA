@@ -4052,6 +4052,57 @@ app.post('/api/ordenes', async (req, res) => {
         const pgResult = await pool.query(insertQuery, insertValues);
         console.log('✅ PostgreSQL: Orden guardada con _id:', wixId);
 
+        // Gestionar registro en tabla conversaciones_whatsapp
+        try {
+            const celularConPrefijo = `57${celular}`; // Agregar prefijo 57 a Colombia
+            console.log('📱 Gestionando conversación WhatsApp para:', celularConPrefijo);
+
+            // Verificar si ya existe un registro con ese celular
+            const conversacionExistente = await pool.query(`
+                SELECT id, celular, "stopBot"
+                FROM conversaciones_whatsapp
+                WHERE celular = $1
+            `, [celularConPrefijo]);
+
+            if (conversacionExistente.rows.length > 0) {
+                // Si existe, actualizar stopBot a true y datos del paciente
+                await pool.query(`
+                    UPDATE conversaciones_whatsapp
+                    SET "stopBot" = true,
+                        paciente_id = $2,
+                        nombre_paciente = $3,
+                        fecha_ultima_actividad = NOW()
+                    WHERE celular = $1
+                `, [celularConPrefijo, numeroId, `${primerNombre} ${primerApellido}`]);
+                console.log('✅ Conversación WhatsApp actualizada: stopBot = true para', celularConPrefijo);
+            } else {
+                // Si no existe, crear nuevo registro con stopBot = true
+                await pool.query(`
+                    INSERT INTO conversaciones_whatsapp (
+                        celular,
+                        paciente_id,
+                        nombre_paciente,
+                        "stopBot",
+                        origen,
+                        estado,
+                        bot_activo,
+                        fecha_inicio,
+                        fecha_ultima_actividad
+                    ) VALUES (
+                        $1, $2, $3, true, 'POSTGRES', 'nueva', false, NOW(), NOW()
+                    )
+                `, [
+                    celularConPrefijo,
+                    numeroId,
+                    `${primerNombre} ${primerApellido}`
+                ]);
+                console.log('✅ Nueva conversación WhatsApp creada con stopBot = true para', celularConPrefijo);
+            }
+        } catch (whatsappError) {
+            console.error('⚠️ Error al gestionar conversación WhatsApp:', whatsappError.message);
+            // No bloqueamos la creación de la orden si falla la gestión de WhatsApp
+        }
+
         // Disparar webhook a Make.com (async, no bloquea) para enviar WhatsApp al paciente
         dispararWebhookMake({
             _id: wixId,
