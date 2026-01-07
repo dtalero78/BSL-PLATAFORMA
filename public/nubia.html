@@ -1105,7 +1105,25 @@
                 <input type="date" id="fechaHasta" title="Fecha hasta">
                 <button class="btn btn-primary" onclick="cargarPacientes()">Filtrar</button>
             </div>
-            <button class="btn btn-secondary" onclick="cargarPacientes()">🔄 Actualizar</button>
+            <button class="btn btn-secondary" onclick="cargarPacientes()">Actualizar</button>
+        </div>
+
+        <!-- Filtros y Acciones Masivas -->
+        <div style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #374151; cursor: pointer;">
+                    <input type="checkbox" id="filtroSinPagar" onchange="aplicarFiltros()" style="width: 16px; height: 16px; cursor: pointer;">
+                    <span>Solo sin pagar</span>
+                </label>
+                <span id="contadorSeleccionados" style="font-size: 14px; color: #6B7280; display: none;">
+                    <strong id="numeroSeleccionados">0</strong> seleccionados
+                </span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-warning" id="btnEnviarMasivo" onclick="enviarMensajeMasivo()" style="display: none;">
+                    Enviar mensaje de confirmación
+                </button>
+            </div>
         </div>
 
         <!-- Loading State -->
@@ -1119,6 +1137,9 @@
             <table class="data-table">
                 <thead>
                     <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" style="width: 16px; height: 16px; cursor: pointer;">
+                        </th>
                         <th>Paciente</th>
                         <th>Cédula</th>
                         <th>Celular</th>
@@ -1389,22 +1410,28 @@
                 const status = getStatusInfo(p);
                 const isAtendido = p.atendido === 'ATENDIDO';
                 const isPagado = p.pvEstado === 'Pagado' || p.pagado === true;
+                const puedeConfirmar = isAtendido && !isPagado;
 
                 return `
-                    <tr onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">
-                        <td>
+                    <tr>
+                        <td onclick="event.stopPropagation()">
+                            ${puedeConfirmar ? `
+                                <input type="checkbox" class="checkbox-paciente" data-id="${p._id}" onchange="actualizarSeleccion()" style="width: 16px; height: 16px; cursor: pointer;">
+                            ` : ''}
+                        </td>
+                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">
                             <div class="cell-name">
                                 <span class="name-primary">${p.primerNombre || ''} ${p.primerApellido || ''}</span>
                                 <span class="name-secondary">${p.empresa || '—'}</span>
                             </div>
                         </td>
-                        <td>${p.numeroId || '—'}</td>
-                        <td>${p.celular || '—'}</td>
-                        <td>${p.email || '—'}</td>
-                        <td>${p.codEmpresa || '—'}</td>
-                        <td class="cell-fecha">${formatFechaCreacion(p._createdDate)}</td>
-                        <td class="cell-fecha">${formatHora(p.fechaAtencion)}</td>
-                        <td>
+                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">${p.numeroId || '—'}</td>
+                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">${p.celular || '—'}</td>
+                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">${p.email || '—'}</td>
+                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">${p.codEmpresa || '—'}</td>
+                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;" class="cell-fecha">${formatFechaCreacion(p._createdDate)}</td>
+                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;" class="cell-fecha">${formatHora(p.fechaAtencion)}</td>
+                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">
                             <span class="status-badge ${status.class}">
                                 <span class="status-dot"></span>
                                 ${status.text}
@@ -1417,7 +1444,7 @@
                                         Atender
                                     </button>
                                 ` : ''}
-                                ${isAtendido && !isPagado ? `
+                                ${puedeConfirmar ? `
                                     <button class="btn-action cobrar" onclick="marcarCobrar('${p._id}')">
                                         Confirmar
                                     </button>
@@ -1488,6 +1515,16 @@
                     const cedula = (p.numeroId || '').toLowerCase();
                     const celular = (p.celular || '').toLowerCase();
                     return nombre.includes(busqueda) || cedula.includes(busqueda) || celular.includes(busqueda);
+                });
+            }
+
+            // Filtrar por estado "sin pagar"
+            const filtroSinPagar = document.getElementById('filtroSinPagar').checked;
+            if (filtroSinPagar) {
+                data = data.filter(p => {
+                    const isAtendido = p.atendido === 'ATENDIDO';
+                    const isPagado = p.pvEstado === 'Pagado' || p.pagado === true;
+                    return isAtendido && !isPagado;
                 });
             }
 
@@ -1992,6 +2029,92 @@
             } catch (error) {
                 console.error('Error:', error);
                 showMessage('Error al enviar mensaje de confirmación', 'error');
+            }
+        }
+
+        // ========== SELECCIÓN MASIVA ==========
+        function aplicarFiltros() {
+            actualizarVista();
+        }
+
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.checkbox-paciente');
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll.checked;
+            });
+            actualizarSeleccion();
+        }
+
+        function actualizarSeleccion() {
+            const checkboxes = document.querySelectorAll('.checkbox-paciente:checked');
+            const count = checkboxes.length;
+
+            const contadorEl = document.getElementById('contadorSeleccionados');
+            const numeroEl = document.getElementById('numeroSeleccionados');
+            const btnMasivoEl = document.getElementById('btnEnviarMasivo');
+
+            if (count > 0) {
+                contadorEl.style.display = 'inline';
+                btnMasivoEl.style.display = 'inline-block';
+                numeroEl.textContent = count;
+            } else {
+                contadorEl.style.display = 'none';
+                btnMasivoEl.style.display = 'none';
+            }
+
+            // Actualizar checkbox "select all"
+            const totalCheckboxes = document.querySelectorAll('.checkbox-paciente').length;
+            const selectAllEl = document.getElementById('selectAll');
+            if (selectAllEl) {
+                selectAllEl.checked = count > 0 && count === totalCheckboxes;
+                selectAllEl.indeterminate = count > 0 && count < totalCheckboxes;
+            }
+        }
+
+        async function enviarMensajeMasivo() {
+            const checkboxes = document.querySelectorAll('.checkbox-paciente:checked');
+            const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
+
+            if (ids.length === 0) {
+                showMessage('No hay pacientes seleccionados', 'error');
+                return;
+            }
+
+            const confirmacion = confirm(`¿Enviar mensaje de confirmación a ${ids.length} paciente(s)?\n\nSe enviará con un intervalo de 3 segundos entre cada mensaje para evitar spam.`);
+            if (!confirmacion) return;
+
+            try {
+                showMessage(`Enviando mensajes a ${ids.length} pacientes...`);
+                document.getElementById('btnEnviarMasivo').disabled = true;
+                document.getElementById('btnEnviarMasivo').textContent = 'Enviando...';
+
+                const response = await fetch('/api/nubia/enviar-masivo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ids })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(`Mensajes enviados: ${result.enviados}/${ids.length}`, 'success');
+
+                    // Desmarcar todos los checkboxes
+                    checkboxes.forEach(cb => cb.checked = false);
+                    document.getElementById('selectAll').checked = false;
+                    actualizarSeleccion();
+
+                    await cargarPacientes();
+                } else {
+                    showMessage(result.message || 'Error al enviar mensajes', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Error al enviar mensajes masivos', 'error');
+            } finally {
+                document.getElementById('btnEnviarMasivo').disabled = false;
+                document.getElementById('btnEnviarMasivo').textContent = 'Enviar mensaje de confirmación';
             }
         }
 

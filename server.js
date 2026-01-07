@@ -8294,6 +8294,85 @@ app.post('/api/nubia/cobrar/:id', async (req, res) => {
     }
 });
 
+// API para envío masivo de mensajes (Panel NUBIA)
+app.post('/api/nubia/enviar-masivo', async (req, res) => {
+    try {
+        const { ids } = req.body;
+
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, message: 'IDs no válidos' });
+        }
+
+        console.log(`📱 [NUBIA] Iniciando envío masivo a ${ids.length} pacientes`);
+
+        let enviados = 0;
+        let errores = 0;
+
+        for (let i = 0; i < ids.length; i++) {
+            const id = ids[i];
+
+            try {
+                // Obtener datos del paciente
+                const result = await pool.query(`
+                    SELECT *
+                    FROM "HistoriaClinica"
+                    WHERE "_id" = $1
+                `, [id]);
+
+                if (result.rows.length === 0) {
+                    console.error(`❌ [NUBIA] Paciente ${id} no encontrado`);
+                    errores++;
+                    continue;
+                }
+
+                const paciente = result.rows[0];
+
+                // Enviar mensaje
+                if (paciente.celular) {
+                    const telefonoLimpio = paciente.celular.replace(/\s+/g, '').replace(/[^\d]/g, '');
+                    const toNumber = telefonoLimpio.startsWith('57') ? telefonoLimpio : `57${telefonoLimpio}`;
+
+                    const nombreCompleto = `${paciente.primerNombre || ''} ${paciente.segundoNombre || ''}`.trim();
+                    const mensaje = `Hola ${nombreCompleto}. Necesitamos saber si continúas con el proceso o eliminamos el certificado. Gracias!`;
+
+                    try {
+                        await sendWhatsAppMessage(toNumber, mensaje);
+                        console.log(`✅ [NUBIA] ${i + 1}/${ids.length} - Mensaje enviado a ${nombreCompleto} (${toNumber})`);
+                        enviados++;
+
+                        // Timeout de 3 segundos entre cada envío (excepto el último)
+                        if (i < ids.length - 1) {
+                            await new Promise(resolve => setTimeout(resolve, 3000));
+                        }
+                    } catch (sendError) {
+                        console.error(`❌ [NUBIA] Error enviando a ${nombreCompleto}:`, sendError);
+                        errores++;
+                    }
+                } else {
+                    console.error(`❌ [NUBIA] Paciente ${paciente.primerNombre} sin número de celular`);
+                    errores++;
+                }
+            } catch (error) {
+                console.error(`❌ [NUBIA] Error procesando paciente ${id}:`, error);
+                errores++;
+            }
+        }
+
+        console.log(`📊 [NUBIA] Envío masivo completado - Enviados: ${enviados}, Errores: ${errores}`);
+
+        res.json({
+            success: true,
+            message: 'Envío masivo completado',
+            enviados,
+            errores,
+            total: ids.length
+        });
+    } catch (error) {
+        console.error('❌ Error en envío masivo:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // API para eliminar registro (Panel NUBIA)
 app.delete('/api/nubia/eliminar/:id', async (req, res) => {
     try {
