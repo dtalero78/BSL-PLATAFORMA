@@ -474,12 +474,14 @@
             background: white;
             border: 1px solid #E5E7EB;
             border-radius: 12px;
-            overflow: hidden;
+            overflow: auto;
+            max-height: 70vh;
         }
 
         .data-table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 1000px;
         }
 
         .data-table thead {
@@ -495,6 +497,10 @@
             color: #6B7280;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            background: #F9FAFB;
+            z-index: 10;
         }
 
         .data-table tbody tr {
@@ -1143,7 +1149,6 @@
                         <th>Paciente</th>
                         <th>Cédula</th>
                         <th>Celular</th>
-                        <th>Email</th>
                         <th>Empresa</th>
                         <th>Creación</th>
                         <th>Hora Cita</th>
@@ -1413,32 +1418,31 @@
                 const puedeConfirmar = isAtendido && !isPagado;
 
                 return `
-                    <tr>
+                    <tr onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">
                         <td onclick="event.stopPropagation()">
                             ${puedeConfirmar ? `
                                 <input type="checkbox" class="checkbox-paciente" data-id="${p._id}" onchange="actualizarSeleccion()" style="width: 16px; height: 16px; cursor: pointer;">
                             ` : ''}
                         </td>
-                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">
+                        <td>
                             <div class="cell-name">
                                 <span class="name-primary">${p.primerNombre || ''} ${p.primerApellido || ''}</span>
                                 <span class="name-secondary">${p.empresa || '—'}</span>
                             </div>
                         </td>
-                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">${p.numeroId || '—'}</td>
-                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">${p.celular || '—'}</td>
-                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">${p.email || '—'}</td>
-                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">${p.codEmpresa || '—'}</td>
-                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;" class="cell-fecha">${formatFechaCreacion(p._createdDate)}</td>
-                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;" class="cell-fecha">${formatHora(p.fechaAtencion)}</td>
-                        <td onclick="abrirModalDetalles('${p._id}')" style="cursor: pointer;">
+                        <td>${p.numeroId || '—'}</td>
+                        <td>${p.celular || '—'}</td>
+                        <td>${p.codEmpresa || '—'}</td>
+                        <td class="cell-fecha">${formatFechaCreacion(p._createdDate)}</td>
+                        <td class="cell-fecha">${formatHora(p.fechaAtencion)}</td>
+                        <td>
                             <span class="status-badge ${status.class}">
                                 <span class="status-dot"></span>
                                 ${status.text}
                             </span>
                         </td>
-                        <td>
-                            <div class="actions-cell" onclick="event.stopPropagation()">
+                        <td onclick="event.stopPropagation()">
+                            <div class="actions-cell">
                                 ${!isAtendido ? `
                                     <button class="btn-action atender" onclick="marcarAtendido('${p._id}')">
                                         Atender
