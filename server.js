@@ -3978,8 +3978,8 @@ app.post('/api/ordenes', async (req, res) => {
                 }
 
                 // Verificar que no tenga cita a esa hora
-                // EXCEPCIÓN: KM2 puede asignar médico aunque el turno esté ocupado
-                if (codEmpresa === 'KM2') {
+                // EXCEPCIÓN: KM2 y SITEL pueden asignar médico aunque el turno esté ocupado
+                if (codEmpresa === 'KM2' || codEmpresa === 'SITEL') {
                     medicosDisponibles.push(med.nombre);
                 } else {
                     // Solo contar como ocupados los turnos PENDIENTES (no los ATENDIDOS)
@@ -7538,9 +7538,9 @@ app.get('/api/horarios-disponibles', async (req, res) => {
                     const horaStr = `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
 
                     // Verificar si este horario está ocupado
-                    // EXCEPCIÓN: KM2 puede agendar en cualquier turno aunque esté ocupado
+                    // EXCEPCIÓN: KM2 y SITEL pueden agendar en cualquier turno aunque esté ocupado
                     let ocupado = false;
-                    if (codEmpresa !== 'KM2') {
+                    if (codEmpresa !== 'KM2' && codEmpresa !== 'SITEL') {
                         ocupado = horasOcupadas.some(horaOcupada => {
                             if (!horaOcupada) return false;
                             const horaOcupadaNorm = horaOcupada.substring(0, 5);
@@ -7673,8 +7673,8 @@ app.get('/api/turnos-disponibles', async (req, res) => {
                     for (let minuto = 0; minuto < 60; minuto += tiempoConsulta) {
                         const horaStr = `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')}`;
 
-                        // EXCEPCIÓN: KM2 puede agendar en cualquier turno aunque esté ocupado
-                        const ocupado = (codEmpresa === 'KM2') ? false : horasOcupadas.includes(horaStr);
+                        // EXCEPCIÓN: KM2 y SITEL pueden agendar en cualquier turno aunque esté ocupado
+                        const ocupado = (codEmpresa === 'KM2' || codEmpresa === 'SITEL') ? false : horasOcupadas.includes(horaStr);
 
                         if (!turnosPorHora[horaStr]) {
                             turnosPorHora[horaStr] = [];
