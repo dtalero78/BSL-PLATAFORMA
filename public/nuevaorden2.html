@@ -954,70 +954,72 @@
             document.getElementById('infoMedico').textContent = '';
         }
 
-        function actualizarHoras() {
+        async function actualizarHoras() {
             const fecha = document.getElementById('dia').value;
             if (!fecha) return;
 
-            // CAMBIO 2026-01-08: NUBIA no tiene restricción de cupo - genera horas directamente sin verificar ocupación
-            generarHorasDisponibles(fecha);
-        }
-
-        function generarHorasDisponibles(fecha) {
             const select = document.getElementById('horaSelect');
+            select.innerHTML = '<option value="">Cargando horarios disponibles...</option>';
+            document.getElementById('infoMedico').textContent = '';
 
-            // Usar hora Colombia (UTC-5) independiente de la zona del usuario
-            const ahora = new Date();
-            const colombiaTime = ahora.toLocaleString('en-US', { timeZone: 'America/Bogota' });
-            const ahoraColombia = new Date(colombiaTime);
-            const fechaHoyColombia = ahora.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
-            const esHoy = fecha === fechaHoyColombia;
+            try {
+                // Consultar turnos disponibles para modalidad virtual
+                const codEmpresaActual = obtenerCodempresaActual();
+                const response = await fetch(`/api/turnos-disponibles?fecha=${fecha}&modalidad=virtual&codEmpresa=${encodeURIComponent(codEmpresaActual)}`);
+                const result = await response.json();
 
-            // Horario de 8 AM a 8 PM (20:00)
-            let horaInicio = 8;
-            let horaFin = 20;
-            let minutoInicio = 0;
-
-            // Si es hoy, agregar buffer de 1 hora desde la hora actual Colombia
-            if (esHoy) {
-                const horaMinima = ahoraColombia.getHours() + 1;
-                const minutoMinimo = ahoraColombia.getMinutes();
-
-                if (horaMinima >= horaFin) {
-                    select.innerHTML = '<option value="">No hay horas disponibles para hoy</option>';
+                if (!result.success) {
+                    select.innerHTML = '<option value="">No hay médicos disponibles para citas virtuales</option>';
                     return;
                 }
 
-                if (horaMinima > horaInicio) {
-                    horaInicio = horaMinima;
-                    // Redondear al siguiente intervalo de 10 minutos
-                    minutoInicio = Math.ceil(minutoMinimo / 10) * 10;
-                    if (minutoInicio >= 60) {
-                        minutoInicio = 0;
-                        horaInicio++;
+                turnosDisponibles = result.turnos || [];
+
+                if (turnosDisponibles.length === 0) {
+                    select.innerHTML = '<option value="">No hay horarios disponibles para este día</option>';
+                    return;
+                }
+
+                // Filtrar solo los turnos que están disponibles
+                // Usar hora Colombia (UTC-5) independiente de la zona del usuario
+                const ahora = new Date();
+                const colombiaTime = ahora.toLocaleString('en-US', { timeZone: 'America/Bogota' });
+                const ahoraColombia = new Date(colombiaTime);
+                const fechaHoyColombia = ahora.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+                const esHoy = fecha === fechaHoyColombia;
+
+                select.innerHTML = '<option value="">Seleccionar hora...</option>';
+                let hayHorasDisponibles = false;
+
+                for (const turno of turnosDisponibles) {
+                    if (!turno.disponible) continue;
+
+                    // Si es hoy, verificar que la hora sea al menos 1 hora en el futuro (hora Colombia)
+                    if (esHoy) {
+                        const [h, m] = turno.hora.split(':').map(Number);
+                        const horaTurnoMinutos = h * 60 + m;
+                        const horaColombiaMinutos = ahoraColombia.getHours() * 60 + ahoraColombia.getMinutes();
+
+                        if (horaTurnoMinutos < horaColombiaMinutos + 60) continue; // +1 hora de margen
                     }
+
+                    const hora = turno.hora;
+                    const [h] = hora.split(':').map(Number);
+                    const hora12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+                    const ampm = h >= 12 ? 'PM' : 'AM';
+                    const minutos = hora.split(':')[1];
+
+                    select.innerHTML += `<option value="${hora}" data-medicos='${JSON.stringify(turno._medicos || [])}'>${hora12}:${minutos} ${ampm}</option>`;
+                    hayHorasDisponibles = true;
                 }
-            }
 
-            select.innerHTML = '<option value="">Seleccionar hora...</option>';
-            let hayHoras = false;
-
-            for (let hora = horaInicio; hora < horaFin; hora++) {
-                const startMinuto = (hora === horaInicio) ? minutoInicio : 0;
-                for (let minuto = startMinuto; minuto < 60; minuto += 10) {
-                    const horaStr = String(hora).padStart(2, '0');
-                    const minutoStr = String(minuto).padStart(2, '0');
-                    const horaCompleta = `${horaStr}:${minutoStr}`;
-
-                    // Sin restricción de cupo - NUBIA acepta citas simultáneas
-                    const hora12 = hora > 12 ? hora - 12 : (hora === 0 ? 12 : hora);
-                    const ampm = hora >= 12 ? 'PM' : 'AM';
-                    select.innerHTML += `<option value="${horaCompleta}">${hora12}:${minutoStr} ${ampm}</option>`;
-                    hayHoras = true;
+                if (!hayHorasDisponibles) {
+                    select.innerHTML = '<option value="">No hay horarios disponibles para hoy</option>';
                 }
-            }
 
-            if (!hayHoras) {
-                select.innerHTML = '<option value="">No hay horas disponibles</option>';
+            } catch (error) {
+                console.error('Error al cargar horarios:', error);
+                select.innerHTML = '<option value="">Error al cargar horarios</option>';
             }
         }
 
@@ -1222,8 +1224,8 @@
             const hora = document.getElementById('horaSelect').value; // HH:MM
 
             const aNombreDe = document.getElementById('aNombreDe').value;
-            // CAMBIO 2026-01-08: Siempre PARTICULAR en lugar de SANITHELP-JJ (se acabaron turnos con otros médicos)
-            let codEmpresa = 'PARTICULAR';
+            // Por defecto SANITHELP-JJ, pero PARTICULAR si viene de Wix
+            let codEmpresa = wixCedula ? 'PARTICULAR' : 'SANITHELP-JJ';
             let empresaNombre = '';
 
             if (aNombreDe === 'PARTICULAR' || wixCedula) {
@@ -1266,10 +1268,9 @@
                 tipoExamen: tipoExamenFinal,
                 atendido: 'PENDIENTE',
                 ciudad: document.getElementById('ciudad').value,
-                // CAMBIO 2026-01-08: Asignar directamente a NUBIA en lugar de asignación automática
-                medico: 'NUBIA'
-                // modalidad: 'virtual',  // COMENTADO - Ya no se usa modalidad virtual con asignación automática
-                // asignarMedicoAuto: true  // COMENTADO - Ya no se asigna médico automáticamente
+                modalidad: 'virtual',  // Modalidad para buscar disponibilidad de médicos
+                // Indicar que se debe asignar médico automáticamente (excluyendo NUBIA)
+                asignarMedicoAuto: true
             };
 
             try {
@@ -1576,57 +1577,57 @@
             document.getElementById('horaExpirado').innerHTML = '<option value="">Primero selecciona un día</option>';
         }
 
-        function actualizarHorasExpirado() {
+        async function actualizarHorasExpirado() {
             const fecha = document.getElementById('diaExpirado').value;
             if (!fecha) return;
 
             const select = document.getElementById('horaExpirado');
-            // CAMBIO 2026-01-08: Usar generación estática de horarios como en actualizarHoras()
+            select.innerHTML = '<option value="">Cargando horarios...</option>';
 
-            // Usar hora Colombia (UTC-5) independiente de la zona del usuario
-            const ahora = new Date();
-            const colombiaTime = ahora.toLocaleString('en-US', { timeZone: 'America/Bogota' });
-            const ahoraColombia = new Date(colombiaTime);
-            const fechaHoyColombia = ahora.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
-            const esHoy = fecha === fechaHoyColombia;
+            try {
+                // Consultar turnos disponibles para modalidad virtual
+                const codEmpresaActual = obtenerCodempresaActual();
+                const response = await fetch(`/api/turnos-disponibles?fecha=${fecha}&modalidad=virtual&codEmpresa=${encodeURIComponent(codEmpresaActual)}`);
+                const result = await response.json();
 
-            // Horario de 8 AM a 8 PM (20:00)
-            let horaInicio = 8;
-            let horaFin = 20;
-            let minutoInicio = 0;
-
-            // Si es hoy, agregar buffer de 1 hora desde la hora actual Colombia
-            if (esHoy) {
-                const horaMinima = ahoraColombia.getHours() + 1;
-                const minutoMinimo = ahoraColombia.getMinutes();
-
-                if (horaMinima >= horaFin) {
-                    select.innerHTML = '<option value="">No hay horas disponibles para hoy</option>';
+                if (!result.success || !result.turnos || result.turnos.length === 0) {
+                    select.innerHTML = '<option value="">No hay horarios disponibles</option>';
                     return;
                 }
 
-                if (horaMinima > horaInicio) {
-                    horaInicio = horaMinima;
-                    minutoInicio = Math.ceil(minutoMinimo / 10) * 10;
-                    if (minutoInicio >= 60) {
-                        minutoInicio = 0;
-                        horaInicio++;
+                // Usar hora Colombia (UTC-5) independiente de la zona del usuario
+                const ahora = new Date();
+                const colombiaTime = ahora.toLocaleString('en-US', { timeZone: 'America/Bogota' });
+                const ahoraColombia = new Date(colombiaTime);
+                const fechaHoyColombia = ahora.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+                const esHoy = fecha === fechaHoyColombia;
+
+                select.innerHTML = '<option value="">Seleccionar hora...</option>';
+
+                for (const turno of result.turnos) {
+                    if (!turno.disponible) continue;
+
+                    // Si es hoy, verificar que la hora sea al menos 1 hora en el futuro (hora Colombia)
+                    if (esHoy) {
+                        const [h, m] = turno.hora.split(':').map(Number);
+                        const horaTurnoMinutos = h * 60 + m;
+                        const horaColombiaMinutos = ahoraColombia.getHours() * 60 + ahoraColombia.getMinutes();
+
+                        if (horaTurnoMinutos < horaColombiaMinutos + 60) continue; // +1 hora de margen
                     }
-                }
-            }
 
-            select.innerHTML = '<option value="">Seleccionar hora...</option>';
+                    const hora = turno.hora;
+                    const [h] = hora.split(':').map(Number);
+                    const hora12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+                    const ampm = h >= 12 ? 'PM' : 'AM';
+                    const minutos = hora.split(':')[1];
 
-            for (let hora = horaInicio; hora < horaFin; hora++) {
-                const startMinuto = (hora === horaInicio) ? minutoInicio : 0;
-                for (let minuto = startMinuto; minuto < 60; minuto += 10) {
-                    const horaStr = String(hora).padStart(2, '0');
-                    const minutoStr = String(minuto).padStart(2, '0');
-                    const horaCompleta = `${horaStr}:${minutoStr}`;
-                    const hora12 = hora > 12 ? hora - 12 : (hora === 0 ? 12 : hora);
-                    const ampm = hora >= 12 ? 'PM' : 'AM';
-                    select.innerHTML += `<option value="${horaCompleta}">${hora12}:${minutoStr} ${ampm}</option>`;
+                    select.innerHTML += `<option value="${hora}">${hora12}:${minutos} ${ampm}</option>`;
                 }
+
+            } catch (error) {
+                console.error('Error:', error);
+                select.innerHTML = '<option value="">Error al cargar horarios</option>';
             }
         }
 
