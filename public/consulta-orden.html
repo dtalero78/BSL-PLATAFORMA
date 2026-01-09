@@ -494,9 +494,8 @@
                 }
 
                 ordenes = data.ordenes;
-                // Mostrar solo la orden más reciente (la primera del array ya viene ordenada por fecha desc)
-                const ordenMasReciente = ordenes.length > 0 ? [ordenes[0]] : [];
-                renderOrdenes(ordenMasReciente);
+                // Mostrar todas las órdenes
+                renderOrdenes(ordenes);
 
             } catch (error) {
                 console.error('Error:', error);
@@ -525,20 +524,37 @@
                 return;
             }
 
-            ordenesLista.innerHTML = ordenes.map(orden => {
+            // Mostrar contador de órdenes si hay más de una
+            let headerHtml = '';
+            if (ordenes.length > 1) {
+                headerHtml = `
+                    <div class="alert alert-info" style="margin-bottom: 24px;">
+                        Se encontraron <strong>${ordenes.length} órdenes</strong> asociadas a este documento
+                    </div>
+                `;
+            }
+
+            ordenesLista.innerHTML = headerHtml + ordenes.map((orden, index) => {
                 const nombreCompleto = `${orden.primerNombre || ''} ${orden.segundoNombre || ''} ${orden.primerApellido || ''} ${orden.segundoApellido || ''}`.trim();
                 const fechaAtencion = orden.fechaAtencion ? formatearFecha(orden.fechaAtencion) : 'Pendiente de agendar';
+                const fechaCreacion = orden.fechaCreacion ? formatearFecha(orden.fechaCreacion) : '';
                 const isAtendido = orden.atendido && orden.atendido.toUpperCase() === 'ATENDIDO';
 
                 // Generar pruebas pendientes
                 const pruebasPendientes = generarPruebasPendientes(orden.estadoPruebas, orden._id);
                 const todasCompletadas = pruebasPendientes.length === 0;
 
+                // Título con número de orden si hay múltiples
+                const tituloOrden = ordenes.length > 1 ? `Orden #${index + 1} - ${nombreCompleto}` : nombreCompleto;
+                const subtituloOrden = ordenes.length > 1
+                    ? `${orden.empresa || 'Sin empresa'} - ${orden.cargo || 'Sin cargo'} • Creada: ${fechaCreacion}`
+                    : `${orden.empresa || 'Sin empresa'} - ${orden.cargo || 'Sin cargo'}`;
+
                 return `
                     <div class="orden-card">
                         <div class="orden-header">
-                            <h3 class="orden-title">${nombreCompleto}</h3>
-                            <p class="orden-subtitle">${orden.empresa || 'Sin empresa'} - ${orden.cargo || 'Sin cargo'}</p>
+                            <h3 class="orden-title">${tituloOrden}</h3>
+                            <p class="orden-subtitle">${subtituloOrden}</p>
                             <span class="status-badge ${isAtendido ? 'atendido' : 'pendiente'}">
                                 ${isAtendido ? '✓ Atendido' : '⏳ Pendiente'}
                             </span>
