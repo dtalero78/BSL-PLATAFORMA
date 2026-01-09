@@ -1951,9 +1951,12 @@
             select.innerHTML = '<option value="">Seleccionar...</option>';
             medicos.forEach(medico => {
                 const nombreCompleto = `${medico.primer_nombre} ${medico.primer_apellido}`;
+                const alias = medico.alias || nombreCompleto;
                 const option = document.createElement('option');
-                option.value = nombreCompleto;
-                option.textContent = nombreCompleto;
+                // Usar alias como valor (es lo que se guarda en HistoriaClinica.medico)
+                option.value = alias;
+                // Mostrar alias y nombre completo si son diferentes
+                option.textContent = alias !== nombreCompleto ? `${alias} (${nombreCompleto})` : alias;
                 select.appendChild(option);
             });
         }
