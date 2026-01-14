@@ -12361,7 +12361,7 @@ app.post('/api/test/whatsapp', async (req, res) => {
 
 // ========== ENDPOINTS ENVÍO SIIGO ==========
 // GET - Obtener registros de SIIGO con linkEnviado vacío (cargar automáticamente)
-app.get('/api/envio-siigo/registros', authMiddleware, requireAdmin, async (req, res) => {
+app.get('/api/envio-siigo/registros', async (req, res) => {
     try {
         const { tipo = 'pendientes' } = req.query;
 
@@ -12455,7 +12455,7 @@ app.get('/api/envio-siigo/registros', authMiddleware, requireAdmin, async (req, 
 });
 
 // POST - Enviar mensaje individual de WhatsApp a paciente SIIGO
-app.post('/api/envio-siigo/enviar-individual', authMiddleware, requireAdmin, async (req, res) => {
+app.post('/api/envio-siigo/enviar-individual', async (req, res) => {
     try {
         const { _id, primerNombre, segundoNombre, primerApellido, celular, numeroId, ciudad, fechaAtencion } = req.body;
 
@@ -12608,7 +12608,7 @@ Es esencial completar el link; sin él, el certificado NO SERÁ VÁLIDO.
 });
 
 // POST - Envío masivo de mensajes
-app.post('/api/envio-siigo/enviar-masivo', authMiddleware, requireAdmin, async (req, res) => {
+app.post('/api/envio-siigo/enviar-masivo', async (req, res) => {
     try {
         const { registros, tipoMensaje } = req.body;
 
