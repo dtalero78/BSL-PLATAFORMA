@@ -495,6 +495,8 @@
         let conversacionesWhatsApp = [];
         let conversacionActualId = null;
         let pollingInterval = null;
+        let mensajesPollingInterval = null;
+        let lastUpdateTimestamps = {}; // Guardar último timestamp de cada conversación
 
         // Inicializar
         document.addEventListener('DOMContentLoaded', async () => {
@@ -518,11 +520,11 @@
                 // Actualizar UI con info del usuario
                 actualizarInfoUsuario();
 
-                // Cargar conversaciones
-                await cargarConversaciones();
+                // Cargar conversaciones (primera vez forzar render completo)
+                await cargarConversaciones(true);
 
-                // Iniciar polling cada 10 segundos
-                pollingInterval = setInterval(cargarConversaciones, 10000);
+                // Iniciar polling cada 5 segundos para actualizaciones incrementales
+                pollingInterval = setInterval(() => cargarConversaciones(false), 5000);
 
                 feather.replace();
             } catch (error) {
@@ -539,7 +541,7 @@
             document.getElementById('userAvatar').textContent = inicial;
         }
 
-        async function cargarConversaciones() {
+        async function cargarConversaciones(forzarRerender = false) {
             try {
                 const token = Auth.getToken();
                 const res = await fetch('/api/admin/whatsapp/conversaciones', {
@@ -551,11 +553,119 @@
                 if (!res.ok) throw new Error('Error al cargar conversaciones');
 
                 const data = await res.json();
-                conversacionesWhatsApp = data.conversaciones || [];
-                renderConversaciones();
+                const nuevasConversaciones = data.conversaciones || [];
+
+                // Detectar qué conversaciones cambiaron
+                const conversacionesCambiadas = [];
+
+                nuevasConversaciones.forEach(nuevaConv => {
+                    const convAnterior = conversacionesWhatsApp.find(c => c.id === nuevaConv.id);
+                    const ultimoMensajeNuevo = nuevaConv.ultimo_mensaje?.fecha_envio;
+                    const ultimoMensajeAnterior = convAnterior?.ultimo_mensaje?.fecha_envio;
+
+                    // Si es nueva o cambió el último mensaje
+                    if (!convAnterior || ultimoMensajeNuevo !== ultimoMensajeAnterior) {
+                        conversacionesCambiadas.push(nuevaConv.id);
+                    }
+                });
+
+                // Actualizar array global
+                conversacionesWhatsApp = nuevasConversaciones;
+
+                // Si hay cambios o es forzado, actualizar UI
+                if (forzarRerender || conversacionesCambiadas.length > 0) {
+                    actualizarConversacionesCambiadas(conversacionesCambiadas);
+                }
+
+                // Si la conversación actual cambió, recargar mensajes
+                if (conversacionActualId && conversacionesCambiadas.includes(conversacionActualId)) {
+                    await cargarMensajes(conversacionActualId, true); // true = silencioso
+                }
             } catch (error) {
                 console.error('Error cargando conversaciones:', error);
             }
+        }
+
+        // Actualizar solo las conversaciones que cambiaron en el DOM
+        function actualizarConversacionesCambiadas(idsConversacionesCambiadas) {
+            const lista = document.getElementById('listaConversaciones');
+
+            // Si está vacía, hacer render completo
+            if (conversacionesWhatsApp.length === 0) {
+                lista.innerHTML = `
+                    <div class="whatsapp-empty">
+                        <i data-feather="message-circle"></i>
+                        <p>No hay conversaciones</p>
+                    </div>
+                `;
+                feather.replace();
+                return;
+            }
+
+            // Si no hay elementos en el DOM, hacer render completo
+            const existingItems = lista.querySelectorAll('.whatsapp-conversacion-item');
+            if (existingItems.length === 0) {
+                renderConversaciones();
+                return;
+            }
+
+            // Actualizar solo las conversaciones cambiadas
+            conversacionesWhatsApp.forEach(conv => {
+                const existingItem = lista.querySelector(`[data-conv-id="${conv.id}"]`);
+
+                // Si cambió o no existe, actualizar
+                if (idsConversacionesCambiadas.includes(conv.id) || !existingItem) {
+                    const nuevoHTML = generarHTMLConversacion(conv);
+
+                    if (existingItem) {
+                        // Reemplazar el elemento existente
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = nuevoHTML;
+                        existingItem.replaceWith(tempDiv.firstChild);
+                    } else {
+                        // Agregar nueva conversación al inicio
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = nuevoHTML;
+                        lista.insertBefore(tempDiv.firstChild, lista.firstChild);
+                    }
+                }
+            });
+
+            feather.replace();
+        }
+
+        // Generar HTML para una conversación individual
+        function generarHTMLConversacion(conv) {
+            const ultimoMensaje = conv.ultimo_mensaje || {};
+            const nombre = conv.nombre_cliente || conv.numero_cliente;
+            const inicial = nombre.charAt(0).toUpperCase();
+            const hora = ultimoMensaje.fecha_envio
+                ? formatearHora(ultimoMensaje.fecha_envio)
+                : '';
+            const preview = ultimoMensaje.contenido
+                ? (ultimoMensaje.direccion === 'entrante' ? '' : '✓ ') + truncarTexto(ultimoMensaje.contenido, 40)
+                : 'Sin mensajes';
+
+            const activeClass = conv.id === conversacionActualId ? 'active' : '';
+
+            // Mostrar nombre + número (si tiene nombre), o solo número
+            const displayNombre = conv.nombre_cliente
+                ? `${conv.nombre_cliente} (${conv.numero_cliente})`
+                : conv.numero_cliente;
+
+            return `
+                <div class="whatsapp-conversacion-item ${activeClass}" data-conv-id="${conv.id}" onclick="seleccionarConversacion(${conv.id})">
+                    <div class="whatsapp-conversacion-avatar">${inicial}</div>
+                    <div class="whatsapp-conversacion-info">
+                        <div class="whatsapp-conversacion-header">
+                            <div class="whatsapp-conversacion-nombre">${displayNombre}</div>
+                            <div class="whatsapp-conversacion-hora">${hora}</div>
+                        </div>
+                        <div class="whatsapp-conversacion-preview">${preview}</div>
+                    </div>
+                    ${conv.no_leidos > 0 ? `<div class="whatsapp-conversacion-badge">${conv.no_leidos}</div>` : ''}
+                </div>
+            `;
         }
 
         function renderConversaciones() {
@@ -572,38 +682,8 @@
                 return;
             }
 
-            lista.innerHTML = conversacionesWhatsApp.map(conv => {
-                const ultimoMensaje = conv.ultimo_mensaje || {};
-                const nombre = conv.nombre_cliente || conv.numero_cliente;
-                const inicial = nombre.charAt(0).toUpperCase();
-                const hora = ultimoMensaje.fecha_envio
-                    ? formatearHora(ultimoMensaje.fecha_envio)
-                    : '';
-                const preview = ultimoMensaje.contenido
-                    ? (ultimoMensaje.direccion === 'entrante' ? '' : '✓ ') + truncarTexto(ultimoMensaje.contenido, 40)
-                    : 'Sin mensajes';
-
-                const activeClass = conv.id === conversacionActualId ? 'active' : '';
-
-                // Mostrar nombre + número (si tiene nombre), o solo número
-                const displayNombre = conv.nombre_cliente
-                    ? `${conv.nombre_cliente} (${conv.numero_cliente})`
-                    : conv.numero_cliente;
-
-                return `
-                    <div class="whatsapp-conversacion-item ${activeClass}" onclick="seleccionarConversacion(${conv.id})">
-                        <div class="whatsapp-conversacion-avatar">${inicial}</div>
-                        <div class="whatsapp-conversacion-info">
-                            <div class="whatsapp-conversacion-header">
-                                <div class="whatsapp-conversacion-nombre">${displayNombre}</div>
-                                <div class="whatsapp-conversacion-hora">${hora}</div>
-                            </div>
-                            <div class="whatsapp-conversacion-preview">${preview}</div>
-                        </div>
-                        ${conv.no_leidos > 0 ? `<div class="whatsapp-conversacion-badge">${conv.no_leidos}</div>` : ''}
-                    </div>
-                `;
-            }).join('');
+            // Usar la función generadora para mantener consistencia
+            lista.innerHTML = conversacionesWhatsApp.map(conv => generarHTMLConversacion(conv)).join('');
 
             feather.replace();
         }
@@ -630,37 +710,8 @@
                 return;
             }
 
-            lista.innerHTML = conversacionesFiltradas.map(conv => {
-                const ultimoMensaje = conv.ultimo_mensaje || {};
-                const nombre = conv.nombre_cliente || conv.numero_cliente;
-                const inicial = nombre.charAt(0).toUpperCase();
-                const hora = ultimoMensaje.fecha_envio
-                    ? formatearHora(ultimoMensaje.fecha_envio)
-                    : '';
-                const preview = ultimoMensaje.contenido
-                    ? (ultimoMensaje.direccion === 'entrante' ? '' : '✓ ') + truncarTexto(ultimoMensaje.contenido, 40)
-                    : 'Sin mensajes';
-
-                const activeClass = conv.id === conversacionActualId ? 'active' : '';
-
-                const displayNombre = conv.nombre_cliente
-                    ? `${conv.nombre_cliente} (${conv.numero_cliente})`
-                    : conv.numero_cliente;
-
-                return `
-                    <div class="whatsapp-conversacion-item ${activeClass}" onclick="seleccionarConversacion(${conv.id})">
-                        <div class="whatsapp-conversacion-avatar">${inicial}</div>
-                        <div class="whatsapp-conversacion-info">
-                            <div class="whatsapp-conversacion-header">
-                                <div class="whatsapp-conversacion-nombre">${displayNombre}</div>
-                                <div class="whatsapp-conversacion-hora">${hora}</div>
-                            </div>
-                            <div class="whatsapp-conversacion-preview">${preview}</div>
-                        </div>
-                        ${conv.no_leidos > 0 ? `<div class="whatsapp-conversacion-badge">${conv.no_leidos}</div>` : ''}
-                    </div>
-                `;
-            }).join('');
+            // Usar la función generadora para mantener consistencia
+            lista.innerHTML = conversacionesFiltradas.map(conv => generarHTMLConversacion(conv)).join('');
 
             feather.replace();
         }
@@ -688,7 +739,7 @@
             renderConversaciones();
         }
 
-        async function cargarMensajes(conversacionId) {
+        async function cargarMensajes(conversacionId, silencioso = false) {
             try {
                 const token = Auth.getToken();
                 const res = await fetch(`/api/admin/whatsapp/conversaciones/${conversacionId}/mensajes`, {
@@ -703,6 +754,10 @@
                 const mensajes = data.mensajes || [];
 
                 const chatMensajes = document.getElementById('chatMensajes');
+                const scrollAnterior = chatMensajes.scrollTop;
+                const heightAnterior = chatMensajes.scrollHeight;
+                const estabaCasiAbajo = (heightAnterior - scrollAnterior - chatMensajes.clientHeight) < 100;
+
                 chatMensajes.innerHTML = mensajes.map(msg => {
                     const esEntrante = msg.direccion === 'entrante';
                     const claseDir = esEntrante ? 'entrante' : 'saliente';
@@ -721,8 +776,10 @@
                     `;
                 }).join('');
 
-                // Scroll al último mensaje
-                chatMensajes.scrollTop = chatMensajes.scrollHeight;
+                // Scroll inteligente: solo si estaba cerca del fondo o si no es silencioso
+                if (!silencioso || estabaCasiAbajo) {
+                    chatMensajes.scrollTop = chatMensajes.scrollHeight;
+                }
             } catch (error) {
                 console.error('Error cargando mensajes:', error);
             }
