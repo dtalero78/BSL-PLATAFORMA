@@ -211,6 +211,24 @@
             opacity: 1;
         }
 
+        /* Community button styles */
+        .nav-item-comunidad {
+            background: linear-gradient(135deg, #2D7A5F 0%, #1E5A47 100%) !important;
+            color: white !important;
+            box-shadow: 0 2px 8px rgba(45, 122, 95, 0.3);
+        }
+
+        .nav-item-comunidad:hover {
+            background: linear-gradient(135deg, #1E5A47 0%, #2D7A5F 100%) !important;
+            color: white !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(45, 122, 95, 0.4);
+        }
+
+        .nav-item-comunidad i {
+            color: white !important;
+        }
+
         /* User info at bottom */
         .sidebar-footer {
             position: absolute;
@@ -997,6 +1015,336 @@
                 flex-direction: column;
             }
         }
+
+        /* WhatsApp Modal Styles */
+        .modal-whatsapp {
+            max-width: 1200px;
+            width: 95%;
+            height: 85vh;
+            max-height: 85vh;
+        }
+
+        .modal-body-whatsapp {
+            padding: 0;
+            height: calc(85vh - 68px);
+        }
+
+        .whatsapp-container {
+            display: flex;
+            height: 100%;
+            background: var(--bg-primary);
+        }
+
+        /* Sidebar de conversaciones */
+        .whatsapp-sidebar {
+            width: 350px;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-secondary);
+        }
+
+        .whatsapp-sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .whatsapp-search {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .whatsapp-conversaciones {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .whatsapp-conversacion-item {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .whatsapp-conversacion-item:hover {
+            background: var(--bg-primary);
+        }
+
+        .whatsapp-conversacion-item.active {
+            background: #E7F3E8;
+        }
+
+        .whatsapp-conversacion-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .whatsapp-conversacion-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .whatsapp-conversacion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .whatsapp-conversacion-nombre {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .whatsapp-conversacion-hora {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+
+        .whatsapp-conversacion-preview {
+            font-size: 13px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .whatsapp-conversacion-badge {
+            min-width: 20px;
+            height: 20px;
+            background: #25D366;
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 0 6px;
+            margin-left: auto;
+        }
+
+        .whatsapp-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-tertiary);
+            gap: 12px;
+        }
+
+        .whatsapp-empty i {
+            width: 64px;
+            height: 64px;
+        }
+
+        /* Panel de chat */
+        .whatsapp-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .whatsapp-chat-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-tertiary);
+            gap: 16px;
+        }
+
+        .whatsapp-chat-empty i {
+            width: 80px;
+            height: 80px;
+        }
+
+        .whatsapp-chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .whatsapp-chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .whatsapp-chat-header-info h4 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+
+        .whatsapp-chat-numero {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .whatsapp-chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="%23e0e0e0" opacity="0.2"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .whatsapp-mensaje {
+            max-width: 65%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            word-wrap: break-word;
+            animation: messageSlide 0.2s ease-out;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .whatsapp-mensaje.entrante {
+            align-self: flex-start;
+            background: white;
+            border: 1px solid var(--border-color);
+        }
+
+        .whatsapp-mensaje.saliente {
+            align-self: flex-end;
+            background: #D9FDD3;
+            color: #000;
+        }
+
+        .whatsapp-mensaje-contenido {
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 4px;
+        }
+
+        .whatsapp-mensaje-hora {
+            font-size: 11px;
+            color: #667781;
+            text-align: right;
+        }
+
+        .whatsapp-chat-input {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .whatsapp-input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            font-size: 14px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .whatsapp-input:focus {
+            outline: none;
+            border-color: #25D366;
+        }
+
+        .whatsapp-send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #25D366;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .whatsapp-send-btn:hover {
+            background: #20BD5B;
+            transform: scale(1.05);
+        }
+
+        .whatsapp-send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .whatsapp-send-btn i {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .modal-whatsapp {
+                width: 100%;
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+
+            .whatsapp-sidebar {
+                width: 100%;
+            }
+
+            .whatsapp-chat {
+                display: none;
+            }
+
+            .whatsapp-chat.active {
+                display: flex;
+            }
+
+            .whatsapp-sidebar.hide-mobile {
+                display: none;
+            }
+        }
     </style>
     <script src="https://unpkg.com/feather-icons"></script>
 </head>
@@ -1019,6 +1367,10 @@
                     <i data-feather="database"></i>
                     <span>Base de Datos</span>
                 </a>
+                <a href="#whatsapp" class="nav-item" data-tooltip="WhatsApp" onclick="event.preventDefault(); abrirModalWhatsApp()">
+                    <i data-feather="message-circle"></i>
+                    <span>WhatsApp</span>
+                </a>
                 <div style="height: 1px; background: var(--border-color); margin: 16px 12px;"></div>
                 <a href="/ordenes.html" class="nav-item" data-tooltip="Ordenes">
                     <i data-feather="clipboard-list"></i>
@@ -1039,6 +1391,11 @@
                 <a href="/panel-rips.html" class="nav-item" data-tooltip="RIPS">
                     <i data-feather="file-text"></i>
                     <span>RIPS</span>
+                </a>
+                <div style="height: 1px; background: var(--border-color); margin: 16px 12px;"></div>
+                <a href="/panel-comunidad.html" class="nav-item nav-item-comunidad" data-tooltip="Comunidad de Salud">
+                    <i data-feather="heart"></i>
+                    <span>Comunidad de Salud</span>
                 </a>
             </nav>
             <div class="sidebar-footer">
@@ -1376,6 +1733,79 @@
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="cerrarModal('modalPermisos')">Cancelar</button>
                 <button type="button" class="btn-primary" id="btnGuardarPermisos" onclick="guardarPermisos()">Guardar Permisos</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal WhatsApp -->
+    <div class="modal-overlay" id="modalWhatsApp">
+        <div class="modal modal-whatsapp">
+            <div class="modal-header">
+                <h3><i data-feather="message-circle"></i> WhatsApp Business</h3>
+                <button class="modal-close" onclick="cerrarModal('modalWhatsApp')">&times;</button>
+            </div>
+            <div class="modal-body modal-body-whatsapp">
+                <div class="whatsapp-container">
+                    <!-- Sidebar de conversaciones -->
+                    <div class="whatsapp-sidebar">
+                        <div class="whatsapp-sidebar-header">
+                            <input
+                                type="text"
+                                class="whatsapp-search"
+                                placeholder="Buscar conversación..."
+                                id="searchConversaciones"
+                                oninput="filtrarConversaciones()"
+                            >
+                        </div>
+                        <div class="whatsapp-conversaciones" id="listaConversaciones">
+                            <!-- Las conversaciones se cargarán aquí dinámicamente -->
+                            <div class="whatsapp-empty">
+                                <i data-feather="message-circle"></i>
+                                <p>No hay conversaciones</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel de chat -->
+                    <div class="whatsapp-chat">
+                        <div class="whatsapp-chat-empty" id="chatEmpty">
+                            <i data-feather="message-circle"></i>
+                            <p>Selecciona una conversación para comenzar</p>
+                        </div>
+
+                        <div class="whatsapp-chat-container" id="chatContainer" style="display: none;">
+                            <!-- Header del chat -->
+                            <div class="whatsapp-chat-header">
+                                <div class="whatsapp-chat-header-info">
+                                    <h4 id="chatNombre">Nombre del Cliente</h4>
+                                    <span class="whatsapp-chat-numero" id="chatNumero">+57 300 000 0000</span>
+                                </div>
+                                <div class="whatsapp-chat-header-actions">
+                                    <span class="badge" id="chatEstado">activa</span>
+                                </div>
+                            </div>
+
+                            <!-- Mensajes -->
+                            <div class="whatsapp-chat-messages" id="chatMensajes">
+                                <!-- Los mensajes se cargarán aquí dinámicamente -->
+                            </div>
+
+                            <!-- Input de mensaje -->
+                            <div class="whatsapp-chat-input">
+                                <input
+                                    type="text"
+                                    class="whatsapp-input"
+                                    placeholder="Escribe un mensaje..."
+                                    id="inputMensaje"
+                                    onkeypress="enviarMensajeEnter(event)"
+                                >
+                                <button class="whatsapp-send-btn" onclick="enviarMensaje()">
+                                    <i data-feather="send"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2261,6 +2691,295 @@
                 }
             });
         });
+
+        // ========== FUNCIONES WHATSAPP ==========
+
+        let conversacionesWhatsApp = [];
+        let conversacionActualId = null;
+        let mensajesActuales = [];
+
+        // Abrir modal de WhatsApp y cargar conversaciones
+        async function abrirModalWhatsApp() {
+            document.getElementById('modalWhatsApp').classList.add('show');
+            await cargarConversaciones();
+            feather.replace();
+        }
+
+        // Cargar todas las conversaciones
+        async function cargarConversaciones() {
+            try {
+                const response = await Auth.fetchAuth('/api/admin/whatsapp/conversaciones');
+                const data = await response.json();
+
+                if (data.success) {
+                    conversacionesWhatsApp = data.conversaciones;
+                    renderizarConversaciones();
+                } else {
+                    mostrarToast('Error al cargar conversaciones', 'error');
+                }
+            } catch (error) {
+                console.error('Error al cargar conversaciones:', error);
+                mostrarToast('Error al cargar conversaciones', 'error');
+            }
+        }
+
+        // Renderizar lista de conversaciones
+        function renderizarConversaciones() {
+            const lista = document.getElementById('listaConversaciones');
+
+            if (conversacionesWhatsApp.length === 0) {
+                lista.innerHTML = `
+                    <div class="whatsapp-empty">
+                        <i data-feather="message-circle"></i>
+                        <p>No hay conversaciones</p>
+                    </div>
+                `;
+                feather.replace();
+                return;
+            }
+
+            lista.innerHTML = conversacionesWhatsApp.map(conv => {
+                const ultimoMensaje = conv.ultimo_mensaje || {};
+                const nombre = conv.nombre_cliente || conv.numero_cliente;
+                const inicial = nombre.charAt(0).toUpperCase();
+                const hora = ultimoMensaje.fecha_envio
+                    ? formatearHora(ultimoMensaje.fecha_envio)
+                    : '';
+                const preview = ultimoMensaje.contenido
+                    ? (ultimoMensaje.direccion === 'entrante' ? '' : '✓ ') + truncarTexto(ultimoMensaje.contenido, 40)
+                    : 'Sin mensajes';
+
+                const activeClass = conv.id === conversacionActualId ? 'active' : '';
+
+                return `
+                    <div class="whatsapp-conversacion-item ${activeClass}" onclick="seleccionarConversacion(${conv.id})">
+                        <div class="whatsapp-conversacion-avatar">${inicial}</div>
+                        <div class="whatsapp-conversacion-info">
+                            <div class="whatsapp-conversacion-header">
+                                <div class="whatsapp-conversacion-nombre">${nombre}</div>
+                                <div class="whatsapp-conversacion-hora">${hora}</div>
+                            </div>
+                            <div class="whatsapp-conversacion-preview">${preview}</div>
+                        </div>
+                        ${conv.no_leidos > 0 ? `<div class="whatsapp-conversacion-badge">${conv.no_leidos}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            feather.replace();
+        }
+
+        // Filtrar conversaciones por búsqueda
+        function filtrarConversaciones() {
+            const search = document.getElementById('searchConversaciones').value.toLowerCase();
+
+            const conversacionesFiltradas = conversacionesWhatsApp.filter(conv => {
+                const nombre = (conv.nombre_cliente || '').toLowerCase();
+                const numero = (conv.numero_cliente || '').toLowerCase();
+                return nombre.includes(search) || numero.includes(search);
+            });
+
+            const lista = document.getElementById('listaConversaciones');
+
+            if (conversacionesFiltradas.length === 0) {
+                lista.innerHTML = `
+                    <div class="whatsapp-empty">
+                        <i data-feather="search"></i>
+                        <p>No se encontraron conversaciones</p>
+                    </div>
+                `;
+                feather.replace();
+                return;
+            }
+
+            lista.innerHTML = conversacionesFiltradas.map(conv => {
+                const ultimoMensaje = conv.ultimo_mensaje || {};
+                const nombre = conv.nombre_cliente || conv.numero_cliente;
+                const inicial = nombre.charAt(0).toUpperCase();
+                const hora = ultimoMensaje.fecha_envio
+                    ? formatearHora(ultimoMensaje.fecha_envio)
+                    : '';
+                const preview = ultimoMensaje.contenido
+                    ? (ultimoMensaje.direccion === 'entrante' ? '' : '✓ ') + truncarTexto(ultimoMensaje.contenido, 40)
+                    : 'Sin mensajes';
+
+                const activeClass = conv.id === conversacionActualId ? 'active' : '';
+
+                return `
+                    <div class="whatsapp-conversacion-item ${activeClass}" onclick="seleccionarConversacion(${conv.id})">
+                        <div class="whatsapp-conversacion-avatar">${inicial}</div>
+                        <div class="whatsapp-conversacion-info">
+                            <div class="whatsapp-conversacion-header">
+                                <div class="whatsapp-conversacion-nombre">${nombre}</div>
+                                <div class="whatsapp-conversacion-hora">${hora}</div>
+                            </div>
+                            <div class="whatsapp-conversacion-preview">${preview}</div>
+                        </div>
+                        ${conv.no_leidos > 0 ? `<div class="whatsapp-conversacion-badge">${conv.no_leidos}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            feather.replace();
+        }
+
+        // Seleccionar una conversación y cargar sus mensajes
+        async function seleccionarConversacion(conversacionId) {
+            conversacionActualId = conversacionId;
+
+            // Actualizar UI de lista de conversaciones
+            renderizarConversaciones();
+
+            // Obtener datos de la conversación
+            const conversacion = conversacionesWhatsApp.find(c => c.id === conversacionId);
+            if (!conversacion) return;
+
+            // Mostrar panel de chat y ocultar empty state
+            document.getElementById('chatEmpty').style.display = 'none';
+            document.getElementById('chatContainer').style.display = 'flex';
+
+            // Actualizar header del chat
+            document.getElementById('chatNombre').textContent =
+                conversacion.nombre_cliente || conversacion.numero_cliente;
+            document.getElementById('chatNumero').textContent = conversacion.numero_cliente;
+            document.getElementById('chatEstado').textContent = conversacion.estado || 'activa';
+
+            // Cargar mensajes
+            await cargarMensajes(conversacionId);
+
+            // Focus en input de mensaje
+            document.getElementById('inputMensaje').focus();
+        }
+
+        // Cargar mensajes de una conversación
+        async function cargarMensajes(conversacionId) {
+            try {
+                const response = await Auth.fetchAuth(`/api/admin/whatsapp/conversaciones/${conversacionId}/mensajes`);
+                const data = await response.json();
+
+                if (data.success) {
+                    mensajesActuales = data.mensajes;
+                    renderizarMensajes();
+                } else {
+                    mostrarToast('Error al cargar mensajes', 'error');
+                }
+            } catch (error) {
+                console.error('Error al cargar mensajes:', error);
+                mostrarToast('Error al cargar mensajes', 'error');
+            }
+        }
+
+        // Renderizar mensajes en el chat
+        function renderizarMensajes() {
+            const container = document.getElementById('chatMensajes');
+
+            if (mensajesActuales.length === 0) {
+                container.innerHTML = `
+                    <div class="whatsapp-empty">
+                        <i data-feather="message-circle"></i>
+                        <p>No hay mensajes en esta conversación</p>
+                    </div>
+                `;
+                feather.replace();
+                return;
+            }
+
+            container.innerHTML = mensajesActuales.map(mensaje => {
+                const clase = mensaje.direccion === 'entrante' ? 'entrante' : 'saliente';
+                const hora = formatearHora(mensaje.fecha_envio);
+
+                return `
+                    <div class="whatsapp-mensaje ${clase}">
+                        <div class="whatsapp-mensaje-contenido">${escapeHtml(mensaje.contenido)}</div>
+                        <div class="whatsapp-mensaje-hora">${hora}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // Scroll al último mensaje
+            container.scrollTop = container.scrollHeight;
+            feather.replace();
+        }
+
+        // Enviar mensaje (con Enter)
+        function enviarMensajeEnter(event) {
+            if (event.key === 'Enter') {
+                enviarMensaje();
+            }
+        }
+
+        // Enviar mensaje
+        async function enviarMensaje() {
+            if (!conversacionActualId) {
+                mostrarToast('Selecciona una conversación primero', 'error');
+                return;
+            }
+
+            const input = document.getElementById('inputMensaje');
+            const contenido = input.value.trim();
+
+            if (!contenido) {
+                return;
+            }
+
+            // Deshabilitar input mientras se envía
+            input.disabled = true;
+
+            try {
+                const response = await Auth.fetchAuth(
+                    `/api/admin/whatsapp/conversaciones/${conversacionActualId}/mensajes`,
+                    {
+                        method: 'POST',
+                        body: JSON.stringify({ contenido })
+                    }
+                );
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Agregar mensaje a la lista actual
+                    mensajesActuales.push(data.mensaje);
+                    renderizarMensajes();
+
+                    // Limpiar input
+                    input.value = '';
+
+                    // Actualizar conversaciones
+                    await cargarConversaciones();
+                } else {
+                    mostrarToast(data.message || 'Error al enviar mensaje', 'error');
+                }
+            } catch (error) {
+                console.error('Error al enviar mensaje:', error);
+                mostrarToast('Error al enviar mensaje', 'error');
+            } finally {
+                input.disabled = false;
+                input.focus();
+            }
+        }
+
+        // Utilidades
+        function formatearHora(fechaStr) {
+            const fecha = new Date(fechaStr);
+            const ahora = new Date();
+            const esHoy = fecha.toDateString() === ahora.toDateString();
+
+            if (esHoy) {
+                return fecha.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+            } else {
+                return fecha.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit' });
+            }
+        }
+
+        function truncarTexto(texto, max) {
+            return texto.length > max ? texto.substring(0, max) + '...' : texto;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
     </script>
 </body>
 </html>

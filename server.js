@@ -11,6 +11,7 @@ const puppeteer = require('puppeteer');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
+const twilio = require('twilio');
 
 // Configuración de multer para uploads en memoria
 const upload = multer({ storage: multer.memoryStorage() });
@@ -336,34 +337,46 @@ async function dispararWebhookMake(orden) {
     }
 }
 
-// Función para enviar mensajes de WhatsApp via Whapi Cloud
-function sendWhatsAppMessage(toNumber, messageBody) {
-    const url = "https://gate.whapi.cloud/messages/text";
-    const headers = {
-        "accept": "application/json",
-        "authorization": "Bearer due3eWCwuBM2Xqd6cPujuTRqSbMb68lt",
-        "content-type": "application/json"
-    };
-    const postData = {
-        "typing_time": 0,
-        "to": toNumber,
-        "body": messageBody
-    };
+// Inicializar cliente de Twilio
+const twilioClient = twilio(
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_AUTH_TOKEN
+);
 
-    return fetch(url, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(postData)
-    })
-    .then(response => response.json())
-    .then(json => {
-        console.log(`📱 WhatsApp enviado a ${toNumber}:`, json);
-        return json;
-    })
-    .catch(err => {
-        console.error(`❌ Error enviando WhatsApp a ${toNumber}:`, err);
-        return null;
-    });
+// Función para enviar mensajes de WhatsApp via Twilio con Content Template
+async function sendWhatsAppMessage(toNumber, messageBody, variables = {}) {
+    try {
+        // Formatear número: si empieza con 57, agregar whatsapp:+, si no, agregar whatsapp:+57
+        let formattedNumber = toNumber;
+        if (!formattedNumber.startsWith('whatsapp:')) {
+            if (!formattedNumber.startsWith('+')) {
+                formattedNumber = formattedNumber.startsWith('57')
+                    ? `+${formattedNumber}`
+                    : `+57${formattedNumber}`;
+            }
+            formattedNumber = `whatsapp:${formattedNumber}`;
+        }
+
+        // Usar Content Template para cumplir con políticas de WhatsApp
+        const messageParams = {
+            contentSid: process.env.TWILIO_CONTENT_TEMPLATE_SID,
+            from: process.env.TWILIO_WHATSAPP_FROM,
+            to: formattedNumber
+        };
+
+        // Si hay variables para el template, agregarlas
+        if (Object.keys(variables).length > 0) {
+            messageParams.contentVariables = JSON.stringify(variables);
+        }
+
+        const message = await twilioClient.messages.create(messageParams);
+
+        console.log(`📱 WhatsApp enviado a ${toNumber} (Twilio SID: ${message.sid})`);
+        return { success: true, sid: message.sid, status: message.status };
+    } catch (err) {
+        console.error(`❌ Error enviando WhatsApp a ${toNumber}:`, err.message);
+        return { success: false, error: err.message };
+    }
 }
 
 // Notificar al coordinador de agendamiento sobre nueva orden
@@ -2718,6 +2731,259 @@ app.get('/api/admin/tablas/:nombre/datos', authMiddleware, requireAdmin, async (
     } catch (error) {
         console.error('Error al obtener datos de tabla:', error);
         res.status(500).json({ success: false, message: 'Error al obtener datos' });
+    }
+});
+
+// ========== ENDPOINTS ADMIN WHATSAPP ==========
+
+// GET - Listar todas las conversaciones de WhatsApp con último mensaje
+app.get('/api/admin/whatsapp/conversaciones', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const query = `
+            SELECT
+                c.id,
+                c.celular as numero_cliente,
+                c.nombre_paciente as nombre_cliente,
+                c.estado_actual as estado,
+                c.agente_asignado as agente_id,
+                c.fecha_inicio,
+                c.fecha_ultima_actividad,
+                0 as no_leidos,
+                c.bot_activo,
+                c.agente_asignado as agente_nombre,
+                (
+                    SELECT json_build_object(
+                        'contenido', m.contenido,
+                        'direccion', m.direccion,
+                        'fecha_envio', m.timestamp
+                    )
+                    FROM mensajes_whatsapp m
+                    WHERE m.conversacion_id = c.id
+                    ORDER BY m.timestamp DESC
+                    LIMIT 1
+                ) as ultimo_mensaje
+            FROM conversaciones_whatsapp c
+            ORDER BY c.fecha_ultima_actividad DESC
+            LIMIT 100
+        `;
+
+        const result = await pool.query(query);
+        res.json({ success: true, conversaciones: result.rows });
+    } catch (error) {
+        console.error('Error al obtener conversaciones WhatsApp:', error);
+        res.status(500).json({ success: false, message: 'Error al obtener conversaciones' });
+    }
+});
+
+// GET - Obtener mensajes de una conversación específica
+app.get('/api/admin/whatsapp/conversaciones/:id/mensajes', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const query = `
+            SELECT
+                id,
+                contenido,
+                direccion,
+                timestamp as fecha_envio,
+                sid_twilio as twilio_sid,
+                tipo_mensaje as tipo_contenido
+            FROM mensajes_whatsapp
+            WHERE conversacion_id = $1
+            ORDER BY timestamp ASC
+        `;
+
+        const result = await pool.query(query, [id]);
+
+        res.json({ success: true, mensajes: result.rows });
+    } catch (error) {
+        console.error('Error al obtener mensajes:', error);
+        res.status(500).json({ success: false, message: 'Error al obtener mensajes' });
+    }
+});
+
+// POST - Enviar mensaje en una conversación
+app.post('/api/admin/whatsapp/conversaciones/:id/mensajes', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { contenido } = req.body;
+
+        // Obtener número del cliente de la conversación
+        const convResult = await pool.query(`
+            SELECT celular FROM conversaciones_whatsapp WHERE id = $1
+        `, [id]);
+
+        if (convResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+        }
+
+        const numeroCliente = convResult.rows[0].celular;
+
+        // Enviar mensaje via Twilio
+        const twilioResult = await sendWhatsAppMessage(numeroCliente, contenido);
+
+        if (!twilioResult.success) {
+            return res.status(500).json({
+                success: false,
+                message: 'Error al enviar mensaje',
+                error: twilioResult.error
+            });
+        }
+
+        // Guardar mensaje en base de datos
+        const insertQuery = `
+            INSERT INTO mensajes_whatsapp (
+                conversacion_id, contenido, direccion, sid_twilio, tipo_mensaje
+            )
+            VALUES ($1, $2, 'saliente', $3, 'text')
+            RETURNING *
+        `;
+
+        const messageResult = await pool.query(insertQuery, [
+            id,
+            contenido,
+            twilioResult.sid
+        ]);
+
+        // Actualizar fecha de última actividad
+        await pool.query(`
+            UPDATE conversaciones_whatsapp
+            SET fecha_ultima_actividad = NOW()
+            WHERE id = $1
+        `, [id]);
+
+        res.json({
+            success: true,
+            mensaje: messageResult.rows[0],
+            twilio: twilioResult
+        });
+    } catch (error) {
+        console.error('Error al enviar mensaje WhatsApp:', error);
+        res.status(500).json({ success: false, message: 'Error al enviar mensaje' });
+    }
+});
+
+// POST - Webhook para recibir mensajes entrantes de Twilio WhatsApp
+app.post('/api/whatsapp/webhook', async (req, res) => {
+    try {
+        const { From, Body, MessageSid, ProfileName } = req.body;
+
+        // Extraer número sin prefijo whatsapp:
+        const numeroCliente = From.replace('whatsapp:', '');
+
+        console.log('📩 Mensaje WhatsApp entrante:', {
+            from: numeroCliente,
+            body: Body,
+            sid: MessageSid,
+            name: ProfileName
+        });
+
+        // Buscar o crear conversación
+        let conversacion = await pool.query(`
+            SELECT id FROM conversaciones_whatsapp WHERE celular = $1
+        `, [numeroCliente]);
+
+        let conversacionId;
+
+        if (conversacion.rows.length === 0) {
+            // Crear nueva conversación
+            const nuevaConv = await pool.query(`
+                INSERT INTO conversaciones_whatsapp (
+                    celular,
+                    nombre_paciente,
+                    estado_actual,
+                    fecha_inicio,
+                    fecha_ultima_actividad,
+                    bot_activo
+                )
+                VALUES ($1, $2, 'activa', NOW(), NOW(), true)
+                RETURNING id
+            `, [numeroCliente, ProfileName || 'Usuario WhatsApp']);
+
+            conversacionId = nuevaConv.rows[0].id;
+        } else {
+            conversacionId = conversacion.rows[0].id;
+
+            // Actualizar última actividad
+            await pool.query(`
+                UPDATE conversaciones_whatsapp
+                SET fecha_ultima_actividad = NOW()
+                WHERE id = $1
+            `, [conversacionId]);
+        }
+
+        // Guardar mensaje entrante
+        await pool.query(`
+            INSERT INTO mensajes_whatsapp (
+                conversacion_id,
+                contenido,
+                direccion,
+                sid_twilio,
+                tipo_mensaje,
+                timestamp
+            )
+            VALUES ($1, $2, 'entrante', $3, 'text', NOW())
+        `, [conversacionId, Body, MessageSid]);
+
+        console.log('✅ Mensaje guardado en conversación:', conversacionId);
+
+        // Responder a Twilio con 200 OK (vacío o con TwiML si quieres auto-responder)
+        res.type('text/xml');
+        res.send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
+
+    } catch (error) {
+        console.error('❌ Error en webhook WhatsApp:', error);
+        res.status(500).send('Error');
+    }
+});
+
+// PATCH - Actualizar estado de una conversación
+app.patch('/api/admin/whatsapp/conversaciones/:id/estado', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { estado, agente_id, bot_activo } = req.body;
+
+        const updates = [];
+        const values = [];
+        let paramCount = 1;
+
+        if (estado !== undefined) {
+            updates.push(`estado_actual = $${paramCount++}`);
+            values.push(estado);
+        }
+
+        if (agente_id !== undefined) {
+            updates.push(`agente_asignado = $${paramCount++}`);
+            values.push(agente_id);
+        }
+
+        if (bot_activo !== undefined) {
+            updates.push(`bot_activo = $${paramCount++}`);
+            values.push(bot_activo);
+        }
+
+        if (updates.length === 0) {
+            return res.status(400).json({ success: false, message: 'No hay cambios para actualizar' });
+        }
+
+        values.push(id);
+        const query = `
+            UPDATE conversaciones_whatsapp
+            SET ${updates.join(', ')}, fecha_ultima_actividad = NOW()
+            WHERE id = $${paramCount}
+            RETURNING *
+        `;
+
+        const result = await pool.query(query, values);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+        }
+
+        res.json({ success: true, conversacion: result.rows[0] });
+    } catch (error) {
+        console.error('Error al actualizar conversación:', error);
+        res.status(500).json({ success: false, message: 'Error al actualizar conversación' });
     }
 });
 
@@ -11685,6 +11951,35 @@ app.post('/api/comunidad/contenido/crear', authMiddleware, async (req, res) => {
 });
 
 console.log('✅ Endpoints Comunidad de Salud configurados');
+
+// Endpoint de prueba para WhatsApp con Twilio
+app.post('/api/test/whatsapp', async (req, res) => {
+    try {
+        const { numero, mensaje } = req.body;
+
+        if (!numero || !mensaje) {
+            return res.status(400).json({
+                success: false,
+                error: 'Se requieren campos: numero, mensaje'
+            });
+        }
+
+        console.log(`🧪 TEST: Enviando WhatsApp a ${numero}`);
+        const result = await sendWhatsAppMessage(numero, mensaje);
+
+        res.json({
+            success: result.success || true,
+            result: result,
+            message: 'Mensaje enviado (verifica logs y Twilio Console)'
+        });
+    } catch (error) {
+        console.error('❌ Error en test de WhatsApp:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
