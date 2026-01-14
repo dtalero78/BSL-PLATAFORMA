@@ -396,6 +396,65 @@
             color: var(--text-primary);
         }
 
+        .whatsapp-comando-preview {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1001;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .whatsapp-comando-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s;
+        }
+
+        .whatsapp-comando-item:last-child {
+            border-bottom: none;
+        }
+
+        .whatsapp-comando-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .whatsapp-comando-item.selected {
+            background: var(--bg-hover);
+        }
+
+        .whatsapp-comando-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .whatsapp-comando-code {
+            font-weight: bold;
+            color: var(--whatsapp-green);
+            font-size: 14px;
+        }
+
+        .whatsapp-comando-desc {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .whatsapp-comando-preview-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .whatsapp-plantillas-menu {
             position: absolute;
             bottom: 80px;
@@ -550,6 +609,11 @@
                     <!-- Los mensajes se cargarán aquí dinámicamente -->
                 </div>
 
+                <!-- Preview de comandos (estilo WhatsApp) -->
+                <div class="whatsapp-comando-preview" id="comandoPreview" style="display: none;">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+
                 <!-- Input de mensaje -->
                 <div class="whatsapp-chat-input">
                     <button class="whatsapp-template-btn" onclick="togglePlantillas()" title="Plantillas de mensajes">
@@ -561,6 +625,7 @@
                         placeholder="Escribe un mensaje o /1, /2, /8, /c..."
                         id="inputMensaje"
                         onkeypress="enviarMensajeEnter(event)"
+                        oninput="manejarInputComando(event)"
                     >
                     <button class="whatsapp-send-btn" onclick="enviarMensaje()">
                         <i data-feather="send"></i>
@@ -608,6 +673,18 @@
         let audioPermitido = false;
         let unreadMessages = 0;
         let titleBlinkInterval = null;
+
+        // Índice de selección para navegación con teclado
+        let selectedCommandIndex = 0;
+        let comandosFiltrados = [];
+
+        // Plantillas de mensajes rápidos con metadata
+        const plantillasInfo = {
+            '/1': { titulo: 'Saludo', descripcion: 'Mensaje de saludo simple' },
+            '/2': { titulo: 'Instrucciones teleconsulta', descripcion: 'Guía completa para agendar' },
+            '/8': { titulo: 'Link consulta orden', descripcion: 'Enlace para consultar estado' },
+            '/c': { titulo: 'Datos de pago', descripcion: 'Información bancaria' }
+        };
 
         // Plantillas de mensajes rápidos
         const plantillasMensajes = {
@@ -1112,8 +1189,36 @@ Llave Breb: @talero585`
         function enviarMensajeEnter(event) {
             const input = document.getElementById('inputMensaje');
             const texto = input.value.trim();
+            const preview = document.getElementById('comandoPreview');
+            const previewVisible = preview.style.display === 'block';
 
-            // Detectar si se presionó Enter
+            // Si el preview está visible, manejar navegación
+            if (previewVisible && comandosFiltrados.length > 0) {
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    selectedCommandIndex = (selectedCommandIndex + 1) % comandosFiltrados.length;
+                    manejarInputComando({ target: input });
+                    return;
+                }
+                else if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    selectedCommandIndex = selectedCommandIndex === 0 ? comandosFiltrados.length - 1 : selectedCommandIndex - 1;
+                    manejarInputComando({ target: input });
+                    return;
+                }
+                else if (event.key === 'Enter') {
+                    event.preventDefault();
+                    seleccionarComando(comandosFiltrados[selectedCommandIndex]);
+                    return;
+                }
+                else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    preview.style.display = 'none';
+                    return;
+                }
+            }
+
+            // Detectar si se presionó Enter (sin preview)
             if (event.key === 'Enter') {
                 event.preventDefault();
 
@@ -1125,8 +1230,8 @@ Llave Breb: @talero585`
 
                 enviarMensaje();
             }
-            // Detectar si se presionó Tab o Space después de un comando
-            else if ((event.key === 'Tab' || event.key === ' ') && plantillasMensajes[texto]) {
+            // Detectar si se presionó Tab después de un comando
+            else if (event.key === 'Tab' && plantillasMensajes[texto]) {
                 event.preventDefault();
                 input.value = plantillasMensajes[texto];
             }
@@ -1167,6 +1272,55 @@ Llave Breb: @talero585`
             input.value = plantillasMensajes[comando];
             togglePlantillas(); // Cerrar menú
             input.focus(); // Enfocar input
+        }
+
+        // Manejar input de comando (preview automático)
+        function manejarInputComando(event) {
+            const input = event.target;
+            const texto = input.value;
+            const preview = document.getElementById('comandoPreview');
+
+            // Si empieza con "/" mostrar preview
+            if (texto.startsWith('/')) {
+                // Filtrar comandos que coincidan
+                comandosFiltrados = Object.keys(plantillasMensajes).filter(cmd =>
+                    cmd.startsWith(texto) || texto === '/'
+                );
+
+                if (comandosFiltrados.length > 0) {
+                    // Mostrar preview con comandos filtrados
+                    preview.innerHTML = comandosFiltrados.map((cmd, index) => {
+                        const info = plantillasInfo[cmd];
+                        const textoPreview = plantillasMensajes[cmd].substring(0, 50);
+                        const selectedClass = index === selectedCommandIndex ? 'selected' : '';
+
+                        return `
+                            <div class="whatsapp-comando-item ${selectedClass}" onclick="seleccionarComando('${cmd}')" data-index="${index}">
+                                <div class="whatsapp-comando-title">
+                                    <span class="whatsapp-comando-code">${cmd}</span>
+                                    <span class="whatsapp-comando-desc">${info.titulo}</span>
+                                </div>
+                                <div class="whatsapp-comando-preview-text">${textoPreview}${plantillasMensajes[cmd].length > 50 ? '...' : ''}</div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    preview.style.display = 'block';
+                    selectedCommandIndex = 0;
+                } else {
+                    preview.style.display = 'none';
+                }
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // Seleccionar comando del preview
+        function seleccionarComando(comando) {
+            const input = document.getElementById('inputMensaje');
+            input.value = plantillasMensajes[comando];
+            document.getElementById('comandoPreview').style.display = 'none';
+            input.focus();
         }
 
         function cerrarSesion() {
