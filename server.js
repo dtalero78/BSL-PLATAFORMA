@@ -344,6 +344,7 @@ const twilioClient = twilio(
 );
 
 // Función para enviar mensajes de WhatsApp via Twilio con Content Template
+// Usado para notificaciones automáticas pre-aprobadas
 async function sendWhatsAppMessage(toNumber, messageBody, variables = {}) {
     try {
         // Formatear número: si empieza con 57, agregar whatsapp:+, si no, agregar whatsapp:+57
@@ -371,10 +372,42 @@ async function sendWhatsAppMessage(toNumber, messageBody, variables = {}) {
 
         const message = await twilioClient.messages.create(messageParams);
 
-        console.log(`📱 WhatsApp enviado a ${toNumber} (Twilio SID: ${message.sid})`);
+        console.log(`📱 WhatsApp template enviado a ${toNumber} (Twilio SID: ${message.sid})`);
         return { success: true, sid: message.sid, status: message.status };
     } catch (err) {
-        console.error(`❌ Error enviando WhatsApp a ${toNumber}:`, err.message);
+        console.error(`❌ Error enviando WhatsApp template a ${toNumber}:`, err.message);
+        return { success: false, error: err.message };
+    }
+}
+
+// Función para enviar mensajes de texto libre via Twilio WhatsApp
+// Usado para conversaciones del panel de administración
+// IMPORTANTE: Solo funciona dentro de las 24 horas después de que el cliente envíe un mensaje
+async function sendWhatsAppFreeText(toNumber, messageBody) {
+    try {
+        // Formatear número: si empieza con 57, agregar whatsapp:+, si no, agregar whatsapp:+57
+        let formattedNumber = toNumber;
+        if (!formattedNumber.startsWith('whatsapp:')) {
+            if (!formattedNumber.startsWith('+')) {
+                formattedNumber = formattedNumber.startsWith('57')
+                    ? `+${formattedNumber}`
+                    : `+57${formattedNumber}`;
+            }
+            formattedNumber = `whatsapp:${formattedNumber}`;
+        }
+
+        const messageParams = {
+            body: messageBody, // Texto libre del mensaje
+            from: process.env.TWILIO_WHATSAPP_FROM,
+            to: formattedNumber
+        };
+
+        const message = await twilioClient.messages.create(messageParams);
+
+        console.log(`📱 WhatsApp texto libre enviado a ${toNumber} (Twilio SID: ${message.sid})`);
+        return { success: true, sid: message.sid, status: message.status };
+    } catch (err) {
+        console.error(`❌ Error enviando WhatsApp texto libre a ${toNumber}:`, err.message);
         return { success: false, error: err.message };
     }
 }
@@ -2819,8 +2852,8 @@ app.post('/api/admin/whatsapp/conversaciones/:id/mensajes', authMiddleware, requ
 
         const numeroCliente = convResult.rows[0].celular;
 
-        // Enviar mensaje via Twilio
-        const twilioResult = await sendWhatsAppMessage(numeroCliente, contenido);
+        // Enviar mensaje via Twilio (texto libre para conversaciones)
+        const twilioResult = await sendWhatsAppFreeText(numeroCliente, contenido);
 
         if (!twilioResult.success) {
             return res.status(500).json({
