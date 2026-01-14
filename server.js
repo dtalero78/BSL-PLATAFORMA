@@ -1,12 +1,14 @@
 require('dotenv').config();
 const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const { Pool } = require('pg');
 const cron = require('node-cron');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand} = require('@aws-sdk/client-s3');
 const puppeteer = require('puppeteer');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -17,6 +19,13 @@ const twilio = require('twilio');
 const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 const PORT = process.env.PORT || 8080;
 
 // ========== DIGITALOCEAN SPACES (Object Storage) ==========
@@ -2885,6 +2894,18 @@ app.post('/api/admin/whatsapp/conversaciones/:id/mensajes', authMiddleware, requ
             WHERE id = $1
         `, [id]);
 
+        // Emitir evento WebSocket para actualización en tiempo real
+        if (global.emitWhatsAppEvent) {
+            global.emitWhatsAppEvent('nuevo_mensaje', {
+                conversacion_id: parseInt(id),
+                numero_cliente: numeroCliente,
+                contenido: contenido,
+                direccion: 'saliente',
+                fecha_envio: new Date().toISOString(),
+                sid_twilio: twilioResult.sid
+            });
+        }
+
         res.json({
             success: true,
             mensaje: messageResult.rows[0],
@@ -2959,6 +2980,19 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
         `, [conversacionId, Body, MessageSid]);
 
         console.log('✅ Mensaje guardado en conversación:', conversacionId);
+
+        // Emitir evento WebSocket para actualización en tiempo real
+        if (global.emitWhatsAppEvent) {
+            global.emitWhatsAppEvent('nuevo_mensaje', {
+                conversacion_id: conversacionId,
+                numero_cliente: numeroCliente,
+                contenido: Body,
+                direccion: 'entrante',
+                fecha_envio: new Date().toISOString(),
+                sid_twilio: MessageSid,
+                nombre_cliente: ProfileName || 'Usuario WhatsApp'
+            });
+        }
 
         // Responder a Twilio con 200 OK (vacío o con TwiML si quieres auto-responder)
         res.type('text/xml');
@@ -12014,7 +12048,24 @@ app.post('/api/test/whatsapp', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+// ========== SOCKET.IO CONFIGURACIÓN ==========
+io.on('connection', (socket) => {
+    console.log('🔌 Cliente Socket.IO conectado:', socket.id);
+
+    socket.on('disconnect', () => {
+        console.log('🔌 Cliente Socket.IO desconectado:', socket.id);
+    });
+});
+
+// Función global para emitir eventos de WhatsApp
+global.emitWhatsAppEvent = function(eventType, data) {
+    io.emit(eventType, data);
+    console.log(`📡 Evento WebSocket enviado: ${eventType}`, data);
+};
+
+// Iniciar servidor
+server.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
     console.log(`📊 Base de datos: PostgreSQL en Digital Ocean`);
+    console.log(`🔌 Socket.IO: Listo para conexiones en tiempo real`);
 });
