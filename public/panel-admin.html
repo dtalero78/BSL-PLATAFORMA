@@ -2751,12 +2751,17 @@
 
                 const activeClass = conv.id === conversacionActualId ? 'active' : '';
 
+                // Mostrar nombre + número (si tiene nombre), o solo número
+                const displayNombre = conv.nombre_cliente
+                    ? `${conv.nombre_cliente} (${conv.numero_cliente})`
+                    : conv.numero_cliente;
+
                 return `
                     <div class="whatsapp-conversacion-item ${activeClass}" onclick="seleccionarConversacion(${conv.id})">
                         <div class="whatsapp-conversacion-avatar">${inicial}</div>
                         <div class="whatsapp-conversacion-info">
                             <div class="whatsapp-conversacion-header">
-                                <div class="whatsapp-conversacion-nombre">${nombre}</div>
+                                <div class="whatsapp-conversacion-nombre">${displayNombre}</div>
                                 <div class="whatsapp-conversacion-hora">${hora}</div>
                             </div>
                             <div class="whatsapp-conversacion-preview">${preview}</div>
@@ -2805,12 +2810,17 @@
 
                 const activeClass = conv.id === conversacionActualId ? 'active' : '';
 
+                // Mostrar nombre + número (si tiene nombre), o solo número
+                const displayNombre = conv.nombre_cliente
+                    ? `${conv.nombre_cliente} (${conv.numero_cliente})`
+                    : conv.numero_cliente;
+
                 return `
                     <div class="whatsapp-conversacion-item ${activeClass}" onclick="seleccionarConversacion(${conv.id})">
                         <div class="whatsapp-conversacion-avatar">${inicial}</div>
                         <div class="whatsapp-conversacion-info">
                             <div class="whatsapp-conversacion-header">
-                                <div class="whatsapp-conversacion-nombre">${nombre}</div>
+                                <div class="whatsapp-conversacion-nombre">${displayNombre}</div>
                                 <div class="whatsapp-conversacion-hora">${hora}</div>
                             </div>
                             <div class="whatsapp-conversacion-preview">${preview}</div>
