@@ -626,8 +626,10 @@
 
         // Actualizar conversación después de recibir mensaje
         async function actualizarConversacionDespuesDeMensaje(data) {
-            // Recargar la lista de conversaciones
-            await cargarConversaciones(false);
+            // Pequeño delay para asegurar que el backend guardó el mensaje
+            await new Promise(resolve => setTimeout(resolve, 100));
+            // Forzar recarga completa de conversaciones
+            await cargarConversaciones(true);
         }
 
         // Parpadeo del título (como WhatsApp)
