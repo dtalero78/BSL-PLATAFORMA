@@ -12488,61 +12488,50 @@ app.post('/api/envio-siigo/enviar-individual', async (req, res) => {
         // Preparar nombre completo
         const nombreCompleto = `${primerNombre || ""} ${segundoNombre || ""}`.trim();
 
-        // Formatear fecha de atención si existe
-        let fechaFormateada = "[fecha pendiente]";
-        let horaFormateada = "[hora pendiente]";
+        // Determinar template y variables según ciudad
+        let templateSid;
+        let variables;
 
-        if (fechaAtencion) {
-            const fecha = new Date(fechaAtencion);
-            const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-
-            const diaSemana = diasSemana[fecha.getDay()];
-            const dia = fecha.getDate();
-            const mes = meses[fecha.getMonth()];
-
-            fechaFormateada = `${diaSemana} ${dia} de ${mes}`;
-
-            const horas = fecha.getHours().toString().padStart(2, '0');
-            const minutos = fecha.getMinutes().toString().padStart(2, '0');
-            horaFormateada = `${horas}:${minutos}`;
-        }
-
-        // Mensaje según la ciudad
-        let mensaje;
         if (ciudad && ciudad.toUpperCase() === "BOGOTA") {
-            mensaje = `Hola te escribimos de BSL. Vas a realizar con nosotros el examen médico de SIIGO.
-
-Para eso necesitas:
-
-1. Diligenciar el siguiente link y realizar todas las pruebas:
-
-https://bsl-formulario-f5qx3.ondigitalocean.app/?_id=${_id}
-
-2. Dirigirte a nuestra sede en la Calle 134 # 7-83 Consultorio 233 mañana a partir de 7 am
-
-Te esperamos!
-*Este examen no tiene ningún costo*`;
+            // Template para Bogotá (presencial)
+            templateSid = 'HX4554efaf53c1bd614d49c951e487d394';
+            variables = {
+                "1": _id  // ID para el botón del formulario
+            };
         } else {
-            mensaje = `Hola ${nombreCompleto}, te escribimos de BSL.
+            // Template para otras ciudades (virtual con cita)
+            templateSid = 'HXeb45e56eb2e8dc4eaa35433282e12709';
 
-Vas a realizar con nosotros el examen médico virtual* para la empresa SIIGO.
+            // Formatear fecha y hora si existe
+            let fechaFormateada = "fecha pendiente";
+            let horaFormateada = "hora pendiente";
 
-Para completar tu examen médico ocupacional:
+            if (fechaAtencion) {
+                const fecha = new Date(fechaAtencion);
+                const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-1. Diligenciar el siguiente link y realizar todas las pruebas:
-https://bsl-formulario-f5qx3.ondigitalocean.app/?_id=${_id}
+                const diaSemana = diasSemana[fecha.getDay()];
+                const dia = fecha.getDate();
+                const mes = meses[fecha.getMonth()];
 
-2. El médico te llamará el ${fechaFormateada} a las ${horaFormateada} por WhatsApp video.
+                fechaFormateada = `${diaSemana} ${dia} de ${mes}`;
 
-Es esencial completar el link; sin él, el certificado NO SERÁ VÁLIDO.
+                const horas = fecha.getHours().toString().padStart(2, '0');
+                const minutos = fecha.getMinutes().toString().padStart(2, '0');
+                horaFormateada = `${horas}:${minutos}`;
+            }
 
-¡Gracias!
-*Este examen no tiene ningún costo*`;
+            variables = {
+                "1": nombreCompleto,
+                "2": fechaFormateada,
+                "3": horaFormateada,
+                "4": _id  // ID para el botón del formulario
+            };
         }
 
-        // Enviar mensaje
-        const resultWhatsApp = await sendWhatsAppFreeText(telefonoCompleto, mensaje);
+        // Enviar mensaje usando template de Twilio
+        const resultWhatsApp = await sendWhatsAppMessage(telefonoCompleto, null, variables, templateSid);
 
         if (!resultWhatsApp.success) {
             return res.status(500).json({
@@ -12653,15 +12642,20 @@ app.post('/api/envio-siigo/enviar-masivo', async (req, res) => {
                 const nombreCompleto = `${item.primerNombre || ""} ${item.segundoNombre || ""}`.trim();
                 const nombrePaciente = `${item.primerNombre || ""} ${item.primerApellido || ""}`.trim();
 
-                // Preparar mensaje según tipo
-                let mensaje;
+                // Determinar template y variables según tipo de mensaje
+                let templateSid;
+                let variables;
 
-                if (tipoMensaje === 'segundo-envio') {
-                    // Mensaje para segundo envío (sin fecha agendada)
+                if (tipoMensaje === 'segundo-envio' || tipoMensaje === 'emergencia') {
+                    // Para segundo envío y emergencia usamos texto libre (conversación activa)
+                    // NOTA: Estos templates aún no están creados en Twilio
+                    // Por ahora usamos sendWhatsAppFreeText
                     const acentos = { 'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U' };
                     const cadenaNombre = item.primerNombre ? item.primerNombre.split('').map(letra => acentos[letra] || letra).join('').toString().split(" ").join("").split(".").join("").split("\t").join("") : "";
 
-                    mensaje = `Hola ${cadenaNombre}! Aún no has agendado tu examen médico virtual de SIIGO.
+                    let mensaje;
+                    if (tipoMensaje === 'segundo-envio') {
+                        mensaje = `Hola ${cadenaNombre}! Aún no has agendado tu examen médico virtual de SIIGO.
 
 Por favor agenda tu cita haciendo clic en el siguiente link:
 
@@ -12670,70 +12664,61 @@ https://www.bsl.com.co/autoagendamiento/${item.numeroId}
 *Este examen no tiene ningún costo*
 
 ¡Gracias!`;
-                } else if (tipoMensaje === 'emergencia') {
-                    // Mensaje de emergencia (confirmación de link)
-                    const acentos = { 'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U' };
-                    const cadenaNombre = item.primerNombre ? item.primerNombre.split('').map(letra => acentos[letra] || letra).join('').toString().split(" ").join("").split(".").join("").split("\t").join("") : "";
-
-                    mensaje = `Hola ${cadenaNombre}! Te confirmo el link: https://www.bsl.com.co/autoagendamiento/${item.numeroId}`;
-                } else {
-                    // Mensaje inicial (primer envío)
-                    let fechaFormateada = "[fecha pendiente]";
-                    let horaFormateada = "[hora pendiente]";
-
-                    if (item.fechaAtencion) {
-                        const fecha = new Date(item.fechaAtencion);
-                        const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-                        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-
-                        const diaSemana = diasSemana[fecha.getDay()];
-                        const dia = fecha.getDate();
-                        const mes = meses[fecha.getMonth()];
-
-                        fechaFormateada = `${diaSemana} ${dia} de ${mes}`;
-
-                        const horas = fecha.getHours().toString().padStart(2, '0');
-                        const minutos = fecha.getMinutes().toString().padStart(2, '0');
-                        horaFormateada = `${horas}:${minutos}`;
-                    }
-
-                    if (item.ciudad && item.ciudad.toUpperCase() === "BOGOTA") {
-                        mensaje = `Hola te escribimos de BSL. Vas a realizar con nosotros el examen médico de SIIGO.
-
-Para eso necesitas:
-
-1. Diligenciar el siguiente link y realizar todas las pruebas:
-
-https://bsl-formulario-f5qx3.ondigitalocean.app/?_id=${item._id}
-
-2. Dirigirte a nuestra sede en la Calle 134 # 7-83 Consultorio 233 mañana a partir de 7 am
-
-Te esperamos!
-*Este examen no tiene ningún costo*`;
                     } else {
-                        mensaje = `Hola ${nombreCompleto}, te escribimos de BSL.
-
-Vas a realizar con nosotros el examen médico virtual* para la empresa SIIGO.
-
-Para completar tu examen médico ocupacional:
-
-1. Diligenciar el siguiente link y realizar todas las pruebas:
-https://bsl-formulario-f5qx3.ondigitalocean.app/?_id=${item._id}
-
-2. El médico te llamará el ${fechaFormateada} a las ${horaFormateada} por WhatsApp video.
-
-Es esencial completar el link; sin él, el certificado NO SERÁ VÁLIDO.
-
-¡Gracias!
-*Este examen no tiene ningún costo*`;
+                        mensaje = `Hola ${cadenaNombre}! Te confirmo el link: https://www.bsl.com.co/autoagendamiento/${item.numeroId}`;
                     }
-                }
 
-                // Enviar mensaje
-                const resultWhatsApp = await sendWhatsAppFreeText(telefonoCompleto, mensaje);
+                    // Enviar mensaje de texto libre
+                    const resultWhatsApp = await sendWhatsAppFreeText(telefonoCompleto, mensaje);
 
-                if (!resultWhatsApp.success) {
-                    throw new Error(resultWhatsApp.error || 'Error al enviar WhatsApp');
+                    if (!resultWhatsApp.success) {
+                        throw new Error(resultWhatsApp.error || 'Error al enviar WhatsApp');
+                    }
+                } else {
+                    // Mensaje inicial (primer envío) - usar templates
+                    if (item.ciudad && item.ciudad.toUpperCase() === "BOGOTA") {
+                        // Template para Bogotá (presencial)
+                        templateSid = 'HX4554efaf53c1bd614d49c951e487d394';
+                        variables = {
+                            "1": item._id
+                        };
+                    } else {
+                        // Template para otras ciudades (virtual con cita)
+                        templateSid = 'HXeb45e56eb2e8dc4eaa35433282e12709';
+
+                        let fechaFormateada = "fecha pendiente";
+                        let horaFormateada = "hora pendiente";
+
+                        if (item.fechaAtencion) {
+                            const fecha = new Date(item.fechaAtencion);
+                            const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+                            const diaSemana = diasSemana[fecha.getDay()];
+                            const dia = fecha.getDate();
+                            const mes = meses[fecha.getMonth()];
+
+                            fechaFormateada = `${diaSemana} ${dia} de ${mes}`;
+
+                            const horas = fecha.getHours().toString().padStart(2, '0');
+                            const minutos = fecha.getMinutes().toString().padStart(2, '0');
+                            horaFormateada = `${horas}:${minutos}`;
+                        }
+
+                        variables = {
+                            "1": nombreCompleto,
+                            "2": fechaFormateada,
+                            "3": horaFormateada,
+                            "4": item._id
+                        };
+                    }
+
+                    // Enviar mensaje usando template de Twilio
+                    const resultWhatsApp = await sendWhatsAppMessage(telefonoCompleto, null, variables, templateSid);
+
+                    if (!resultWhatsApp.success) {
+                        throw new Error(resultWhatsApp.error || 'Error al enviar WhatsApp');
+                    }
                 }
 
                 // Solo actualizar linkEnviado si es primer envío
