@@ -1534,6 +1534,18 @@ const initDB = async () => {
             }
         }
 
+        // Agregar columna linkEnviado a HistoriaClinica para seguimiento de envíos SIIGO
+        try {
+            await pool.query(`
+                ALTER TABLE "HistoriaClinica"
+                ADD COLUMN IF NOT EXISTS "linkEnviado" VARCHAR(50)
+            `);
+            console.log('✅ Columna linkEnviado agregada a HistoriaClinica');
+        } catch (err) {
+            // Columna ya existe o tabla no existe
+            console.log('ℹ️ Columna linkEnviado ya existe o tabla HistoriaClinica no encontrada');
+        }
+
         console.log('✅ Base de datos inicializada correctamente');
     } catch (error) {
         console.error('❌ Error al inicializar la base de datos:', error);
