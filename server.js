@@ -3214,6 +3214,20 @@ app.post('/api/whatsapp/status', async (req, res) => {
                 }
             }
 
+            // Determinar contenido del mensaje
+            let contenidoMensaje = Body;
+            if (!contenidoMensaje) {
+                // Si no hay texto, verificar si hay multimedia
+                if (numMedia > 0) {
+                    contenidoMensaje = '📎 Archivo adjunto';
+                } else {
+                    // No hay ni texto ni multimedia - no guardar mensaje
+                    console.log('⚠️ Mensaje sin contenido ni multimedia, ignorando:', MessageSid);
+                    res.sendStatus(200);
+                    return;
+                }
+            }
+
             // Guardar mensaje saliente desde plataforma externa
             const mensajeResult = await pool.query(`
                 INSERT INTO mensajes_whatsapp (
@@ -3230,7 +3244,7 @@ app.post('/api/whatsapp/status', async (req, res) => {
                 RETURNING *
             `, [
                 conversacionId,
-                Body || '📎 Archivo adjunto',
+                contenidoMensaje,
                 MessageSid,
                 tipoMensaje,
                 mediaUrls.length > 0 ? JSON.stringify(mediaUrls) : null,
@@ -3244,7 +3258,7 @@ app.post('/api/whatsapp/status', async (req, res) => {
                 global.emitWhatsAppEvent('nuevo_mensaje', {
                     conversacion_id: conversacionId,
                     numero_cliente: numeroCliente,
-                    contenido: Body || '📎 Archivo adjunto',
+                    contenido: contenidoMensaje,
                     direccion: 'saliente',
                     fecha_envio: new Date().toISOString(),
                     sid_twilio: MessageSid,
