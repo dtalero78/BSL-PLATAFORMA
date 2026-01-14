@@ -153,6 +153,30 @@
             background: #E7F3E8;
         }
 
+        /* Conversaciones no leídas - estilo WhatsApp */
+        .whatsapp-conversacion-item.unread {
+            background: #E9FBF1;
+        }
+
+        .whatsapp-conversacion-item.unread:hover {
+            background: #D4F5E6;
+        }
+
+        .whatsapp-conversacion-item.unread .whatsapp-conversacion-nombre {
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .whatsapp-conversacion-item.unread .whatsapp-conversacion-preview {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .whatsapp-conversacion-item.unread .whatsapp-conversacion-hora {
+            color: var(--whatsapp-green);
+            font-weight: 600;
+        }
+
         .whatsapp-conversacion-avatar {
             width: 48px;
             height: 48px;
@@ -997,6 +1021,7 @@ Llave Breb: @talero585`
                 : 'Sin mensajes';
 
             const activeClass = conv.id === conversacionActualId ? 'active' : '';
+            const unreadClass = conv.no_leidos > 0 ? 'unread' : '';
 
             // Mostrar nombre + número (si tiene nombre), o solo número
             const displayNombre = conv.nombre_cliente
@@ -1004,7 +1029,7 @@ Llave Breb: @talero585`
                 : conv.numero_cliente;
 
             return `
-                <div class="whatsapp-conversacion-item ${activeClass}" data-conv-id="${conv.id}" onclick="seleccionarConversacion(${conv.id})">
+                <div class="whatsapp-conversacion-item ${activeClass} ${unreadClass}" data-conv-id="${conv.id}" onclick="seleccionarConversacion(${conv.id})">
                     <div class="whatsapp-conversacion-avatar">${inicial}</div>
                     <div class="whatsapp-conversacion-info">
                         <div class="whatsapp-conversacion-header">
