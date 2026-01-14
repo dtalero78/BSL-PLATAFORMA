@@ -10,7 +10,12 @@ const Auth = {
      * Obtener token almacenado
      */
     getToken() {
-        return localStorage.getItem(this.TOKEN_KEY);
+        // Intentar con la nueva key, si no existe buscar la antigua
+        let token = localStorage.getItem(this.TOKEN_KEY);
+        if (!token) {
+            token = localStorage.getItem('token'); // Backward compatibility
+        }
+        return token;
     },
 
     /**

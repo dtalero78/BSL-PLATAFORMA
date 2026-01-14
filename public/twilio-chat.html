@@ -499,11 +499,19 @@
         // Inicializar
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                // Verificar autenticación
-                usuarioActual = await verificarAuth();
+                // Verificar autenticación usando Auth.js
+                usuarioActual = await Auth.verificarSesion();
 
                 if (!usuarioActual) {
                     window.location.href = '/login.html';
+                    return;
+                }
+
+                // Verificar que el usuario sea admin o tenga permisos de WhatsApp
+                if (usuarioActual.rol !== 'admin' && usuarioActual.rol !== 'ADMIN' &&
+                    usuarioActual.rol !== 'agente_chat' && usuarioActual.rol !== 'supervisor_chat') {
+                    alert('No tienes permisos para acceder al chat de WhatsApp');
+                    window.location.href = '/';
                     return;
                 }
 
@@ -533,7 +541,7 @@
 
         async function cargarConversaciones() {
             try {
-                const token = localStorage.getItem('token');
+                const token = Auth.getToken();
                 const res = await fetch('/api/admin/whatsapp/conversaciones', {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -682,7 +690,7 @@
 
         async function cargarMensajes(conversacionId) {
             try {
-                const token = localStorage.getItem('token');
+                const token = Auth.getToken();
                 const res = await fetch(`/api/admin/whatsapp/conversaciones/${conversacionId}/mensajes`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -727,7 +735,7 @@
             if (!contenido || !conversacionActualId) return;
 
             try {
-                const token = localStorage.getItem('token');
+                const token = Auth.getToken();
                 const res = await fetch(`/api/admin/whatsapp/conversaciones/${conversacionActualId}/mensajes`, {
                     method: 'POST',
                     headers: {
@@ -777,8 +785,7 @@
         }
 
         function cerrarSesion() {
-            localStorage.removeItem('token');
-            window.location.href = '/login.html';
+            Auth.logout();
         }
 
         // Limpiar polling al salir
