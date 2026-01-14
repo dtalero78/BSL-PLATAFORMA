@@ -264,6 +264,7 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            position: relative;
         }
 
         .whatsapp-chat-header {
@@ -376,6 +377,83 @@
             transform: scale(1.05);
         }
 
+        .whatsapp-template-btn {
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            background: white;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .whatsapp-template-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .whatsapp-plantillas-menu {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            max-width: 400px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .whatsapp-plantillas-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .whatsapp-plantillas-header h4 {
+            margin: 0;
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+
+        .whatsapp-plantillas-list {
+            padding: 8px;
+        }
+
+        .whatsapp-plantilla-item {
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .whatsapp-plantilla-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .whatsapp-plantilla-item strong {
+            color: var(--whatsapp-green);
+            font-size: 14px;
+        }
+
+        .whatsapp-plantilla-item p {
+            margin: 4px 0 0 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .badge {
             padding: 4px 12px;
             border-radius: 12px;
@@ -474,16 +552,45 @@
 
                 <!-- Input de mensaje -->
                 <div class="whatsapp-chat-input">
+                    <button class="whatsapp-template-btn" onclick="togglePlantillas()" title="Plantillas de mensajes">
+                        <i data-feather="file-text"></i>
+                    </button>
                     <input
                         type="text"
                         class="whatsapp-input"
-                        placeholder="Escribe un mensaje..."
+                        placeholder="Escribe un mensaje o /1, /2, /8, /c..."
                         id="inputMensaje"
                         onkeypress="enviarMensajeEnter(event)"
                     >
                     <button class="whatsapp-send-btn" onclick="enviarMensaje()">
                         <i data-feather="send"></i>
                     </button>
+                </div>
+
+                <!-- Menú de plantillas -->
+                <div class="whatsapp-plantillas-menu" id="plantillasMenu" style="display: none;">
+                    <div class="whatsapp-plantillas-header">
+                        <h4>Plantillas de mensajes</h4>
+                        <button onclick="togglePlantillas()" style="background: none; border: none; cursor: pointer; font-size: 20px;">×</button>
+                    </div>
+                    <div class="whatsapp-plantillas-list">
+                        <div class="whatsapp-plantilla-item" onclick="usarPlantilla('/1')">
+                            <strong>/1</strong> - Saludo
+                            <p>Hola!</p>
+                        </div>
+                        <div class="whatsapp-plantilla-item" onclick="usarPlantilla('/2')">
+                            <strong>/2</strong> - Instrucciones teleconsulta
+                            <p>Agendar tu teleconsulta es muy fácil...</p>
+                        </div>
+                        <div class="whatsapp-plantilla-item" onclick="usarPlantilla('/8')">
+                            <strong>/8</strong> - Link consulta orden
+                            <p>Revisa acá: https://bsl-plataforma.com/consulta-orden.html</p>
+                        </div>
+                        <div class="whatsapp-plantilla-item" onclick="usarPlantilla('/c')">
+                            <strong>/c</strong> - Datos de pago
+                            <p>Bancolombia, Daviplata, Nequi...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -501,6 +608,36 @@
         let audioPermitido = false;
         let unreadMessages = 0;
         let titleBlinkInterval = null;
+
+        // Plantillas de mensajes rápidos
+        const plantillasMensajes = {
+            '/1': 'Hola!',
+            '/2': `Agendar tu teleconsulta es muy fácil:
+
+Diligencia tus datos y escoge la hora que te convenga
+
+Realiza las pruebas de audición y visión necesarias desde tu celular o computador
+
+El médico se comunicará contigo a través de WhatsApp video 💵
+
+Paga después de la consulta usando Bancolombia, Nequi o Daviplata
+
+¡Listo! Descarga inmediatamente tu certificado
+
+*Para comenzar:*
+
+https://bsl-plataforma.com/nuevaorden1.html`,
+            '/8': `Revisa acá:
+
+https://bsl-plataforma.com/consulta-orden.html`,
+            '/c': `Bancolombia Ahorros: 442 9119 2456
+Cédula: 79 981 585
+
+Daviplata: 3014400818
+Nequi: 3008021701
+
+Llave Breb: @talero585`
+        };
 
         // Inicializar
         document.addEventListener('DOMContentLoaded', async () => {
@@ -973,9 +1110,25 @@
         }
 
         function enviarMensajeEnter(event) {
+            const input = document.getElementById('inputMensaje');
+            const texto = input.value.trim();
+
+            // Detectar si se presionó Enter
             if (event.key === 'Enter') {
                 event.preventDefault();
+
+                // Si el texto es solo un comando, expandirlo primero
+                if (plantillasMensajes[texto]) {
+                    input.value = plantillasMensajes[texto];
+                    return; // No enviar, solo expandir
+                }
+
                 enviarMensaje();
+            }
+            // Detectar si se presionó Tab o Space después de un comando
+            else if ((event.key === 'Tab' || event.key === ' ') && plantillasMensajes[texto]) {
+                event.preventDefault();
+                input.value = plantillasMensajes[texto];
             }
         }
 
@@ -995,6 +1148,25 @@
         function truncarTexto(texto, maxLen) {
             if (!texto) return '';
             return texto.length > maxLen ? texto.substring(0, maxLen) + '...' : texto;
+        }
+
+        // Toggle menú de plantillas
+        function togglePlantillas() {
+            const menu = document.getElementById('plantillasMenu');
+            if (menu.style.display === 'none') {
+                menu.style.display = 'block';
+                feather.replace();
+            } else {
+                menu.style.display = 'none';
+            }
+        }
+
+        // Usar una plantilla
+        function usarPlantilla(comando) {
+            const input = document.getElementById('inputMensaje');
+            input.value = plantillasMensajes[comando];
+            togglePlantillas(); // Cerrar menú
+            input.focus(); // Enfocar input
         }
 
         function cerrarSesion() {
