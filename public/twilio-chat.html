@@ -867,10 +867,57 @@
                     const claseDir = esEntrante ? 'entrante' : 'saliente';
                     const hora = formatearHora(msg.fecha_envio);
 
+                    // Renderizar contenido según tipo
+                    let contenidoHTML = '';
+
+                    if (msg.media_url) {
+                        try {
+                            const mediaUrls = JSON.parse(msg.media_url);
+                            const mediaTypes = msg.media_type ? JSON.parse(msg.media_type) : [];
+
+                            mediaUrls.forEach((url, index) => {
+                                const type = mediaTypes[index] || 'unknown';
+
+                                if (type.startsWith('image/')) {
+                                    // Imagen
+                                    contenidoHTML += `<img src="${url}" alt="Imagen" style="max-width: 250px; border-radius: 8px; cursor: pointer;" onclick="window.open('${url}', '_blank')">`;
+                                } else if (type.startsWith('video/')) {
+                                    // Video
+                                    contenidoHTML += `<video controls style="max-width: 250px; border-radius: 8px;"><source src="${url}" type="${type}"></video>`;
+                                } else if (type.startsWith('audio/')) {
+                                    // Audio
+                                    contenidoHTML += `<audio controls style="width: 250px;"><source src="${url}" type="${type}"></audio>`;
+                                } else if (type === 'application/pdf') {
+                                    // PDF
+                                    contenidoHTML += `<a href="${url}" target="_blank" style="display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none;">
+                                        <i data-feather="file-text"></i>
+                                        <span>📄 Documento PDF</span>
+                                    </a>`;
+                                } else {
+                                    // Otro archivo
+                                    contenidoHTML += `<a href="${url}" target="_blank" style="display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none;">
+                                        <i data-feather="paperclip"></i>
+                                        <span>📎 Archivo adjunto</span>
+                                    </a>`;
+                                }
+                            });
+
+                            // Agregar texto si existe
+                            if (msg.contenido && msg.contenido !== '📎 Archivo adjunto') {
+                                contenidoHTML += `<p class="whatsapp-mensaje-contenido" style="margin-top: 8px;">${msg.contenido}</p>`;
+                            }
+                        } catch (e) {
+                            contenidoHTML = `<p class="whatsapp-mensaje-contenido">${msg.contenido}</p>`;
+                        }
+                    } else {
+                        // Solo texto
+                        contenidoHTML = `<p class="whatsapp-mensaje-contenido">${msg.contenido}</p>`;
+                    }
+
                     return `
                         <div class="whatsapp-mensaje ${claseDir}">
                             <div class="whatsapp-mensaje-bubble">
-                                <p class="whatsapp-mensaje-contenido">${msg.contenido}</p>
+                                ${contenidoHTML}
                                 <div class="whatsapp-mensaje-tiempo">
                                     ${hora}
                                     ${!esEntrante ? '<span class="whatsapp-mensaje-check">✓✓</span>' : ''}
@@ -879,6 +926,9 @@
                         </div>
                     `;
                 }).join('');
+
+                // Reemplazar iconos de feather
+                feather.replace();
 
                 // Scroll inteligente: solo si estaba cerca del fondo o si no es silencioso
                 if (!silencioso || estabaCasiAbajo) {

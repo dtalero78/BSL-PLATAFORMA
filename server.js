@@ -1412,6 +1412,14 @@ const initDB = async () => {
             )
         `);
 
+        // Agregar columnas para archivos multimedia si no existen
+        try {
+            await pool.query(`ALTER TABLE mensajes_whatsapp ADD COLUMN IF NOT EXISTS media_url TEXT`);
+            await pool.query(`ALTER TABLE mensajes_whatsapp ADD COLUMN IF NOT EXISTS media_type TEXT`);
+        } catch (err) {
+            // Columnas ya existen
+        }
+
         // Índices para mensajes_whatsapp
         try {
             await pool.query(`CREATE INDEX IF NOT EXISTS idx_msg_conversacion ON mensajes_whatsapp(conversacion_id)`);
@@ -2829,7 +2837,9 @@ app.get('/api/admin/whatsapp/conversaciones/:id/mensajes', authMiddleware, requi
                 direccion,
                 timestamp as fecha_envio,
                 sid_twilio as twilio_sid,
-                tipo_mensaje as tipo_contenido
+                tipo_mensaje as tipo_contenido,
+                media_url,
+                media_type
             FROM mensajes_whatsapp
             WHERE conversacion_id = $1
             ORDER BY timestamp ASC
@@ -2920,16 +2930,33 @@ app.post('/api/admin/whatsapp/conversaciones/:id/mensajes', authMiddleware, requ
 // POST - Webhook para recibir mensajes entrantes de Twilio WhatsApp
 app.post('/api/whatsapp/webhook', async (req, res) => {
     try {
-        const { From, Body, MessageSid, ProfileName } = req.body;
+        const { From, Body, MessageSid, ProfileName, NumMedia } = req.body;
 
         // Extraer número sin prefijo whatsapp:
         const numeroCliente = From.replace('whatsapp:', '');
+
+        // Capturar archivos multimedia si existen
+        const numMedia = parseInt(NumMedia) || 0;
+        const mediaUrls = [];
+        const mediaTypes = [];
+
+        for (let i = 0; i < numMedia; i++) {
+            const mediaUrl = req.body[`MediaUrl${i}`];
+            const mediaType = req.body[`MediaContentType${i}`];
+            if (mediaUrl) {
+                mediaUrls.push(mediaUrl);
+                mediaTypes.push(mediaType || 'unknown');
+            }
+        }
 
         console.log('📩 Mensaje WhatsApp entrante:', {
             from: numeroCliente,
             body: Body,
             sid: MessageSid,
-            name: ProfileName
+            name: ProfileName,
+            numMedia,
+            mediaUrls,
+            mediaTypes
         });
 
         // Buscar o crear conversación
@@ -2966,6 +2993,23 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
             `, [conversacionId]);
         }
 
+        // Determinar tipo de mensaje
+        let tipoMensaje = 'text';
+        if (numMedia > 0) {
+            const mainMediaType = mediaTypes[0];
+            if (mainMediaType.startsWith('image/')) {
+                tipoMensaje = 'image';
+            } else if (mainMediaType.startsWith('video/')) {
+                tipoMensaje = 'video';
+            } else if (mainMediaType.startsWith('audio/')) {
+                tipoMensaje = 'audio';
+            } else if (mainMediaType === 'application/pdf') {
+                tipoMensaje = 'document';
+            } else {
+                tipoMensaje = 'media';
+            }
+        }
+
         // Guardar mensaje entrante
         await pool.query(`
             INSERT INTO mensajes_whatsapp (
@@ -2974,10 +3018,19 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
                 direccion,
                 sid_twilio,
                 tipo_mensaje,
+                media_url,
+                media_type,
                 timestamp
             )
-            VALUES ($1, $2, 'entrante', $3, 'text', NOW())
-        `, [conversacionId, Body, MessageSid]);
+            VALUES ($1, $2, 'entrante', $3, $4, $5, $6, NOW())
+        `, [
+            conversacionId,
+            Body || '📎 Archivo adjunto',
+            MessageSid,
+            tipoMensaje,
+            mediaUrls.length > 0 ? JSON.stringify(mediaUrls) : null,
+            mediaTypes.length > 0 ? JSON.stringify(mediaTypes) : null
+        ]);
 
         console.log('✅ Mensaje guardado en conversación:', conversacionId);
 
@@ -2986,11 +3039,14 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
             global.emitWhatsAppEvent('nuevo_mensaje', {
                 conversacion_id: conversacionId,
                 numero_cliente: numeroCliente,
-                contenido: Body,
+                contenido: Body || '📎 Archivo adjunto',
                 direccion: 'entrante',
                 fecha_envio: new Date().toISOString(),
                 sid_twilio: MessageSid,
-                nombre_cliente: ProfileName || 'Usuario WhatsApp'
+                nombre_cliente: ProfileName || 'Usuario WhatsApp',
+                tipo_mensaje: tipoMensaje,
+                media_url: mediaUrls.length > 0 ? JSON.stringify(mediaUrls) : null,
+                media_type: mediaTypes.length > 0 ? JSON.stringify(mediaTypes) : null
             });
         }
 
