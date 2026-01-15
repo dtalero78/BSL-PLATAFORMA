@@ -4739,6 +4739,65 @@ app.post('/api/ordenes', async (req, res) => {
             // No bloqueamos la creación de la orden si falla la gestión de WhatsApp
         }
 
+        // Enviar mensaje de confirmación por WhatsApp con Twilio (solo si tiene fecha y hora)
+        if (fechaAtencion && horaAtencion && celular) {
+            try {
+                console.log('📱 Enviando mensaje de confirmación por WhatsApp...');
+
+                const nombreCompleto = `${primerNombre} ${primerApellido}`;
+
+                // Formatear fecha y hora para Colombia
+                const fechaObj = construirFechaAtencionColombia(fechaAtencion, horaAtencion);
+                if (fechaObj) {
+                    // Convertir a hora de Colombia (UTC-5)
+                    const offsetColombia = -5 * 60;
+                    const offsetLocal = fechaObj.getTimezoneOffset();
+                    const fechaColombia = new Date(fechaObj.getTime() + (offsetLocal + offsetColombia) * 60000);
+
+                    const fechaFormateada = fechaColombia.toLocaleDateString('es-CO', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                    const horaFormateada = fechaColombia.toLocaleTimeString('es-CO', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                    const fechaHoraCompleta = `${fechaFormateada} a las ${horaFormateada}`;
+
+                    // Normalizar teléfono
+                    const telefonoCompleto = normalizarTelefonoConPrefijo57(celular);
+
+                    if (telefonoCompleto) {
+                        // Template: saludo_particulares (HX43d06a0a97e11919c1e4b19d3e4b6957)
+                        // Variables: {{1}} = nombre, {{2}} = fecha y hora
+                        const templateSid = 'HX43d06a0a97e11919c1e4b19d3e4b6957';
+                        const variables = {
+                            "1": nombreCompleto,
+                            "2": fechaHoraCompleta
+                        };
+
+                        const resultWhatsApp = await sendWhatsAppMessage(
+                            telefonoCompleto,
+                            null, // No hay mensaje de texto libre
+                            variables,
+                            templateSid
+                        );
+
+                        if (resultWhatsApp.success) {
+                            console.log(`✅ Mensaje de confirmación enviado a ${telefonoCompleto}`);
+                        } else {
+                            console.error(`⚠️ No se pudo enviar mensaje de confirmación: ${resultWhatsApp.error}`);
+                        }
+                    }
+                }
+            } catch (confirmacionError) {
+                console.error('⚠️ Error al enviar mensaje de confirmación:', confirmacionError.message);
+                // No bloqueamos la creación de la orden si falla el envío del mensaje
+            }
+        }
+
         // Disparar webhook a Make.com (async, no bloquea) para enviar WhatsApp al paciente
         dispararWebhookMake({
             _id: wixId,
