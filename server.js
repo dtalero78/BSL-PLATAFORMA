@@ -28,6 +28,10 @@ const openai = new OpenAI({
 const estadoPagos = new Map();
 const ESTADO_ESPERANDO_DOCUMENTO = 'esperando_documento';
 
+// Map para gestión de estado de usuarios nuevos
+const estadoUsuariosNuevos = new Map();
+const ESTADO_ESPERANDO_OPCION_MENU = 'esperando_opcion_menu';
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -981,6 +985,123 @@ async function notificarCoordinadorNuevaOrden(orden) {
     } catch (error) {
         console.error('❌ Error notificando al coordinador:', error.message);
         // No bloquear si falla la notificación
+    }
+}
+
+/**
+ * Verifica si un número de celular es nuevo (no existe en ninguna tabla)
+ * @param {string} numeroCelular - Número de celular a verificar
+ * @returns {Promise<boolean>} - true si es nuevo, false si ya existe
+ */
+async function esUsuarioNuevo(numeroCelular) {
+    try {
+        // Normalizar número (puede venir con o sin +57)
+        let numeroLimpio = numeroCelular.replace(/[^0-9]/g, '');
+
+        // Si no tiene código de país, agregarlo
+        if (!numeroLimpio.startsWith('57') && numeroLimpio.length === 10) {
+            numeroLimpio = '57' + numeroLimpio;
+        }
+
+        // Buscar en HistoriaClinica
+        const enHistoria = await pool.query(`
+            SELECT "numeroId" FROM "HistoriaClinica"
+            WHERE celular LIKE '%${numeroLimpio.slice(-10)}%'
+            LIMIT 1
+        `);
+
+        if (enHistoria.rows.length > 0) {
+            console.log('📋 Usuario encontrado en HistoriaClinica');
+            return false;
+        }
+
+        // Buscar en formularios
+        const enFormularios = await pool.query(`
+            SELECT id FROM formularios
+            WHERE celular LIKE '%${numeroLimpio.slice(-10)}%'
+            LIMIT 1
+        `);
+
+        if (enFormularios.rows.length > 0) {
+            console.log('📋 Usuario encontrado en formularios');
+            return false;
+        }
+
+        // Buscar en conversaciones_whatsapp con más de 2 mensajes (para no contar solo el mensaje inicial)
+        const enWhatsApp = await pool.query(`
+            SELECT cw.id
+            FROM conversaciones_whatsapp cw
+            WHERE cw.celular = $1
+            AND (
+                SELECT COUNT(*)
+                FROM mensajes_whatsapp mw
+                WHERE mw.conversacion_id = cw.id
+            ) > 2
+            LIMIT 1
+        `, [numeroCelular]);
+
+        if (enWhatsApp.rows.length > 0) {
+            console.log('📋 Usuario con historial en WhatsApp');
+            return false;
+        }
+
+        console.log('🆕 Usuario nuevo detectado:', numeroCelular);
+        return true;
+
+    } catch (error) {
+        console.error('❌ Error verificando si es usuario nuevo:', error);
+        return false; // En caso de error, asumir que no es nuevo para evitar spam
+    }
+}
+
+/**
+ * Procesa la respuesta del menú de opciones para usuarios nuevos
+ * @param {string} from - Número del remitente con prefijo whatsapp:
+ * @param {string} opcion - Opción seleccionada por el usuario
+ */
+async function procesarMenuUsuarioNuevo(from, opcion) {
+    try {
+        const numeroCliente = from.replace('whatsapp:', '');
+        const opcionNormalizada = opcion.trim();
+
+        if (opcionNormalizada === '1') {
+            const mensaje = `Agendar tu teleconsulta es muy fácil:
+
+✅ Diligencia tus datos y escoge la hora que te convenga
+
+✅ Realiza las pruebas de audición y visión necesarias desde tu celular o computador
+
+✅ El médico se comunicará contigo a través de WhatsApp video
+
+💵 Paga después de la consulta usando Bancolombia, Nequi o Daviplata
+
+✅ ¡Listo! Descarga inmediatamente tu certificado
+
+*Para comenzar:*
+
+💰 52.000: Paquete básico Osteomuscular, audiometría, visio/optometría
+
+🔗 https://bsl-plataforma.com/nuevaorden1.html`;
+
+            await sendWhatsAppFreeText(numeroCliente, mensaje);
+            console.log('✅ Mensaje de agendamiento enviado a usuario nuevo:', numeroCliente);
+
+            // Limpiar estado
+            estadoUsuariosNuevos.delete(from);
+
+        } else if (opcionNormalizada === '2') {
+            // Opción 2: No hacer nada, solo limpiar el estado
+            console.log('📝 Usuario nuevo seleccionó opción 2 (Otro) - no se envía respuesta');
+            estadoUsuariosNuevos.delete(from);
+        } else {
+            // Opción inválida, pedir de nuevo
+            await sendWhatsAppFreeText(numeroCliente,
+                'Por favor, responde con *1* o *2* según la opción que desees.');
+        }
+
+    } catch (error) {
+        console.error('❌ Error procesando menú de usuario nuevo:', error);
+        estadoUsuariosNuevos.delete(from);
     }
 }
 
@@ -3681,6 +3802,33 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
                 SET fecha_ultima_actividad = NOW()
                 WHERE id = $1
             `, [conversacionId]);
+        }
+
+        // 🆕 DETECTAR Y PROCESAR USUARIOS NUEVOS
+        let esNuevo = false;
+        if (conversacion.rows.length === 0) {
+            // Es la primera vez que escribe
+            esNuevo = await esUsuarioNuevo(numeroCliente);
+
+            if (esNuevo) {
+                console.log('🆕 Primer mensaje de usuario nuevo - enviando menú de opciones');
+
+                const mensajeBienvenida = `Hola:
+
+Marca:
+1. Deseas agendar una consulta médica ocupacional
+2. Otro`;
+
+                await sendWhatsAppFreeText(numeroCliente, mensajeBienvenida);
+                estadoUsuariosNuevos.set(From, ESTADO_ESPERANDO_OPCION_MENU);
+            }
+        }
+
+        // 💬 PROCESAR RESPUESTA DE MENÚ SI ESTÁ ESPERANDO
+        const estadoMenu = estadoUsuariosNuevos.get(From);
+        if (estadoMenu === ESTADO_ESPERANDO_OPCION_MENU && Body && numMedia === 0) {
+            console.log('📝 Usuario respondió al menú de opciones:', Body);
+            await procesarMenuUsuarioNuevo(From, Body);
         }
 
         // 📸 PROCESAR FLUJO DE VALIDACIÓN DE PAGOS SI HAY IMÁGENES
