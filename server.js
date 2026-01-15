@@ -3349,14 +3349,17 @@ app.post('/api/whatsapp/status', async (req, res) => {
     try {
         const { MessageSid, MessageStatus, To, From, Body, NumMedia } = req.body;
 
+        console.log('🔔 ===== STATUS CALLBACK RECIBIDO =====');
         console.log('📊 Status callback de Twilio:', {
             sid: MessageSid,
             status: MessageStatus,
             to: To,
             from: From,
             body: Body,
-            numMedia: NumMedia
+            numMedia: NumMedia,
+            timestamp: new Date().toISOString()
         });
+        console.log('🔔 =====================================');
 
         // Solo procesar cuando el mensaje fue enviado exitosamente
         if (MessageStatus === 'sent' || MessageStatus === 'delivered') {
