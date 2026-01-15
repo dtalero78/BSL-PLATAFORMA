@@ -4969,9 +4969,9 @@ app.post('/api/ordenes', async (req, res) => {
                     const telefonoCompleto = normalizarTelefonoConPrefijo57(celular);
 
                     if (telefonoCompleto) {
-                        // Template: saludo_particulares (HX43d06a0a97e11919c1e4b19d3e4b6957)
+                        // Template: saludo_particulares (HX8c84dc81049e7b055bd30125e9786051)
                         // Variables: {{1}} = nombre, {{2}} = fecha y hora
-                        const templateSid = 'HX43d06a0a97e11919c1e4b19d3e4b6957';
+                        const templateSid = 'HX8c84dc81049e7b055bd30125e9786051';
                         const variables = {
                             "1": nombreCompleto,
                             "2": fechaHoraCompleta
