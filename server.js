@@ -398,6 +398,12 @@ async function sendWhatsAppMessage(toNumber, messageBody, variables = {}, templa
         const message = await twilioClient.messages.create(messageParams);
 
         console.log(`📱 WhatsApp template enviado a ${toNumber} (Template: ${contentSid}, SID: ${message.sid})`);
+
+        // Guardar mensaje en base de datos automáticamente
+        const numeroLimpio = toNumber.replace(/[^\d]/g, '');
+        const contenidoTemplate = messageBody || `Template: ${contentSid}`;
+        await guardarMensajeSaliente(numeroLimpio, contenidoTemplate, message.sid, 'template');
+
         return { success: true, sid: message.sid, status: message.status };
     } catch (err) {
         console.error(`❌ Error enviando WhatsApp template a ${toNumber}:`, err.message);
@@ -436,6 +442,11 @@ async function sendWhatsAppFreeText(toNumber, messageBody) {
         const message = await twilioClient.messages.create(messageParams);
 
         console.log(`📱 WhatsApp texto libre enviado a ${toNumber} (Twilio SID: ${message.sid})`);
+
+        // Guardar mensaje en base de datos automáticamente
+        const numeroLimpio = toNumber.replace(/[^\d]/g, '');
+        await guardarMensajeSaliente(numeroLimpio, messageBody, message.sid, 'text');
+
         return { success: true, sid: message.sid, status: message.status };
     } catch (err) {
         console.error(`❌ Error enviando WhatsApp texto libre a ${toNumber}:`, err.message);
@@ -508,6 +519,93 @@ async function sendWhatsAppMedia(toNumber, mediaBuffer, mediaType, fileName, cap
     } catch (err) {
         console.error(`❌ Error enviando WhatsApp media a ${toNumber}:`, err.message);
         return { success: false, error: err.message };
+    }
+}
+
+// Helper: Guardar mensaje saliente en base de datos y emitir evento WebSocket
+async function guardarMensajeSaliente(numeroCliente, contenido, twilioSid, tipoMensaje = 'text', mediaUrl = null, mediaType = null, nombrePaciente = null) {
+    try {
+        // Normalizar número (agregar + si no tiene)
+        const numeroNormalizado = numeroCliente.startsWith('+') ? numeroCliente : `+${numeroCliente}`;
+
+        // Buscar o crear conversación
+        let conversacion = await pool.query(`
+            SELECT id FROM conversaciones_whatsapp WHERE celular = $1
+        `, [numeroNormalizado]);
+
+        let conversacionId;
+
+        if (conversacion.rows.length === 0) {
+            // Crear nueva conversación
+            const nombre = nombrePaciente || 'Cliente WhatsApp';
+            const nuevaConv = await pool.query(`
+                INSERT INTO conversaciones_whatsapp (
+                    celular,
+                    nombre_paciente,
+                    estado_actual,
+                    fecha_inicio,
+                    fecha_ultima_actividad,
+                    bot_activo
+                )
+                VALUES ($1, $2, 'activa', NOW(), NOW(), false)
+                RETURNING id
+            `, [numeroNormalizado, nombre]);
+
+            conversacionId = nuevaConv.rows[0].id;
+            console.log(`📝 Conversación creada: ${conversacionId} para ${numeroNormalizado}`);
+        } else {
+            conversacionId = conversacion.rows[0].id;
+
+            // Actualizar última actividad
+            await pool.query(`
+                UPDATE conversaciones_whatsapp
+                SET fecha_ultima_actividad = NOW()
+                WHERE id = $1
+            `, [conversacionId]);
+        }
+
+        // Guardar mensaje saliente
+        await pool.query(`
+            INSERT INTO mensajes_whatsapp (
+                conversacion_id,
+                contenido,
+                direccion,
+                sid_twilio,
+                tipo_mensaje,
+                media_url,
+                media_type,
+                timestamp
+            )
+            VALUES ($1, $2, 'saliente', $3, $4, $5, $6, NOW())
+            ON CONFLICT (sid_twilio) DO NOTHING
+        `, [
+            conversacionId,
+            contenido,
+            twilioSid,
+            tipoMensaje,
+            mediaUrl ? JSON.stringify([mediaUrl]) : null,
+            mediaType ? JSON.stringify([mediaType]) : null
+        ]);
+
+        console.log(`✅ Mensaje guardado en conversación ${conversacionId} (SID: ${twilioSid})`);
+
+        // Emitir evento WebSocket para actualización en tiempo real
+        if (global.emitWhatsAppEvent) {
+            global.emitWhatsAppEvent('nuevo_mensaje', {
+                conversacion_id: conversacionId,
+                numero_cliente: numeroNormalizado,
+                contenido: contenido,
+                direccion: 'saliente',
+                fecha_envio: new Date().toISOString(),
+                sid_twilio: twilioSid,
+                tipo_mensaje: tipoMensaje
+            });
+        }
+
+        return { success: true, conversacionId };
+    } catch (error) {
+        console.error('❌ Error guardando mensaje saliente:', error);
+        return { success: false, error: error.message };
     }
 }
 
