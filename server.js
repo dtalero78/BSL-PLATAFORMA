@@ -831,43 +831,11 @@ async function procesarFlujoPagos(message, from) {
                 estadoPagos.set(from, ESTADO_ESPERANDO_DOCUMENTO);
                 return 'Comprobante validado, esperando documento';
             }
-            else if (clasificacion === 'listado_examenes') {
-                // Enviar información de servicios
-                const mensajeExamenes = `📋 *¡Perfecto! Veo que te pidieron exámenes ocupacionales.*
-
-🩺 *Nuestras opciones:*
-
-*Virtual – $52.000 COP*
-• 100% online desde cualquier lugar
-• Disponible 7am-7pm todos los días
-• Duración: 35 minutos
-• Incluye: Médico, audiometría, optometría
-
-*Presencial – $69.000 COP*
-• Calle 134 No. 7-83, Bogotá
-• Lunes a Viernes 7:30am-4:30pm
-• Sábados 8am-11:30am
-
-📲 *Agenda aquí:* https://bsl-plataforma.com/nuevaorden1.html
-
-¿Tienes alguna pregunta sobre los exámenes?`;
-
-                await sendWhatsAppFreeText(from.replace('whatsapp:', ''), mensajeExamenes);
-                return 'Información de servicios enviada';
-            }
             else {
-                // otra_imagen o error -> transferir a asesor
-                await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
-                    'Déjame transferirte con un asesor que te ayudará mejor. Un momento por favor...');
-
-                // Marcar bot como detenido
-                await pool.query(`
-                    UPDATE conversaciones_whatsapp
-                    SET bot_activo = false
-                    WHERE celular = $1
-                `, [from.replace('whatsapp:', '')]);
-
-                return 'Transferido a asesor';
+                // listado_examenes, otra_imagen o error -> NO responder nada
+                // Dejar que el usuario continúe normalmente o el asesor vea la imagen
+                console.log(`📸 Imagen clasificada como "${clasificacion}" - no se procesa automáticamente`);
+                return 'Imagen no procesada';
             }
         }
 
