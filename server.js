@@ -3058,7 +3058,14 @@ app.get('/api/admin/whatsapp/conversaciones', authMiddleware, requireAdmin, asyn
                     LIMIT 1
                 ) as ultimo_mensaje
             FROM conversaciones_whatsapp c
-            ORDER BY c.fecha_ultima_actividad DESC
+            ORDER BY
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM mensajes_whatsapp m
+                    WHERE m.conversacion_id = c.id
+                    AND m.direccion = 'entrante'
+                    AND m.leido_por_agente = false
+                ) THEN 0 ELSE 1 END,
+                c.fecha_ultima_actividad DESC
             LIMIT 100
         `;
 
