@@ -2209,8 +2209,14 @@
                 <div class="page-header-left">
                     <h1>Órdenes</h1>
                 </div>
-                <div class="stats-badge" id="statsCounter">
-                    <strong>0</strong> registros
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <button class="btn btn-primary" onclick="abrirModalWhatsApp()" style="background: #25D366; border: none; display: flex; align-items: center; gap: 6px;">
+                        <i data-feather="message-circle" style="width: 16px; height: 16px;"></i>
+                        Enviar WhatsApp
+                    </button>
+                    <div class="stats-badge" id="statsCounter">
+                        <strong>0</strong> registros
+                    </div>
                 </div>
             </div>
 
@@ -3006,6 +3012,65 @@
 
                 <!-- Resultado -->
                 <div id="facturaResultado" style="display: none; margin-top: 20px; padding: 16px; border-radius: 8px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Enviar WhatsApp Manual -->
+    <div id="modalWhatsApp" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">📱 Enviar WhatsApp Manual</h2>
+                </div>
+                <button type="button" class="btn-icon" onclick="cerrarModalWhatsApp()">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+
+            <div class="modal-body" style="padding: 24px;">
+                <form id="formWhatsApp" onsubmit="enviarWhatsAppManual(event)">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">
+                            Número de Celular
+                        </label>
+                        <input
+                            type="text"
+                            id="whatsappCelular"
+                            placeholder="Ej: 3001234567 o +573001234567"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;"
+                            required
+                        >
+                        <small style="color: #666; font-size: 12px; display: block; margin-top: 4px;">
+                            Puedes ingresar el número con o sin el prefijo +57
+                        </small>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">
+                            Mensaje
+                        </label>
+                        <textarea
+                            id="whatsappMensaje"
+                            rows="6"
+                            placeholder="¡Hola! 😊&#10;&#10;Tenemos una llamada perdida de tu número. ¿En qué te podemos ayudar?"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical; font-family: inherit;"
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div id="whatsappRespuesta" style="display: none; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px;"></div>
+
+                    <div style="display: flex; gap: 12px;">
+                        <button type="button" class="btn btn-secondary" onclick="cerrarModalWhatsApp()" style="flex: 1;">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="btnEnviarWhatsApp" style="flex: 2; background: #25D366; border: none;">
+                            <i data-feather="send" style="width: 16px; height: 16px;"></i>
+                            Enviar Mensaje
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -5099,6 +5164,121 @@
         }
 
         // ==================== FIN FACTURACIÓN ====================
+
+        // ==================== ENVÍO MANUAL WHATSAPP ====================
+
+        function abrirModalWhatsApp() {
+            const modal = document.getElementById('modalWhatsApp');
+            modal.style.display = 'flex';
+
+            // Limpiar formulario
+            document.getElementById('whatsappCelular').value = '';
+            document.getElementById('whatsappMensaje').value = '';
+            document.getElementById('whatsappRespuesta').style.display = 'none';
+
+            // Reemplazar iconos Feather
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+        }
+
+        function cerrarModalWhatsApp() {
+            const modal = document.getElementById('modalWhatsApp');
+            modal.style.display = 'none';
+        }
+
+        async function enviarWhatsAppManual(event) {
+            event.preventDefault();
+
+            const celular = document.getElementById('whatsappCelular').value.trim();
+            const mensaje = document.getElementById('whatsappMensaje').value.trim();
+            const btnEnviar = document.getElementById('btnEnviarWhatsApp');
+            const respuestaDiv = document.getElementById('whatsappRespuesta');
+
+            if (!celular || !mensaje) {
+                mostrarRespuestaWhatsApp('Por favor completa todos los campos', 'error');
+                return;
+            }
+
+            // Deshabilitar botón
+            btnEnviar.disabled = true;
+            btnEnviar.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite;"></span> Enviando...';
+
+            try {
+                const response = await fetch('/api/whatsapp/enviar-manual', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ celular, mensaje })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    mostrarRespuestaWhatsApp(`✅ Mensaje enviado exitosamente a ${data.data.telefono}`, 'success');
+
+                    // Limpiar formulario después de 2 segundos
+                    setTimeout(() => {
+                        document.getElementById('whatsappCelular').value = '';
+                        document.getElementById('whatsappMensaje').value = '';
+                    }, 2000);
+                } else {
+                    mostrarRespuestaWhatsApp(`❌ Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarRespuestaWhatsApp('❌ Error al enviar el mensaje. Intenta nuevamente.', 'error');
+            } finally {
+                // Rehabilitar botón
+                btnEnviar.disabled = false;
+                btnEnviar.innerHTML = '<i data-feather="send" style="width: 16px; height: 16px;"></i> Enviar Mensaje';
+
+                // Reemplazar iconos Feather
+                if (typeof feather !== 'undefined') {
+                    feather.replace();
+                }
+            }
+        }
+
+        function mostrarRespuestaWhatsApp(mensaje, tipo) {
+            const respuestaDiv = document.getElementById('whatsappRespuesta');
+            respuestaDiv.style.display = 'block';
+            respuestaDiv.textContent = mensaje;
+
+            if (tipo === 'success') {
+                respuestaDiv.style.backgroundColor = '#d1fae5';
+                respuestaDiv.style.color = '#065f46';
+                respuestaDiv.style.border = '1px solid #10b981';
+            } else {
+                respuestaDiv.style.backgroundColor = '#fee2e2';
+                respuestaDiv.style.color = '#991b1b';
+                respuestaDiv.style.border = '1px solid #ef4444';
+            }
+        }
+
+        // Cerrar modal al hacer clic fuera de él
+        window.addEventListener('click', (e) => {
+            const modalWhatsApp = document.getElementById('modalWhatsApp');
+            if (e.target === modalWhatsApp) {
+                cerrarModalWhatsApp();
+            }
+        });
+
+        // Soporte para tecla Enter en el campo de celular
+        document.addEventListener('DOMContentLoaded', () => {
+            const celularInput = document.getElementById('whatsappCelular');
+            if (celularInput) {
+                celularInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        document.getElementById('whatsappMensaje').focus();
+                    }
+                });
+            }
+        });
+
+        // ==================== FIN ENVÍO MANUAL WHATSAPP ====================
 
     </script>
     <!-- Sistema de autenticación -->

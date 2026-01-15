@@ -13061,6 +13061,98 @@ https://www.bsl.com.co/autoagendamiento/${item.numeroId}
     }
 });
 
+// POST - Enviar mensaje manual de WhatsApp (para uso desde ordenes.html)
+app.post('/api/whatsapp/enviar-manual', async (req, res) => {
+    try {
+        const { celular, mensaje } = req.body;
+
+        if (!celular || !mensaje) {
+            return res.status(400).json({
+                success: false,
+                message: 'Se requiere celular y mensaje'
+            });
+        }
+
+        console.log('📱 Enviando mensaje manual de WhatsApp...');
+        console.log('   Celular:', celular);
+        console.log('   Mensaje:', mensaje.substring(0, 50) + '...');
+
+        // Normalizar teléfono con prefijo 57
+        const telefonoNormalizado = normalizarTelefonoConPrefijo57(celular);
+
+        if (!telefonoNormalizado) {
+            return res.status(400).json({
+                success: false,
+                message: 'Número de teléfono inválido'
+            });
+        }
+
+        // Enviar mensaje de texto libre (sin template)
+        const resultado = await sendWhatsAppMessage(
+            telefonoNormalizado,
+            mensaje,
+            null, // Sin variables
+            null  // Sin template
+        );
+
+        if (!resultado.success) {
+            throw new Error(resultado.error || 'Error al enviar mensaje');
+        }
+
+        // Guardar en conversaciones_whatsapp
+        try {
+            const conversacionExistente = await pool.query(
+                'SELECT id FROM conversaciones_whatsapp WHERE celular = $1',
+                [telefonoNormalizado]
+            );
+
+            if (conversacionExistente.rows.length > 0) {
+                // Actualizar conversación existente
+                await pool.query(`
+                    UPDATE conversaciones_whatsapp
+                    SET "stopBot" = true,
+                        fecha_ultima_actividad = NOW()
+                    WHERE celular = $1
+                `, [telefonoNormalizado]);
+            } else {
+                // Crear nueva conversación
+                await pool.query(`
+                    INSERT INTO conversaciones_whatsapp (
+                        celular,
+                        "stopBot",
+                        origen,
+                        estado,
+                        bot_activo,
+                        fecha_inicio,
+                        fecha_ultima_actividad
+                    ) VALUES ($1, true, 'MANUAL', 'nueva', false, NOW(), NOW())
+                `, [telefonoNormalizado]);
+            }
+        } catch (dbError) {
+            console.error('⚠️ Error al guardar en conversaciones_whatsapp:', dbError.message);
+            // No bloqueamos el envío si falla la BD
+        }
+
+        console.log(`✅ Mensaje manual enviado a ${telefonoNormalizado}`);
+
+        res.json({
+            success: true,
+            message: 'Mensaje enviado exitosamente',
+            data: {
+                telefono: telefonoNormalizado
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error enviando mensaje manual:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al enviar mensaje',
+            error: error.message
+        });
+    }
+});
+
 console.log('✅ Endpoints Envío SIIGO configurados');
 
 // ========== SOCKET.IO CONFIGURACIÓN ==========
