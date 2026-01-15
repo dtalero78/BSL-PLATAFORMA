@@ -432,8 +432,37 @@ async function sendWhatsAppFreeText(toNumber, messageBody) {
     }
 }
 
+// Subir archivo multimedia a Digital Ocean Spaces para WhatsApp
+async function subirMediaWhatsAppASpaces(buffer, fileName, mimeType) {
+    try {
+        // Generar nombre único
+        const timestamp = Date.now();
+        const ext = fileName.split('.').pop();
+        const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const key = `whatsapp-media/${timestamp}_${sanitizedName}`;
+
+        // Subir a Spaces
+        await s3Client.send(new PutObjectCommand({
+            Bucket: SPACES_BUCKET,
+            Key: key,
+            Body: buffer,
+            ContentType: mimeType,
+            ACL: 'public-read',
+            CacheControl: 'max-age=31536000'
+        }));
+
+        const mediaUrl = `https://${SPACES_BUCKET}.${SPACES_REGION}.digitaloceanspaces.com/${key}`;
+        console.log(`📤 Media WhatsApp subido a Spaces: ${key} (${(buffer.length / 1024).toFixed(1)} KB)`);
+
+        return mediaUrl;
+    } catch (error) {
+        console.error('❌ Error subiendo media WhatsApp a Spaces:', error.message);
+        throw error;
+    }
+}
+
 // Enviar WhatsApp con archivo multimedia via Twilio
-async function sendWhatsAppMedia(toNumber, mediaBuffer, mediaType, caption = '') {
+async function sendWhatsAppMedia(toNumber, mediaBuffer, mediaType, fileName, caption = '') {
     try {
         // Formatear número
         let formattedNumber = toNumber;
@@ -446,14 +475,13 @@ async function sendWhatsAppMedia(toNumber, mediaBuffer, mediaType, caption = '')
             formattedNumber = `whatsapp:${formattedNumber}`;
         }
 
-        // Convertir buffer a base64
-        const base64Media = mediaBuffer.toString('base64');
-        const dataUri = `data:${mediaType};base64,${base64Media}`;
+        // Subir archivo a Spaces y obtener URL pública
+        const mediaUrl = await subirMediaWhatsAppASpaces(mediaBuffer, fileName, mediaType);
 
         const messageParams = {
             from: process.env.TWILIO_WHATSAPP_FROM,
             to: formattedNumber,
-            mediaUrl: [dataUri],
+            mediaUrl: [mediaUrl],
             statusCallback: `${process.env.BASE_URL || 'https://bsl-plataforma.com'}/api/whatsapp/status`
         };
 
@@ -465,7 +493,7 @@ async function sendWhatsAppMedia(toNumber, mediaBuffer, mediaType, caption = '')
         const message = await twilioClient.messages.create(messageParams);
 
         console.log(`📱 WhatsApp media enviado a ${toNumber} (Twilio SID: ${message.sid})`);
-        return { success: true, sid: message.sid, status: message.status };
+        return { success: true, sid: message.sid, status: message.status, mediaUrl };
     } catch (err) {
         console.error(`❌ Error enviando WhatsApp media a ${toNumber}:`, err.message);
         return { success: false, error: err.message };
@@ -3115,6 +3143,7 @@ app.post('/api/admin/whatsapp/conversaciones/:id/media', authMiddleware, require
             numeroCliente,
             file.buffer,
             file.mimetype,
+            file.originalname,
             contenido || ''
         );
 
@@ -3136,9 +3165,9 @@ app.post('/api/admin/whatsapp/conversaciones/:id/media', authMiddleware, require
 
         const insertQuery = `
             INSERT INTO mensajes_whatsapp (
-                conversacion_id, contenido, direccion, sid_twilio, tipo_mensaje
+                conversacion_id, contenido, direccion, sid_twilio, tipo_mensaje, media_url, media_type
             )
-            VALUES ($1, $2, 'saliente', $3, $4)
+            VALUES ($1, $2, 'saliente', $3, $4, $5, $6)
             RETURNING *
         `;
 
@@ -3146,7 +3175,9 @@ app.post('/api/admin/whatsapp/conversaciones/:id/media', authMiddleware, require
             id,
             mensajeContenido,
             twilioResult.sid,
-            tipoMensaje
+            tipoMensaje,
+            JSON.stringify([twilioResult.mediaUrl]),
+            JSON.stringify([file.mimetype])
         ]);
 
         // Actualizar fecha de última actividad
