@@ -432,6 +432,46 @@ async function sendWhatsAppFreeText(toNumber, messageBody) {
     }
 }
 
+// Enviar WhatsApp con archivo multimedia via Twilio
+async function sendWhatsAppMedia(toNumber, mediaBuffer, mediaType, caption = '') {
+    try {
+        // Formatear número
+        let formattedNumber = toNumber;
+        if (!formattedNumber.startsWith('whatsapp:')) {
+            if (!formattedNumber.startsWith('+')) {
+                formattedNumber = formattedNumber.startsWith('57')
+                    ? `+${formattedNumber}`
+                    : `+57${formattedNumber}`;
+            }
+            formattedNumber = `whatsapp:${formattedNumber}`;
+        }
+
+        // Convertir buffer a base64
+        const base64Media = mediaBuffer.toString('base64');
+        const dataUri = `data:${mediaType};base64,${base64Media}`;
+
+        const messageParams = {
+            from: process.env.TWILIO_WHATSAPP_FROM,
+            to: formattedNumber,
+            mediaUrl: [dataUri],
+            statusCallback: `${process.env.BASE_URL || 'https://bsl-plataforma.com'}/api/whatsapp/status`
+        };
+
+        // Agregar caption si existe
+        if (caption) {
+            messageParams.body = caption;
+        }
+
+        const message = await twilioClient.messages.create(messageParams);
+
+        console.log(`📱 WhatsApp media enviado a ${toNumber} (Twilio SID: ${message.sid})`);
+        return { success: true, sid: message.sid, status: message.status };
+    } catch (err) {
+        console.error(`❌ Error enviando WhatsApp media a ${toNumber}:`, err.message);
+        return { success: false, error: err.message };
+    }
+}
+
 // Notificar al coordinador de agendamiento sobre nueva orden
 async function notificarCoordinadorNuevaOrden(orden) {
     try {
@@ -3038,6 +3078,105 @@ app.post('/api/admin/whatsapp/conversaciones/:id/mensajes', authMiddleware, requ
     } catch (error) {
         console.error('Error al enviar mensaje WhatsApp:', error);
         res.status(500).json({ success: false, message: 'Error al enviar mensaje' });
+    }
+});
+
+// POST - Enviar archivo multimedia en una conversación
+app.post('/api/admin/whatsapp/conversaciones/:id/media', authMiddleware, requireAdmin, upload.single('file'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { contenido } = req.body; // Caption opcional
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({ success: false, message: 'No se proporcionó ningún archivo' });
+        }
+
+        // Validar tamaño (16MB - límite de Twilio)
+        if (file.size > 16 * 1024 * 1024) {
+            return res.status(400).json({ success: false, message: 'El archivo excede el tamaño máximo de 16MB' });
+        }
+
+        // Obtener número del cliente de la conversación
+        const convResult = await pool.query(`
+            SELECT celular FROM conversaciones_whatsapp WHERE id = $1
+        `, [id]);
+
+        if (convResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+        }
+
+        const numeroCliente = convResult.rows[0].celular;
+
+        console.log(`📤 Enviando archivo ${file.originalname} (${file.mimetype}, ${file.size} bytes) a ${numeroCliente}`);
+
+        // Enviar archivo via Twilio
+        const twilioResult = await sendWhatsAppMedia(
+            numeroCliente,
+            file.buffer,
+            file.mimetype,
+            contenido || ''
+        );
+
+        if (!twilioResult.success) {
+            return res.status(500).json({
+                success: false,
+                message: 'Error al enviar archivo',
+                error: twilioResult.error
+            });
+        }
+
+        // Guardar mensaje en base de datos con metadata del archivo
+        const tipoMensaje = file.mimetype.startsWith('image/') ? 'image' :
+                           file.mimetype.startsWith('video/') ? 'video' :
+                           file.mimetype.startsWith('audio/') ? 'audio' :
+                           'document';
+
+        const mensajeContenido = contenido || `📎 ${file.originalname}`;
+
+        const insertQuery = `
+            INSERT INTO mensajes_whatsapp (
+                conversacion_id, contenido, direccion, sid_twilio, tipo_mensaje
+            )
+            VALUES ($1, $2, 'saliente', $3, $4)
+            RETURNING *
+        `;
+
+        const messageResult = await pool.query(insertQuery, [
+            id,
+            mensajeContenido,
+            twilioResult.sid,
+            tipoMensaje
+        ]);
+
+        // Actualizar fecha de última actividad
+        await pool.query(`
+            UPDATE conversaciones_whatsapp
+            SET fecha_ultima_actividad = NOW()
+            WHERE id = $1
+        `, [id]);
+
+        // Emitir evento WebSocket para actualización en tiempo real
+        if (global.emitWhatsAppEvent) {
+            global.emitWhatsAppEvent('nuevo_mensaje', {
+                conversacion_id: parseInt(id),
+                numero_cliente: numeroCliente,
+                contenido: mensajeContenido,
+                direccion: 'saliente',
+                fecha_envio: new Date().toISOString(),
+                sid_twilio: twilioResult.sid,
+                tipo_mensaje: tipoMensaje
+            });
+        }
+
+        res.json({
+            success: true,
+            mensaje: messageResult.rows[0],
+            twilio: twilioResult
+        });
+    } catch (error) {
+        console.error('Error al enviar archivo WhatsApp:', error);
+        res.status(500).json({ success: false, message: 'Error al enviar archivo', error: error.message });
     }
 });
 

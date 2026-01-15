@@ -430,6 +430,120 @@
             color: var(--text-primary);
         }
 
+        .whatsapp-attach-btn {
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            background: white;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .whatsapp-attach-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .whatsapp-attach-btn input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .whatsapp-file-preview {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 16px;
+            z-index: 1001;
+            display: none;
+        }
+
+        .whatsapp-file-preview.active {
+            display: block;
+        }
+
+        .whatsapp-file-preview-content {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .whatsapp-file-preview-thumbnail {
+            width: 60px;
+            height: 60px;
+            border-radius: 4px;
+            object-fit: cover;
+            background: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .whatsapp-file-preview-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .whatsapp-file-preview-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .whatsapp-file-preview-size {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .whatsapp-file-preview-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .whatsapp-file-preview-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .whatsapp-file-preview-send {
+            background: var(--whatsapp-green);
+            color: white;
+        }
+
+        .whatsapp-file-preview-send:hover {
+            background: var(--whatsapp-dark);
+        }
+
+        .whatsapp-file-preview-cancel {
+            background: #f3f4f6;
+            color: var(--text-secondary);
+        }
+
+        .whatsapp-file-preview-cancel:hover {
+            background: #e5e7eb;
+        }
+
         .whatsapp-comando-preview {
             position: absolute;
             bottom: 80px;
@@ -648,10 +762,35 @@
                     <!-- Se llenará dinámicamente -->
                 </div>
 
+                <!-- Preview de archivo adjunto -->
+                <div class="whatsapp-file-preview" id="filePreview">
+                    <div class="whatsapp-file-preview-content">
+                        <div class="whatsapp-file-preview-thumbnail" id="fileThumbnail">
+                            📄
+                        </div>
+                        <div class="whatsapp-file-preview-info">
+                            <div class="whatsapp-file-preview-name" id="fileName">archivo.pdf</div>
+                            <div class="whatsapp-file-preview-size" id="fileSize">1.2 MB</div>
+                        </div>
+                        <div class="whatsapp-file-preview-actions">
+                            <button class="whatsapp-file-preview-btn whatsapp-file-preview-send" onclick="enviarArchivoAdjunto()">
+                                Enviar
+                            </button>
+                            <button class="whatsapp-file-preview-btn whatsapp-file-preview-cancel" onclick="cancelarArchivoAdjunto()">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Input de mensaje -->
                 <div class="whatsapp-chat-input">
                     <button class="whatsapp-template-btn" onclick="togglePlantillas()" title="Plantillas de mensajes">
                         <i data-feather="file-text"></i>
+                    </button>
+                    <button class="whatsapp-attach-btn" title="Adjuntar archivo">
+                        <i data-feather="paperclip"></i>
+                        <input type="file" id="fileInput" accept="image/*,video/*,audio/*,application/pdf,.doc,.docx" onchange="manejarArchivoSeleccionado(event)">
                     </button>
                     <textarea
                         class="whatsapp-input"
@@ -1263,6 +1402,125 @@ Llave Breb: @talero585`
             } catch (error) {
                 console.error('Error enviando mensaje:', error);
                 alert('Error al enviar el mensaje. Por favor intenta de nuevo.');
+            }
+        }
+
+        // Variable global para almacenar el archivo seleccionado
+        let archivoSeleccionado = null;
+
+        function manejarArchivoSeleccionado(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validar tamaño (máximo 16MB - límite de Twilio)
+            const maxSize = 16 * 1024 * 1024; // 16MB
+            if (file.size > maxSize) {
+                alert('El archivo es demasiado grande. El tamaño máximo es 16MB.');
+                event.target.value = '';
+                return;
+            }
+
+            archivoSeleccionado = file;
+
+            // Actualizar preview
+            mostrarPreviewArchivo(file);
+        }
+
+        function mostrarPreviewArchivo(file) {
+            const preview = document.getElementById('filePreview');
+            const thumbnail = document.getElementById('fileThumbnail');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+
+            // Formato de tamaño
+            const size = file.size < 1024 * 1024
+                ? `${(file.size / 1024).toFixed(1)} KB`
+                : `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+
+            fileName.textContent = file.name;
+            fileSize.textContent = size;
+
+            // Mostrar thumbnail según tipo
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    thumbnail.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">`;
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type.startsWith('video/')) {
+                thumbnail.textContent = '🎥';
+            } else if (file.type.startsWith('audio/')) {
+                thumbnail.textContent = '🎵';
+            } else if (file.type === 'application/pdf') {
+                thumbnail.textContent = '📄';
+            } else {
+                thumbnail.textContent = '📎';
+            }
+
+            // Mostrar preview
+            preview.classList.add('active');
+
+            // Reemplazar iconos de feather
+            feather.replace();
+        }
+
+        function cancelarArchivoAdjunto() {
+            const preview = document.getElementById('filePreview');
+            const fileInput = document.getElementById('fileInput');
+
+            preview.classList.remove('active');
+            fileInput.value = '';
+            archivoSeleccionado = null;
+        }
+
+        async function enviarArchivoAdjunto() {
+            if (!archivoSeleccionado || !conversacionActualId) return;
+
+            const preview = document.getElementById('filePreview');
+            const sendBtn = preview.querySelector('.whatsapp-file-preview-send');
+            const originalText = sendBtn.textContent;
+
+            try {
+                sendBtn.textContent = 'Enviando...';
+                sendBtn.disabled = true;
+
+                const token = Auth.getToken();
+                const formData = new FormData();
+                formData.append('file', archivoSeleccionado);
+
+                // Agregar mensaje opcional del textarea si hay texto
+                const input = document.getElementById('inputMensaje');
+                const contenido = input.value.trim();
+                if (contenido) {
+                    formData.append('contenido', contenido);
+                }
+
+                const res = await fetch(`/api/admin/whatsapp/conversaciones/${conversacionActualId}/media`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (!res.ok) {
+                    const error = await res.json();
+                    throw new Error(error.message || 'Error al enviar archivo');
+                }
+
+                // Limpiar
+                cancelarArchivoAdjunto();
+                input.value = '';
+
+                // Recargar mensajes
+                await cargarMensajes(conversacionActualId, false);
+                await cargarConversaciones(true);
+
+            } catch (error) {
+                console.error('Error enviando archivo:', error);
+                alert('Error al enviar el archivo: ' + error.message);
+                sendBtn.textContent = originalText;
+                sendBtn.disabled = false;
             }
         }
 
