@@ -1149,9 +1149,10 @@ Llave Breb: @talero585`
                             mediaUrls.forEach((url, index) => {
                                 const type = mediaTypes[index] || 'unknown';
 
-                                // Usar proxy para URLs de Twilio
+                                // Usar proxy para URLs de Twilio con token en query param
+                                const token = Auth.getToken();
                                 const proxiedUrl = url.startsWith('https://api.twilio.com/')
-                                    ? `/api/admin/whatsapp/media/proxy?url=${encodeURIComponent(url)}`
+                                    ? `/api/admin/whatsapp/media/proxy?url=${encodeURIComponent(url)}&token=${encodeURIComponent(token)}`
                                     : url;
 
                                 if (type.startsWith('image/')) {

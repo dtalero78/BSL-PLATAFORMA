@@ -2894,10 +2894,10 @@ app.get('/api/admin/whatsapp/conversaciones/:id/mensajes', authMiddleware, requi
     }
 });
 
-// GET - Proxy para media de Twilio (requiere autenticación)
-app.get('/api/admin/whatsapp/media/proxy', authMiddleware, requireAdmin, async (req, res) => {
+// GET - Proxy para media de Twilio (autenticación por header o query param)
+app.get('/api/admin/whatsapp/media/proxy', async (req, res) => {
     try {
-        const { url } = req.query;
+        const { url, token } = req.query;
 
         if (!url) {
             return res.status(400).json({ success: false, message: 'URL no proporcionada' });
@@ -2906,6 +2906,35 @@ app.get('/api/admin/whatsapp/media/proxy', authMiddleware, requireAdmin, async (
         // Validar que la URL sea de Twilio
         if (!url.startsWith('https://api.twilio.com/')) {
             return res.status(400).json({ success: false, message: 'URL no válida' });
+        }
+
+        // Autenticación: token en query param o en header
+        let authenticated = false;
+
+        // Intentar autenticación por header primero
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const headerToken = authHeader.substring(7);
+            try {
+                jwt.verify(headerToken, JWT_SECRET);
+                authenticated = true;
+            } catch (err) {
+                // Token inválido en header
+            }
+        }
+
+        // Si no está autenticado por header, intentar por query param
+        if (!authenticated && token) {
+            try {
+                jwt.verify(token, JWT_SECRET);
+                authenticated = true;
+            } catch (err) {
+                return res.status(401).json({ success: false, message: 'Token inválido' });
+            }
+        }
+
+        if (!authenticated) {
+            return res.status(401).json({ success: false, message: 'Token de autenticación requerido' });
         }
 
         console.log('🖼️ Proxying media from Twilio:', url);
