@@ -401,7 +401,21 @@ async function sendWhatsAppMessage(toNumber, messageBody, variables = {}, templa
 
         // Guardar mensaje en base de datos automáticamente
         const numeroLimpio = toNumber.replace(/[^\d]/g, '');
-        const contenidoTemplate = messageBody || `Template: ${contentSid}`;
+
+        // Construir contenido legible del template con las variables
+        let contenidoTemplate;
+        if (messageBody) {
+            contenidoTemplate = messageBody;
+        } else if (Object.keys(variables).length > 0) {
+            // Generar mensaje con las variables para que sea legible
+            const varsTexto = Object.entries(variables)
+                .map(([key, value]) => `{{${key}}}: ${value}`)
+                .join(', ');
+            contenidoTemplate = `📬 Template enviado (${contentSid})\nVariables: ${varsTexto}`;
+        } else {
+            contenidoTemplate = `📬 Template enviado: ${contentSid}`;
+        }
+
         await guardarMensajeSaliente(numeroLimpio, contenidoTemplate, message.sid, 'template');
 
         return { success: true, sid: message.sid, status: message.status };
