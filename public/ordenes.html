@@ -3017,18 +3017,16 @@
     </div>
 
     <!-- Modal: Enviar WhatsApp Manual -->
-    <div id="modalWhatsApp" class="modal">
-        <div class="modal-content" style="max-width: 500px;">
+    <div id="modalWhatsApp" class="modal-overlay">
+        <div class="modal" style="max-width: 500px;">
             <div class="modal-header">
                 <div>
                     <h2 class="modal-title">📱 Enviar WhatsApp Manual</h2>
                 </div>
-                <button type="button" class="btn-icon" onclick="cerrarModalWhatsApp()">
-                    <i data-feather="x"></i>
-                </button>
+                <button type="button" class="btn-close" onclick="cerrarModalWhatsApp()">✕</button>
             </div>
 
-            <div class="modal-body" style="padding: 24px;">
+            <div class="modal-body">
                 <form id="formWhatsApp" onsubmit="enviarWhatsAppManual(event)">
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; margin-bottom: 8px; font-weight: 500;">
@@ -5169,7 +5167,7 @@
 
         function abrirModalWhatsApp() {
             const modal = document.getElementById('modalWhatsApp');
-            modal.style.display = 'flex';
+            modal.classList.add('active');
 
             // Limpiar formulario
             document.getElementById('whatsappCelular').value = '';
@@ -5184,7 +5182,7 @@
 
         function cerrarModalWhatsApp() {
             const modal = document.getElementById('modalWhatsApp');
-            modal.style.display = 'none';
+            modal.classList.remove('active');
         }
 
         async function enviarWhatsAppManual(event) {
