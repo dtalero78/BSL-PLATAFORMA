@@ -296,8 +296,13 @@
             border-bottom: 1px solid var(--border-color);
             background: var(--bg-secondary);
             display: flex;
-            justify-content: space-between;
+            gap: 0;
             align-items: center;
+        }
+
+        .whatsapp-chat-header-info {
+            flex: 1;
+            min-width: 0;
         }
 
         .whatsapp-chat-header-info h4 {
@@ -674,6 +679,30 @@
         }
 
         /* Responsive */
+        /* Botón volver en móvil */
+        .whatsapp-chat-back-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: background 0.2s;
+            margin-right: 12px;
+        }
+
+        .whatsapp-chat-back-btn:hover {
+            background: var(--bg-primary);
+        }
+
+        .whatsapp-chat-back-btn:active {
+            background: var(--border-color);
+        }
+
         @media (max-width: 768px) {
             .whatsapp-sidebar {
                 width: 100%;
@@ -681,14 +710,41 @@
 
             .whatsapp-chat {
                 display: none;
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                z-index: 10;
             }
 
-            .whatsapp-sidebar.hidden {
+            .whatsapp-sidebar.mobile-hidden {
                 display: none;
             }
 
-            .whatsapp-chat.active {
+            .whatsapp-chat.mobile-active {
                 display: flex;
+            }
+
+            .whatsapp-chat-back-btn {
+                display: flex;
+            }
+
+            .header-user {
+                display: none;
+            }
+
+            .header {
+                padding: 12px 16px;
+            }
+
+            .header-title {
+                font-size: 16px;
+            }
+
+            .whatsapp-mensaje {
+                max-width: 80%;
             }
         }
     </style>
@@ -743,6 +799,9 @@
             <div class="whatsapp-chat-container" id="chatContainer" style="display: none;">
                 <!-- Header del chat -->
                 <div class="whatsapp-chat-header">
+                    <button class="whatsapp-chat-back-btn" onclick="volverALista()" aria-label="Volver a conversaciones">
+                        <i data-feather="arrow-left"></i>
+                    </button>
                     <div class="whatsapp-chat-header-info">
                         <h4 id="chatNombre">Nombre del Cliente</h4>
                         <span class="whatsapp-chat-numero" id="chatNumero">+57 300 000 0000</span>
@@ -1255,6 +1314,10 @@ Llave Breb: @talero585`
             document.getElementById('chatEmpty').style.display = 'none';
             document.getElementById('chatContainer').style.display = 'flex';
 
+            // En móvil: ocultar sidebar y mostrar chat
+            document.getElementById('sidebar').classList.add('mobile-hidden');
+            document.getElementById('chat').classList.add('mobile-active');
+
             // Actualizar header del chat
             document.getElementById('chatNombre').textContent =
                 conversacion.nombre_cliente || conversacion.numero_cliente;
@@ -1265,6 +1328,20 @@ Llave Breb: @talero585`
             await cargarMensajes(conversacionId);
 
             // Re-renderizar conversaciones para actualizar la selección
+            renderConversaciones();
+        }
+
+        // Función para volver a la lista de conversaciones (móvil)
+        function volverALista() {
+            document.getElementById('sidebar').classList.remove('mobile-hidden');
+            document.getElementById('chat').classList.remove('mobile-active');
+            conversacionActualId = null;
+
+            // Ocultar el chat container
+            document.getElementById('chatEmpty').style.display = 'flex';
+            document.getElementById('chatContainer').style.display = 'none';
+
+            // Re-renderizar para quitar la selección activa
             renderConversaciones();
         }
 
