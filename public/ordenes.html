@@ -3027,7 +3027,7 @@
             </div>
 
             <div class="modal-body">
-                <form id="formWhatsApp" onsubmit="enviarWhatsAppManual(event)">
+                <form id="formWhatsApp" onsubmit="enviarWhatsappManual(event)">
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; margin-bottom: 8px; font-weight: 500;">
                             Número de Celular
@@ -3044,17 +3044,11 @@
                         </small>
                     </div>
 
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">
-                            Mensaje
-                        </label>
-                        <textarea
-                            id="whatsappMensaje"
-                            rows="6"
-                            placeholder="¡Hola! 😊&#10;&#10;Tenemos una llamada perdida de tu número. ¿En qué te podemos ayudar?"
-                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical; font-family: inherit;"
-                            required
-                        ></textarea>
+                    <div style="margin-bottom: 20px; padding: 16px; background-color: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 6px;">
+                        <p style="margin: 0; font-size: 14px; color: #1e40af; line-height: 1.5;">
+                            <strong>📱 Mensaje automático:</strong><br>
+                            Se enviará el template de confirmación con saludo y solicitud de nombre y cédula.
+                        </p>
                     </div>
 
                     <div id="whatsappRespuesta" style="display: none; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px;"></div>
@@ -5171,7 +5165,6 @@
 
             // Limpiar formulario
             document.getElementById('whatsappCelular').value = '';
-            document.getElementById('whatsappMensaje').value = '';
             document.getElementById('whatsappRespuesta').style.display = 'none';
 
             // Reemplazar iconos Feather
@@ -5185,16 +5178,15 @@
             modal.classList.remove('active');
         }
 
-        async function enviarWhatsAppManual(event) {
+        async function enviarWhatsappManual(event) {
             event.preventDefault();
 
             const celular = document.getElementById('whatsappCelular').value.trim();
-            const mensaje = document.getElementById('whatsappMensaje').value.trim();
             const btnEnviar = document.getElementById('btnEnviarWhatsApp');
             const respuestaDiv = document.getElementById('whatsappRespuesta');
 
-            if (!celular || !mensaje) {
-                mostrarRespuestaWhatsApp('Por favor completa todos los campos', 'error');
+            if (!celular) {
+                mostrarRespuestaWhatsApp('Por favor ingresa un número de celular', 'error');
                 return;
             }
 
@@ -5208,7 +5200,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ celular, mensaje })
+                    body: JSON.stringify({ celular })
                 });
 
                 const data = await response.json();
@@ -5219,7 +5211,6 @@
                     // Limpiar formulario después de 2 segundos
                     setTimeout(() => {
                         document.getElementById('whatsappCelular').value = '';
-                        document.getElementById('whatsappMensaje').value = '';
                     }, 2000);
                 } else {
                     mostrarRespuestaWhatsApp(`❌ Error: ${data.message}`, 'error');

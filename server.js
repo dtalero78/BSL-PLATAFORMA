@@ -13098,18 +13098,17 @@ https://www.bsl.com.co/autoagendamiento/${item.numeroId}
 // POST - Enviar mensaje manual de WhatsApp (para uso desde ordenes.html)
 app.post('/api/whatsapp/enviar-manual', async (req, res) => {
     try {
-        const { celular, mensaje } = req.body;
+        const { celular } = req.body;
 
-        if (!celular || !mensaje) {
+        if (!celular) {
             return res.status(400).json({
                 success: false,
-                message: 'Se requiere celular y mensaje'
+                message: 'Se requiere celular'
             });
         }
 
-        console.log('📱 Enviando mensaje manual de WhatsApp...');
+        console.log('📱 Enviando mensaje manual de WhatsApp con template...');
         console.log('   Celular:', celular);
-        console.log('   Mensaje:', mensaje.substring(0, 50) + '...');
 
         // Normalizar teléfono con prefijo 57
         const telefonoNormalizado = normalizarTelefonoConPrefijo57(celular);
@@ -13121,12 +13120,20 @@ app.post('/api/whatsapp/enviar-manual', async (req, res) => {
             });
         }
 
-        // Enviar mensaje de texto libre (sin template)
+        // Enviar mensaje con template de confirmación
+        // Template: saludo_particulares (HX8c84dc81049e7b055bd30125e9786051)
+        // Variables: {{1}} = nombre (vacío para manual), {{2}} = fecha y hora (vacío para manual)
+        const templateSid = 'HX8c84dc81049e7b055bd30125e9786051';
+        const variables = {
+            "1": "",  // Nombre vacío
+            "2": ""   // Fecha/hora vacía
+        };
+
         const resultado = await sendWhatsAppMessage(
             telefonoNormalizado,
-            mensaje,
-            null, // Sin variables
-            null  // Sin template
+            null,  // Sin mensaje de texto
+            variables,
+            templateSid
         );
 
         if (!resultado.success) {
