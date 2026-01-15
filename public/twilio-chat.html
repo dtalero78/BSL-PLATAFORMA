@@ -1431,6 +1431,11 @@ Llave Breb: @talero585`
             const thumbnail = document.getElementById('fileThumbnail');
             const fileName = document.getElementById('fileName');
             const fileSize = document.getElementById('fileSize');
+            const sendBtn = preview.querySelector('.whatsapp-file-preview-send');
+
+            // Resetear estado del botón (por si quedó deshabilitado de un envío anterior)
+            sendBtn.textContent = 'Enviar';
+            sendBtn.disabled = false;
 
             // Formato de tamaño
             const size = file.size < 1024 * 1024
