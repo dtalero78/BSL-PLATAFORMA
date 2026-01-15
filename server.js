@@ -539,24 +539,32 @@ async function sendWhatsAppMedia(toNumber, mediaBuffer, mediaType, fileName, cap
 // Helper: Guardar mensaje saliente en base de datos y emitir evento WebSocket
 async function guardarMensajeSaliente(numeroCliente, contenido, twilioSid, tipoMensaje = 'text', mediaUrl = null, mediaType = null, nombrePaciente = null) {
     try {
-        // Normalizar número al formato +57XXXXXXXXXX
+        // Normalizar número: mantener formato internacional
         let numeroNormalizado = numeroCliente.trim().replace(/[^\d+]/g, '');
 
-        // Remover + temporal para procesar
-        numeroNormalizado = numeroNormalizado.replace(/^\+/, '');
+        // Si ya tiene +, mantenerlo
+        if (numeroNormalizado.startsWith('+')) {
+            // Ya tiene formato correcto
+        } else {
+            // Remover + temporal si existe para procesar
+            numeroNormalizado = numeroNormalizado.replace(/^\+/, '');
 
-        // Si empieza con 5757, remover el 57 duplicado
-        if (numeroNormalizado.startsWith('5757')) {
-            numeroNormalizado = numeroNormalizado.substring(2);
+            // Si empieza con 5757, remover el 57 duplicado
+            if (numeroNormalizado.startsWith('5757')) {
+                numeroNormalizado = numeroNormalizado.substring(2);
+            }
+
+            // Solo agregar +57 si es un número colombiano de 10 dígitos sin código de país
+            if (numeroNormalizado.length === 10 && numeroNormalizado.match(/^3\d{9}$/)) {
+                numeroNormalizado = '57' + numeroNormalizado;
+            }
+            // Si ya tiene código de país pero no +, asumimos que está correcto
+
+            // Agregar + al inicio si no lo tiene
+            if (!numeroNormalizado.startsWith('+')) {
+                numeroNormalizado = '+' + numeroNormalizado;
+            }
         }
-
-        // Si no empieza con 57, agregarlo
-        if (!numeroNormalizado.startsWith('57')) {
-            numeroNormalizado = '57' + numeroNormalizado;
-        }
-
-        // Agregar + al inicio
-        numeroNormalizado = '+' + numeroNormalizado;
 
         // Buscar o crear conversación
         let conversacion = await pool.query(`
