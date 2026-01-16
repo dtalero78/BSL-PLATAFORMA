@@ -7194,6 +7194,9 @@ app.put('/api/historia-clinica/:id', async (req, res) => {
         console.log('═══════════════════════════════════════════════════════════');
         console.log('📝 Recibida solicitud de edición');
         console.log('   _id:', id);
+        console.log('   eps:', datos.eps);
+        console.log('   examenes:', datos.examenes);
+        console.log('   Todos los datos:', JSON.stringify(datos, null, 2));
         console.log('═══════════════════════════════════════════════════════════');
 
         // Primero verificar si existe en HistoriaClinica
