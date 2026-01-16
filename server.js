@@ -4263,28 +4263,6 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
             `, [conversacionId]);
         }
 
-        // 🆕 DETECTAR Y ENVIAR MENSAJE A USUARIOS NUEVOS
-        if (conversacion.rows.length === 0) {
-            // Primera vez que escribe por WhatsApp
-            const esNuevo = await esUsuarioNuevo(numeroCliente);
-
-            if (esNuevo) {
-                console.log('🆕 Usuario nuevo detectado - enviando información de agendamiento');
-
-                const mensajeBienvenida = `Hola:\n\n` +
-                    `Si deseas agendar una consulta esta es la información\n\n` +
-                    `Diligencia tus datos y escoge la hora que te convenga\n\n` +
-                    `Realiza las pruebas desde tu celular o computador\n\n` +
-                    `El médico se comunicará contigo\n\n` +
-                    `¡Listo! Descarga inmediatamente tu certificado\n\n` +
-                    `*Para comenzar:*\n` +
-                    `https://bsl-plataforma.com/nuevaorden1.html\n` +
-                    `52.000: Paquete básico Osteomuscular, audiometría, visio/optometría`;
-
-                await sendWhatsAppFreeText(numeroCliente, mensajeBienvenida);
-            }
-        }
-
         // 📸 PROCESAR FLUJO DE VALIDACIÓN DE PAGOS SI HAY IMÁGENES
         if (numMedia > 0) {
             const mainMediaType = mediaTypes[0];
