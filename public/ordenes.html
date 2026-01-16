@@ -3694,6 +3694,16 @@
             const form = datos.formulario;
             const estadoPruebas = datos.estadoPruebas;
 
+            // IMPORTANTE: Capturar el ID al inicio para evitar race conditions
+            // Esto garantiza que los botones siempre usen el ID correcto
+            const ordenIdActual = orden._id;
+
+            // Verificar que este render corresponde a la orden actualmente solicitada
+            if (ultimaOrdenSolicitada !== ordenIdActual) {
+                console.log('Render cancelado: se solicitó otra orden');
+                return;
+            }
+
             const nombreCompleto = `${orden.primerNombre || ''} ${orden.segundoNombre || ''} ${orden.primerApellido || ''} ${orden.segundoApellido || ''}`.replace(/\s+/g, ' ').trim() || 'Sin nombre';
             const initials = getInitials(orden.primerNombre, orden.primerApellido);
             const isAtendido = orden.atendido && orden.atendido.toUpperCase() === 'ATENDIDO';
@@ -3711,7 +3721,7 @@
 
             // Generar tags de estado de pruebas
             let pruebasTagsHtml = '';
-            const ordenId = orden._id;
+            // Usar ordenIdActual capturado arriba para evitar race conditions
             if (estadoPruebas && estadoPruebas.pruebas) {
                 const p = estadoPruebas.pruebas;
                 let tagsCompletados = [];
@@ -3758,29 +3768,46 @@
                         <div class="pruebas-status-section">
                             <div class="pruebas-status-title">Estado de Pruebas <span class="pruebas-hint">(clic para enviar link por WhatsApp)</span></div>
                             <div class="pruebas-tags-container">
-                                ${tagsCompletados.map(t => `<span class="prueba-tag prueba-completada" data-tipo="${tiposPrueba[t]}" data-orden="${ordenId}" onclick="enviarLinkPrueba(this)">${t}</span>`).join('')}
-                                ${tagsPendientes.map(t => `<span class="prueba-tag prueba-pendiente" data-tipo="${tiposPrueba[t]}" data-orden="${ordenId}" onclick="enviarLinkPrueba(this)">${t}</span>`).join('')}
+                                ${tagsCompletados.map(t => `<span class="prueba-tag prueba-completada" data-tipo="${tiposPrueba[t]}" data-orden="${ordenIdActual}" onclick="enviarLinkPrueba(this)">${t}</span>`).join('')}
+                                ${tagsPendientes.map(t => `<span class="prueba-tag prueba-pendiente" data-tipo="${tiposPrueba[t]}" data-orden="${ordenIdActual}" onclick="enviarLinkPrueba(this)">${t}</span>`).join('')}
                             </div>
                         </div>
                     `;
                 }
             }
 
-            // Configure buttons
-            document.getElementById('btnFormularioFromModal').href = `/?_id=${orden._id}`;
-            document.getElementById('btnWhatsappFromModal').href = `https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${orden._id}`;
-            document.getElementById('btnDescargarFromModal').href = `https://bsl-utilidades-yp78a.ondigitalocean.app/generar-certificado-desde-wix/${orden._id}`;
+            // Configure buttons - usar ordenIdActual capturado para evitar race conditions
+            document.getElementById('btnFormularioFromModal').href = `/?_id=${ordenIdActual}`;
+            document.getElementById('btnWhatsappFromModal').href = `https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${ordenIdActual}`;
+            document.getElementById('btnDescargarFromModal').href = `https://bsl-utilidades-yp78a.ondigitalocean.app/generar-certificado-desde-wix/${ordenIdActual}`;
             document.getElementById('btnEditarFromModal').onclick = () => {
+                // Verificación adicional: asegurar que el modal sigue mostrando esta orden
+                if (ultimaOrdenSolicitada !== ordenIdActual) {
+                    console.log('Editar cancelado: el modal ya muestra otra orden');
+                    return;
+                }
                 cerrarModalDetalles();
-                editarOrden(orden._id);
+                editarOrden(ordenIdActual);
             };
             document.getElementById('btnEliminarFromModal').onclick = () => {
-                eliminarOrden(orden._id, orden.numeroId, orden.primerNombre, orden.primerApellido);
+                // Verificación adicional: asegurar que el modal sigue mostrando esta orden
+                if (ultimaOrdenSolicitada !== ordenIdActual) {
+                    console.log('Eliminar cancelado: el modal ya muestra otra orden');
+                    return;
+                }
+                eliminarOrden(ordenIdActual, orden.numeroId, orden.primerNombre, orden.primerApellido);
             };
 
             // Configurar botón de pago
             actualizarBotonPago(orden.pagado || false);
-            document.getElementById('btnPagoFromModal').onclick = () => togglePago(orden._id);
+            document.getElementById('btnPagoFromModal').onclick = () => {
+                // Verificación adicional: asegurar que el modal sigue mostrando esta orden
+                if (ultimaOrdenSolicitada !== ordenIdActual) {
+                    console.log('Toggle pago cancelado: el modal ya muestra otra orden');
+                    return;
+                }
+                togglePago(ordenIdActual);
+            };
 
             const body = document.getElementById('modalDetallesBody');
 
