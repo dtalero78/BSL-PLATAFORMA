@@ -56,7 +56,7 @@ Si preguntan temas personales, emocionales o NO relacionados con exámenes médi
 
 **Exámenes extras opcionales:**
 • Cardiovascular, Vascular, Espirometría, Dermatológico: $10.000 c/u
-• Psicológico: $23.000
+• Psicológico (también llamado Psicosocial o Perfil Psicológico): $23.000
 • Perfil lipídico: $69.500
 • Glicemia: $23.100
 
