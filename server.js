@@ -396,17 +396,21 @@ async function recuperarMensajesBot(poolRef, conversacionId, limite = 10) {
 async function buscarContextoPacienteBot(poolRef, celular) {
     try {
         // Limpiar el número: quitar prefijos
-        const celularLimpio = celular.replace(/\D/g, '').replace(/^57/, '').replace(/^whatsapp:/, '');
+        const celularLimpio = celular.replace(/\D/g, '').replace(/^57/, '');
+        const celularCon57 = '57' + celularLimpio;
+        const celularConPlus = '+57' + celularLimpio;
 
-        // Buscar en HistoriaClinica
+        console.log(`🔍 Bot: Buscando paciente por celular: ${celular} -> limpio: ${celularLimpio}`);
+
+        // Buscar en HistoriaClinica con múltiples formatos
         const result = await poolRef.query(`
             SELECT "_id", "numeroId", "primerNombre", "primerApellido", "celular",
                    "fechaAtencion", "fechaConsulta", "empresa", "codEmpresa", "atendido"
             FROM "HistoriaClinica"
-            WHERE "celular" = $1
+            WHERE "celular" IN ($1, $2, $3)
             ORDER BY "fechaAtencion" DESC
             LIMIT 1
-        `, [celularLimpio]);
+        `, [celularLimpio, celularCon57, celularConPlus]);
 
         if (result.rows.length === 0) {
             return '';
