@@ -1440,7 +1440,10 @@ async function procesarFlujoPagos(message, from) {
                 await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
                     '✅ Comprobante recibido.\n\n¿Cuál es tu número de documento? (solo números, sin puntos)');
 
-                estadoPagos.set(from, ESTADO_ESPERANDO_DOCUMENTO);
+                estadoPagos.set(from, {
+                    estado: ESTADO_ESPERANDO_DOCUMENTO,
+                    timestamp: Date.now()
+                });
                 return 'Comprobante validado, esperando documento';
             }
             else {
@@ -1452,7 +1455,8 @@ async function procesarFlujoPagos(message, from) {
         }
 
         // Caso 2: Usuario envía TEXTO (documento) con flujo activo
-        if (messageText && estadoPago === ESTADO_ESPERANDO_DOCUMENTO) {
+        const estadoActivo = estadoPago && estadoPago.estado === ESTADO_ESPERANDO_DOCUMENTO;
+        if (messageText && estadoActivo) {
             const documento = messageText.trim();
 
             // Validar formato de documento
@@ -4448,20 +4452,31 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
 
         // 💬 PROCESAR TEXTO SI ESTÁ EN FLUJO DE PAGOS (esperando documento)
         if (Body && numMedia === 0) {
-            const estadoPago = estadoPagos.get(From);
+            const estadoPagoData = estadoPagos.get(From);
 
-            if (estadoPago === ESTADO_ESPERANDO_DOCUMENTO) {
-                console.log('📝 Usuario envió texto en flujo de pagos - procesando documento');
+            // Verificar si hay estado activo Y no ha expirado (5 minutos)
+            if (estadoPagoData && estadoPagoData.estado === ESTADO_ESPERANDO_DOCUMENTO) {
+                const TIMEOUT_PAGO = 5 * 60 * 1000; // 5 minutos
+                const tiempoTranscurrido = Date.now() - estadoPagoData.timestamp;
 
-                try {
-                    await procesarFlujoPagos(req.body, From);
-                } catch (error) {
-                    console.error('❌ Error procesando documento en flujo de pagos:', error);
+                if (tiempoTranscurrido > TIMEOUT_PAGO) {
+                    // Estado expirado - limpiar y dejar que el bot responda
+                    estadoPagos.delete(From);
+                    console.log(`⏰ Estado de pago expirado para ${From} (${Math.round(tiempoTranscurrido/1000)}s) - limpiando`);
+                } else {
+                    // Estado válido - procesar como pago
+                    console.log('📝 Usuario envió texto en flujo de pagos - procesando documento');
+
+                    try {
+                        await procesarFlujoPagos(req.body, From);
+                    } catch (error) {
+                        console.error('❌ Error procesando documento en flujo de pagos:', error);
+                    }
+                    // Si está en flujo de pagos, no activar el bot
+                    res.type('text/xml');
+                    res.send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
+                    return;
                 }
-                // Si está en flujo de pagos, no activar el bot
-                res.type('text/xml');
-                res.send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
-                return;
             }
         }
 
