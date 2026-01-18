@@ -2285,7 +2285,22 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                 // Recargar mensajes sin hacer scroll automático
                 await cargarMensajes(conversacionActualId, false);
 
+                // Actualizar la conversación en el array local para marcar no_leidos = 0
+                const conversacion = conversacionesWhatsApp.find(c => c.id === conversacionActualId);
+                if (conversacion) {
+                    conversacion.no_leidos = 0;
+                }
+
+                // Si estamos en modo "Solo no leídas", remover esta conversación de la lista
+                if (!mostrandoTodas) {
+                    // Remover del array
+                    conversacionesWhatsApp = conversacionesWhatsApp.filter(c => c.id !== conversacionActualId);
+                    // Re-renderizar la lista
+                    renderConversaciones();
+                }
+
                 // Forzar actualización completa de conversaciones para reflejar el nuevo mensaje
+                // (esto traerá datos actualizados del servidor)
                 await cargarConversaciones(true);
             } catch (error) {
                 console.error('Error enviando mensaje:', error);
@@ -2527,6 +2542,19 @@ https://bsl-plataforma.com/nuevaorden1.html`,
 
                     // Recargar mensajes
                     await cargarMensajes(conversacionActualId, false);
+
+                    // Actualizar la conversación en el array local
+                    const conv = conversacionesWhatsApp.find(c => c.id === conversacionActualId);
+                    if (conv) {
+                        conv.no_leidos = 0;
+                    }
+
+                    // Si estamos en modo "Solo no leídas", remover esta conversación de la lista
+                    if (!mostrandoTodas) {
+                        conversacionesWhatsApp = conversacionesWhatsApp.filter(c => c.id !== conversacionActualId);
+                        renderConversaciones();
+                    }
+
                     await cargarConversaciones(true);
                 } else {
                     alert('Error al enviar mensaje: ' + (resultado.message || 'Desconocido'));
@@ -2594,6 +2622,19 @@ https://bsl-plataforma.com/nuevaorden1.html`,
 
                     // Recargar mensajes para mostrar el nuevo mensaje
                     await cargarMensajes(conversacionActualId, false);
+
+                    // Actualizar la conversación en el array local
+                    const conv = conversacionesWhatsApp.find(c => c.id === conversacionActualId);
+                    if (conv) {
+                        conv.no_leidos = 0;
+                    }
+
+                    // Si estamos en modo "Solo no leídas", remover esta conversación de la lista
+                    if (!mostrandoTodas) {
+                        conversacionesWhatsApp = conversacionesWhatsApp.filter(c => c.id !== conversacionActualId);
+                        renderConversaciones();
+                    }
+
                     await cargarConversaciones(true);
                 } else {
                     alert('Error al enviar: ' + (data.message || 'Desconocido'));
