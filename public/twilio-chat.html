@@ -2250,7 +2250,7 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                     // Solo actualizar el badge de esta conversación, no re-renderizar todo
                     const convItem = document.querySelector(`[data-conv-id="${conversacionId}"]`);
                     if (convItem) {
-                        const badge = convItem.querySelector('.whatsapp-unread-badge');
+                        const badge = convItem.querySelector('.whatsapp-conversacion-badge');
                         if (badge) badge.remove();
                         convItem.classList.remove('unread');
                     }
