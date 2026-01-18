@@ -2054,12 +2054,24 @@ https://bsl-plataforma.com/nuevaorden1.html`,
 
         async function seleccionarConversacion(conversacionId) {
             console.log('📱 Seleccionando conversación:', conversacionId);
+            console.log('📊 Total conversaciones en array:', conversacionesWhatsApp.length);
+            console.log('📋 IDs en array:', conversacionesWhatsApp.map(c => c.id));
+
             conversacionActualId = conversacionId;
 
-            const conversacion = conversacionesWhatsApp.find(c => c.id === conversacionId);
+            let conversacion = conversacionesWhatsApp.find(c => c.id === conversacionId);
+
+            // Si no está en el array local, recargar desde el servidor
             if (!conversacion) {
-                console.error('❌ Conversación no encontrada:', conversacionId);
-                return;
+                console.warn('⚠️ Conversación no encontrada en array local, recargando desde servidor...');
+                await cargarConversaciones(true);
+                conversacion = conversacionesWhatsApp.find(c => c.id === conversacionId);
+
+                if (!conversacion) {
+                    console.error('❌ Conversación no encontrada incluso después de recargar:', conversacionId);
+                    alert('Error: No se pudo cargar la conversación. Por favor intenta de nuevo.');
+                    return;
+                }
             }
 
             // Guardar referencia completa a la conversación actual
