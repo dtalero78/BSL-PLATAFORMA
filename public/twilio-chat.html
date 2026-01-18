@@ -2285,22 +2285,10 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                 // Recargar mensajes sin hacer scroll automático
                 await cargarMensajes(conversacionActualId, false);
 
-                // Actualizar la conversación en el array local para marcar no_leidos = 0
-                const conversacion = conversacionesWhatsApp.find(c => c.id === conversacionActualId);
-                if (conversacion) {
-                    conversacion.no_leidos = 0;
-                }
-
-                // Si estamos en modo "Solo no leídas", remover esta conversación de la lista
-                if (!mostrandoTodas) {
-                    // Remover del array
-                    conversacionesWhatsApp = conversacionesWhatsApp.filter(c => c.id !== conversacionActualId);
-                    // Re-renderizar la lista
-                    renderConversaciones();
-                }
+                // Pequeño delay para asegurar que el backend procesó el mensaje
+                await new Promise(resolve => setTimeout(resolve, 300));
 
                 // Forzar actualización completa de conversaciones para reflejar el nuevo mensaje
-                // (esto traerá datos actualizados del servidor)
                 await cargarConversaciones(true);
             } catch (error) {
                 console.error('Error enviando mensaje:', error);
@@ -2543,17 +2531,8 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                     // Recargar mensajes
                     await cargarMensajes(conversacionActualId, false);
 
-                    // Actualizar la conversación en el array local
-                    const conv = conversacionesWhatsApp.find(c => c.id === conversacionActualId);
-                    if (conv) {
-                        conv.no_leidos = 0;
-                    }
-
-                    // Si estamos en modo "Solo no leídas", remover esta conversación de la lista
-                    if (!mostrandoTodas) {
-                        conversacionesWhatsApp = conversacionesWhatsApp.filter(c => c.id !== conversacionActualId);
-                        renderConversaciones();
-                    }
+                    // Pequeño delay para asegurar que el backend procesó el mensaje
+                    await new Promise(resolve => setTimeout(resolve, 300));
 
                     await cargarConversaciones(true);
                 } else {
@@ -2623,17 +2602,8 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                     // Recargar mensajes para mostrar el nuevo mensaje
                     await cargarMensajes(conversacionActualId, false);
 
-                    // Actualizar la conversación en el array local
-                    const conv = conversacionesWhatsApp.find(c => c.id === conversacionActualId);
-                    if (conv) {
-                        conv.no_leidos = 0;
-                    }
-
-                    // Si estamos en modo "Solo no leídas", remover esta conversación de la lista
-                    if (!mostrandoTodas) {
-                        conversacionesWhatsApp = conversacionesWhatsApp.filter(c => c.id !== conversacionActualId);
-                        renderConversaciones();
-                    }
+                    // Pequeño delay para asegurar que el backend procesó el mensaje
+                    await new Promise(resolve => setTimeout(resolve, 300));
 
                     await cargarConversaciones(true);
                 } else {
