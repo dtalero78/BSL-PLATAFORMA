@@ -1901,7 +1901,7 @@ https://bsl-plataforma.com/nuevaorden1.html`,
             // OPTIMIZACIÓN: Actualizar solo las conversaciones específicas que cambiaron
             // en lugar de re-renderizar toda la lista
             if (idsConversacionesCambiadas.length > 0) {
-                // 1. Actualizar el contenido de cada conversación cambiada
+                // 1. Actualizar o agregar cada conversación cambiada
                 idsConversacionesCambiadas.forEach(convId => {
                     const conv = conversacionesWhatsApp.find(c => c.id === convId);
                     if (!conv) return;
@@ -1914,6 +1914,12 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                         const newElement = tempDiv.firstElementChild;
                         existingElement.innerHTML = newElement.innerHTML;
                         existingElement.className = newElement.className;
+                    } else {
+                        // Es una conversación nueva, agregarla al principio
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = generarHTMLConversacion(conv);
+                        const newElement = tempDiv.firstElementChild;
+                        lista.insertBefore(newElement, lista.firstChild);
                     }
                 });
 
@@ -1933,6 +1939,18 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                 // Mover al principio en el orden correcto
                 convsCambiadas.forEach(el => {
                     lista.insertBefore(el, lista.firstElementChild);
+                });
+
+                // 3. Remover conversaciones que ya no están en el array del servidor
+                // (por ejemplo, en modo "Solo no leídas" después de responder)
+                const currentItems = lista.querySelectorAll('.whatsapp-conversacion-item');
+                const currentIds = conversacionesWhatsApp.map(c => c.id);
+
+                currentItems.forEach(item => {
+                    const itemId = parseInt(item.dataset.convId);
+                    if (!currentIds.includes(itemId)) {
+                        item.remove();
+                    }
                 });
 
                 return;
