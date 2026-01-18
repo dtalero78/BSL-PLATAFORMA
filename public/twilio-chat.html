@@ -2804,9 +2804,14 @@ https://bsl-plataforma.com/nuevaorden1.html`,
             }
 
             const conversacion = conversacionesWhatsApp.find(c => c.id === conversacionActualId);
-            if (!conversacion) return;
+            if (!conversacion) {
+                console.error('Conversación no encontrada en el array local');
+                return;
+            }
 
+            console.log('Estado actual del bot:', conversacion.stopBot);
             const nuevoEstado = !conversacion.stopBot;
+            console.log('Nuevo estado a enviar:', nuevoEstado);
 
             try {
                 const token = Auth.getToken();
@@ -2820,8 +2825,13 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                 });
 
                 if (!response.ok) {
-                    throw new Error('Error al cambiar estado del bot');
+                    const errorData = await response.json();
+                    console.error('Error del servidor:', errorData);
+                    throw new Error(errorData.message || 'Error al cambiar estado del bot');
                 }
+
+                const data = await response.json();
+                console.log('Respuesta del servidor:', data);
 
                 // Actualizar localmente
                 conversacion.stopBot = nuevoEstado;
@@ -2831,7 +2841,7 @@ https://bsl-plataforma.com/nuevaorden1.html`,
 
             } catch (error) {
                 console.error('Error al cambiar estado del bot:', error);
-                alert('Error al cambiar estado del bot');
+                alert('Error al cambiar estado del bot: ' + error.message);
             }
         }
 
