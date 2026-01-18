@@ -1917,14 +1917,15 @@ https://bsl-plataforma.com/nuevaorden1.html`,
 
             // Actualizar texto del botón
             const btnText = document.getElementById('verTodasText');
-            const btnIcon = document.querySelector('#btnVerTodas i');
+            const btn = document.getElementById('btnVerTodas');
 
             if (mostrandoTodas) {
                 btnText.textContent = 'Solo no leídas';
-                btnIcon.setAttribute('data-feather', 'eye-off');
+                // Actualizar el icono reemplazando el elemento <i>
+                btn.querySelector('i, svg').outerHTML = '<i data-feather="eye-off"></i>';
             } else {
                 btnText.textContent = 'Ver todas';
-                btnIcon.setAttribute('data-feather', 'eye');
+                btn.querySelector('i, svg').outerHTML = '<i data-feather="eye"></i>';
             }
 
             feather.replace();
