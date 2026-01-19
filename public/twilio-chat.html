@@ -1549,6 +1549,22 @@
         let selectedCommandIndex = 0;
         let comandosFiltrados = [];
 
+        // Función debounce para optimizar recargas frecuentes (performance fix)
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Versión debounced de cargarConversaciones (se define después de la función)
+        let cargarConversacionesDebounced = null;
+
         // Plantillas de mensajes rápidos con metadata
         const plantillasInfo = {
             '/1': { titulo: 'Saludo', descripcion: 'Mensaje de saludo simple' },
@@ -1654,6 +1670,14 @@ https://bsl-plataforma.com/nuevaorden1.html`,
 
         // Inicializar Socket.IO
         function inicializarSocketIO() {
+            // Remover listeners anteriores para evitar duplicación (memory leak fix)
+            if (socket) {
+                socket.off('connect');
+                socket.off('disconnect');
+                socket.off('reconnect');
+                socket.off('nuevo_mensaje');
+            }
+
             socket = io({
                 transports: ['websocket', 'polling'],
                 reconnection: true,
@@ -1788,8 +1812,8 @@ https://bsl-plataforma.com/nuevaorden1.html`,
             // Pequeño delay para asegurar que el backend guardó el mensaje
             await new Promise(resolve => setTimeout(resolve, 200));
 
-            // Recargar solo para detectar cambios incrementales
-            await cargarConversaciones(false);
+            // Usar versión debounced para evitar recargas excesivas (performance fix)
+            await cargarConversacionesDebounced(false);
         }
 
         // Parpadeo del título (como WhatsApp)
@@ -1876,6 +1900,9 @@ https://bsl-plataforma.com/nuevaorden1.html`,
             }
         }
 
+        // Inicializar versión debounced de cargarConversaciones
+        cargarConversacionesDebounced = debounce(cargarConversaciones, 500);
+
         // Actualizar solo las conversaciones que cambiaron en el DOM
         function actualizarConversacionesCambiadas(idsConversacionesCambiadas) {
             const lista = document.getElementById('listaConversaciones');
@@ -1888,7 +1915,8 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                         <p>No hay conversaciones</p>
                     </div>
                 `;
-                feather.replace();
+                const listaConv = document.getElementById('listaConversaciones');
+                feather.replace({ root: listaConv });
                 return;
             }
 
@@ -2010,14 +2038,16 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                         <p>No hay conversaciones</p>
                     </div>
                 `;
-                feather.replace();
+                const listaConv = document.getElementById('listaConversaciones');
+                feather.replace({ root: listaConv });
                 return;
             }
 
             // Usar la función generadora para mantener consistencia
             lista.innerHTML = conversacionesWhatsApp.map(conv => generarHTMLConversacion(conv)).join('');
 
-            feather.replace();
+            const listaConv2 = document.getElementById('listaConversaciones');
+            feather.replace({ root: listaConv2 });
         }
 
         // Búsqueda en el servidor (con debounce para evitar llamadas excesivas)
