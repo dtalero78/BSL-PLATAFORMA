@@ -92,14 +92,14 @@ Si preguntan temas personales, emocionales o NO relacionados con exámenes médi
 **Información general:**
 Muestra opciones: "🩺 Nuestras opciones:\nVirtual – $52.000 COP\nPresencial – $69.000 COP"
 
-**🔍 SOLICITUDES DE CERTIFICADOS ANTIGUOS (CRÍTICO):**
-Si el usuario usa verbos en PASADO indicando que YA HIZO exámenes:
+**🔍 SOLICITUDES DE CERTIFICADOS ANTIGUOS:**
+Si el usuario pregunta por exámenes que ya hizo en el pasado:
 - "exámenes que me hice", "que me realicé", "del año 2023", "del año pasado"
 - "necesito mis resultados anteriores", "certificados viejos", "del 2024"
 
 → NO ofrecer agendamiento nuevo
-→ Responder: "Claro, para buscar tus exámenes anteriores necesito tu número de documento (solo números, sin puntos)."
-→ Luego usar el documento para consultar su historial
+→ Responder: "Para consultar exámenes anteriores, por favor comunícate con nuestro equipo. ¿Deseas hablar con un asesor?"
+→ Si el usuario confirma, responde: "...transfiriendo con asesor"
 
 **Consulta por pago/certificado:**
 ⚠️ CRÍTICO: NO respondas sin verificar "Estado detallado" primero.
@@ -107,7 +107,7 @@ Si el usuario usa verbos en PASADO indicando que YA HIZO exámenes:
 - "cita_programada": Debe realizar examen primero
 - "falta_formulario": Envía link https://www.bsl.com.co/desbloqueo
 - "no_realizo_consulta" o "no_asistio_consulta": Transfiere a asesor
-- Sin información: Pide número de documento
+- Sin información: Ofrece transferir con asesor para ayudarle
 
 Si usuario insiste que ya hizo algo pero el estado no lo refleja: transfiere a asesor.
 
@@ -558,12 +558,13 @@ function detectarDocumentoEnMensaje(mensaje) {
  */
 async function getAIResponseBot(poolRef, userMessage, conversationHistory = [], contextoPaciente = '') {
     try {
-        // Detectar si el usuario envió un número de documento
-        const documentoDetectado = detectarDocumentoEnMensaje(userMessage);
+        // DESHABILITADO: Ya no detectamos ni buscamos por documento automáticamente
+        // const documentoDetectado = detectarDocumentoEnMensaje(userMessage);
+        // let contextoDocumento = '';
+        // if (documentoDetectado) {
+        //     contextoDocumento = await buscarPacientePorDocumentoBot(poolRef, documentoDetectado);
+        // }
         let contextoDocumento = '';
-        if (documentoDetectado) {
-            contextoDocumento = await buscarPacientePorDocumentoBot(poolRef, documentoDetectado);
-        }
 
         // Buscar respuestas similares previas (RAG)
         let contextoRAG = '';
@@ -11833,6 +11834,86 @@ app.post('/api/enviar-link-prueba', async (req, res) => {
     } catch (error) {
         console.error('❌ Error enviando link de prueba:', error);
         res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Enviar link de certificado por WhatsApp desde conversación
+app.post('/api/enviar-certificado-whatsapp', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { conversacionId } = req.body;
+
+        if (!conversacionId) {
+            return res.status(400).json({ success: false, message: 'conversacionId es requerido' });
+        }
+
+        // Obtener número de teléfono de la conversación
+        const convResult = await pool.query(
+            'SELECT celular FROM conversaciones_whatsapp WHERE id = $1',
+            [conversacionId]
+        );
+
+        if (convResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Conversación no encontrada' });
+        }
+
+        const numeroCliente = convResult.rows[0].celular;
+
+        if (!numeroCliente) {
+            return res.status(400).json({ success: false, message: 'La conversación no tiene número de teléfono' });
+        }
+
+        // Buscar paciente por número de celular (normalizado)
+        const numeroLimpio = numeroCliente.replace(/\s+/g, '').replace(/[^0-9]/g, '');
+        const numeroSin57 = numeroLimpio.startsWith('57') ? numeroLimpio.substring(2) : numeroLimpio;
+
+        const pacienteResult = await pool.query(
+            `SELECT "_id", "primerNombre" FROM "HistoriaClinica"
+             WHERE REPLACE(REPLACE("celular", ' ', ''), '+57', '') = $1
+             OR REPLACE(REPLACE("celular", ' ', ''), '+', '') = $2
+             LIMIT 1`,
+            [numeroSin57, numeroLimpio]
+        );
+
+        if (pacienteResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'No se encontró paciente con ese número de teléfono' });
+        }
+
+        const paciente = pacienteResult.rows[0];
+        const primerNombre = paciente.primerNombre || 'Paciente';
+        const pacienteId = paciente._id;
+
+        // Construir link de solicitar certificado
+        const link = `https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${pacienteId}`;
+
+        // Construir mensaje
+        const mensaje = `Hola ${primerNombre}, puedes solicitar tu certificado médico aquí:\n\n${link}\n\n_BSL - Salud Ocupacional_`;
+
+        // Enviar mensaje por WhatsApp
+        const twilioResult = await sendWhatsAppFreeText(numeroCliente, mensaje);
+
+        if (!twilioResult.success) {
+            return res.status(500).json({
+                success: false,
+                message: 'Error al enviar mensaje por WhatsApp',
+                error: twilioResult.error
+            });
+        }
+
+        console.log(`📱 Link de certificado enviado a ${numeroCliente} para paciente ${pacienteId}`);
+
+        res.json({
+            success: true,
+            message: 'Link de certificado enviado correctamente',
+            enviado: {
+                telefono: numeroCliente,
+                pacienteId: pacienteId,
+                link: link
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error enviando link de certificado:', error);
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 

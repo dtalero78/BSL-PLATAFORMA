@@ -2508,50 +2508,38 @@ https://bsl-plataforma.com/nuevaorden1.html`,
 
         // Enviar link de certificado por WhatsApp rápido
         async function enviarWhatsAppRapido() {
-            if (!conversacionActualId || !conversacionActual) {
+            if (!conversacionActualId) {
                 alert('No hay conversación seleccionada');
-                return;
-            }
-
-            if (!conversacionActual.numero_cliente) {
-                alert('No se puede enviar: número de teléfono no disponible');
                 return;
             }
 
             try {
                 const token = Auth.getToken();
 
-                // Obtener el _id del paciente desde HistoriaClinica por celular
-                const res = await fetch(`/api/historia-clinica/celular/${conversacionActual.numero_cliente}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                // Feedback visual - deshabilitar botón temporalmente
+                const btn = document.getElementById('btnWhatsAppRapido');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '⏳';
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+                btn.style.pointerEvents = 'none';
 
-                if (!res.ok) throw new Error('No se encontró el paciente');
-
-                const data = await res.json();
-                const pacienteId = data._id;
-
-                // Construir link de solicitar certificado
-                const link = `https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${pacienteId}`;
-
-                // Enviar mensaje por WhatsApp
-                const enviarRes = await fetch(`/api/admin/whatsapp/conversaciones/${conversacionActualId}/mensajes`, {
+                // Enviar mediante el nuevo endpoint que maneja todo el proceso
+                const response = await fetch('/api/enviar-certificado-whatsapp', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({
-                        contenido: `Hola, puedes solicitar tu certificado médico aquí:\n\n${link}\n\n_BSL - Salud Ocupacional_`
+                        conversacionId: conversacionActualId
                     })
                 });
 
-                const resultado = await enviarRes.json();
+                const resultado = await response.json();
 
-                if (enviarRes.ok) {
-                    // Feedback visual temporal
-                    const btn = document.getElementById('btnWhatsAppRapido');
-                    const originalHTML = btn.innerHTML;
+                if (resultado.success) {
+                    // Mostrar éxito
                     btn.innerHTML = '✓';
                     btn.style.background = '#25D366';
                     btn.style.color = 'white';
@@ -2560,22 +2548,40 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                         btn.innerHTML = originalHTML;
                         btn.style.background = 'white';
                         btn.style.color = '#25D366';
+                        btn.style.opacity = '1';
+                        btn.style.pointerEvents = 'auto';
+                        btn.disabled = false;
                     }, 2000);
 
-                    // Recargar mensajes
+                    // Recargar mensajes para mostrar el enviado
                     await cargarMensajes(conversacionActualId, false);
-
-                    // Pequeño delay para asegurar que el backend procesó el mensaje
                     await new Promise(resolve => setTimeout(resolve, 300));
-
                     await cargarConversaciones(true);
                 } else {
-                    alert('Error al enviar mensaje: ' + (resultado.message || 'Desconocido'));
+                    // Mostrar error
+                    alert('Error: ' + (resultado.message || 'No se pudo enviar el mensaje'));
+                    btn.innerHTML = originalHTML;
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                    btn.disabled = false;
                 }
 
             } catch (error) {
                 console.error('Error enviando WhatsApp rápido:', error);
-                alert('Error al enviar mensaje por WhatsApp');
+                alert('Error al enviar mensaje por WhatsApp. Intenta de nuevo.');
+
+                // Restaurar botón
+                const btn = document.getElementById('btnWhatsAppRapido');
+                btn.innerHTML = btn.innerHTML.replace('⏳', '');
+                if (!btn.innerHTML.includes('<svg')) {
+                    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>`;
+                }
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+                btn.disabled = false;
             }
         }
 
