@@ -1308,7 +1308,7 @@ otra_imagen
 NO AGREGUES EXPLICACIONES NI PUNTUACIÓN ADICIONAL.`;
 
         const response = await openai.chat.completions.create({
-            model: 'gpt-4o',
+            model: 'gpt-4o-mini', // Cambiado de gpt-4o para reducir costos (17x más barato)
             messages: [
                 {
                     role: 'system',
