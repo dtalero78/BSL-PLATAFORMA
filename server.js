@@ -28,18 +28,16 @@ const openai = new OpenAI({
 // System prompt para el bot de WhatsApp
 const systemPromptBot = `Eres el asistente virtual de BSL para exámenes médicos ocupacionales en Colombia.
 
-🎯 TU PROPÓSITO:
-Ayudar a usuarios a agendar exámenes médicos ocupacionales de forma clara y eficiente.
+🎯 TU ÚNICO TRABAJO:
+Responder preguntas sobre servicios, precios y proceso de agendamiento usando SOLO la información que tienes abajo.
 
-🚨 TRANSFERIR A ASESOR:
-Si no entiendes algo, hay problemas técnicos, o el usuario lo solicita, responde EXACTAMENTE:
-"...transfiriendo con asesor"
+🚨 REGLAS ESTRICTAS:
+1. NUNCA inventes información
+2. NUNCA busques datos de pacientes (no tienes acceso)
+3. Si preguntan por su examen/certificado/pago → Responde: "...transfiriendo con asesor"
+4. Si no sabes algo → Responde: "...transfiriendo con asesor"
 
-⛔ TEMAS FUERA DE ALCANCE:
-Si preguntan temas personales, emocionales o NO relacionados con exámenes médicos:
-"Entiendo que es importante, pero solo puedo ayudarte con exámenes médicos ocupacionales. ¿Necesitas agendar un examen?"
-
-📋 SERVICIOS Y PRECIOS:
+📋 INFORMACIÓN QUE TIENES:
 
 **Exámenes Ocupacionales (Paquete Completo):**
 • Virtual: $52.000 COP
@@ -56,68 +54,65 @@ Si preguntan temas personales, emocionales o NO relacionados con exámenes médi
 
 **Exámenes extras opcionales:**
 • Cardiovascular, Vascular, Espirometría, Dermatológico: $10.000 c/u
-• Psicológico (también llamado Psicosocial o Perfil Psicológico): $23.000
+• Psicológico: $23.000
 • Perfil lipídico: $69.500
 • Glicemia: $23.100
 
 **Solicitud especial:**
-• Solo Visiometría y Optometría virtual (sin osteomuscular y audiometría): $23.000
-• NO se hace solo examen médico osteomuscular. SE HACE EL PAQUETE COMPLETO
+• Solo Visiometría y Optometría: $23.000
 
 **Medios de pago:**
-• Bancolombia: Ahorros 44291192456 (cédula 79981585)
+• Bancolombia: Ahorros 44291192456
 • Daviplata: 3014400818
 • Nequi: 3008021701
 • Transfiya
 
-📌 PROCESO:
-1. Usuario agenda en el link
+📌 PROCESO DE AGENDAMIENTO:
+1. Usuario agenda en el link de arriba
 2. Realiza pruebas virtuales (25 min)
 3. Consulta médica (10 min)
 4. Médico revisa y aprueba certificado
 5. Usuario paga y envía comprobante por WhatsApp
 6. Descarga certificado sin marca de agua
 
-⚠️ IMPORTANTE SOBRE CERTIFICADOS:
-- NO se envían automáticamente al correo
-- Primero se paga DESPUÉS de que el médico apruebe
-- El certificado se descarga desde link enviado por WhatsApp
+⚠️ IMPORTANTE:
+- Los certificados NO se envían por correo
+- Se paga DESPUÉS de que el médico apruebe
+- El certificado se descarga desde link por WhatsApp
 
 🎯 CÓMO RESPONDER:
 
 **Saludos:**
-- Si hay "Estado detallado" del paciente, saluda contextualmente según su estado
-- Si no hay info: "¡Hola! ¿En qué puedo ayudarte hoy?"
+"¡Hola! ¿En qué puedo ayudarte hoy? 😊"
 
-**Información general:**
-Muestra opciones: "🩺 Nuestras opciones:\nVirtual – $52.000 COP\nPresencial – $69.000 COP"
+**Preguntas sobre precios:**
+"🩺 Nuestras opciones:
+• Virtual – $52.000 COP
+• Presencial – $69.000 COP
 
-**🔍 SOLICITUDES DE CERTIFICADOS ANTIGUOS:**
-Si el usuario pregunta por exámenes que ya hizo en el pasado:
-- "exámenes que me hice", "que me realicé", "del año 2023", "del año pasado"
-- "necesito mis resultados anteriores", "certificados viejos", "del 2024"
+¿Cuál te interesa?"
 
-→ NO ofrecer agendamiento nuevo
-→ Responder: "Para consultar exámenes anteriores, por favor comunícate con nuestro equipo. ¿Deseas hablar con un asesor?"
-→ Si el usuario confirma, responde: "...transfiriendo con asesor"
+**Preguntas sobre su examen/certificado/pago:**
+"Para consultar tu examen o certificado, necesito transferirte con un asesor que pueda verificar tu información. ¿Te parece?"
 
-**Consulta por pago/certificado:**
-Para consultas sobre pagos, certificados o estado de exámenes, ofrece transferir con un asesor que pueda verificar la información en el sistema.
+**Si dicen SÍ:**
+"...transfiriendo con asesor"
+
+**Exámenes antiguos (del año pasado, 2023, etc.):**
+"Para consultar exámenes anteriores, por favor comunícate con nuestro equipo. ¿Deseas hablar con un asesor?"
 
 **Menú:**
-Si usuario dice "menú" o "volver al menú", responde EXACTAMENTE: "VOLVER_AL_MENU"
+Si dice "menú", responde: "VOLVER_AL_MENU"
 
-**Datos Legales (si preguntan):**
+**Datos Legales:**
 NIT: 900.844.030-8
 LICENCIA: Resolución No 64 de 10/01/2017
-CÓDIGO PRESTADOR REPS: 1100130342
-DISTINTIVO: DHSS0244914
-Consulta en: https://prestadores.minsalud.gov.co/habilitacion/
+CÓDIGO PRESTADOR: 1100130342
 
-📝 REGLAS DE FORMATO:
-- Respuestas cortas y claras
-- NO uses formato markdown para URLs (escribe URLs en texto plano)
-- NO repitas información que ya diste
+📝 FORMATO:
+- Respuestas cortas y directas
+- URLs en texto plano (sin markdown)
+- NO repitas información
 - Mantén el contexto de la conversación
 `;
 
@@ -391,50 +386,18 @@ async function recuperarMensajesBot(poolRef, conversacionId, limite = 10) {
  * @param {string} contextoPaciente - Contexto del paciente
  * @returns {Promise<string>} - Respuesta del bot
  */
-async function getAIResponseBot(poolRef, userMessage, conversationHistory = [], contextoPaciente = '') {
+async function getAIResponseBot(conversationHistory = []) {
     try {
-        // DESHABILITADO: Ya no detectamos ni buscamos por documento automáticamente
-        // const documentoDetectado = detectarDocumentoEnMensaje(userMessage);
-        // let contextoDocumento = '';
-        // if (documentoDetectado) {
-        //     contextoDocumento = await buscarPacientePorDocumentoBot(poolRef, documentoDetectado);
-        // }
-        let contextoDocumento = '';
-
-        // Buscar respuestas similares previas (RAG)
-        let contextoRAG = '';
-        try {
-            const resultadosRAG = await buscarRespuestasSimilaresRAG(poolRef, userMessage, {
-                limite: 5,
-                umbralSimilitud: 0.70,
-                pesoAdmin: 2.0
-            });
-
-            if (resultadosRAG.length > 0) {
-                contextoRAG = formatearContextoRAG(resultadosRAG);
-                console.log(`🧠 RAG: Agregando ${resultadosRAG.length} respuestas VERIFICADAS al contexto`);
-            }
-        } catch (ragError) {
-            console.error('⚠️ RAG: Error (continuando sin RAG):', ragError.message);
-        }
-
-        // Construir system prompt enriquecido (solo con RAG, sin contexto de citas)
-        let systemPromptEnriquecido = systemPromptBot;
-        if (contextoRAG) {
-            systemPromptEnriquecido += contextoRAG;
-        }
-
         const messages = [
-            { role: 'system', content: systemPromptEnriquecido },
-            ...conversationHistory,
-            { role: 'user', content: userMessage }
+            { role: 'system', content: systemPromptBot }, // Solo el prompt base
+            ...conversationHistory
         ];
 
         const completion = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages: messages,
-            temperature: 0.7,
-            max_tokens: 500,
+            temperature: 0.5,  // Más bajo = más consistente
+            max_tokens: 300,   // Más bajo = respuestas más cortas
         });
 
         return completion.choices[0].message.content;
@@ -448,6 +411,12 @@ async function getAIResponseBot(poolRef, userMessage, conversationHistory = [], 
 const estadoPagos = new Map();
 const ESTADO_CONFIRMAR_PAGO = 'confirmar_pago';
 const ESTADO_ESPERANDO_DOCUMENTO = 'esperando_documento';
+
+// NUEVO: Estado global de modos de conversación
+const estadoConversacion = new Map();
+const MODO_BOT = 'modo_bot';           // Bot conversacional activo
+const MODO_PAGO = 'modo_pago';         // Flujo de pago activo
+const MODO_HUMANO = 'modo_humano';     // Asesor humano atendiendo
 
 const app = express();
 const server = http.createServer(app);
@@ -1273,6 +1242,9 @@ async function procesarFlujoPagos(message, from) {
 
             // Router de clasificación
             if (clasificacion === 'comprobante_pago') {
+                // ACTIVAR MODO_PAGO - el bot conversacional se bloqueará
+                estadoConversacion.set(from, MODO_PAGO);
+
                 // NUEVO: Preguntar primero si desea registrar el pago
                 await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
                     '💳 ¿Deseas registrar un pago con este comprobante?\n\nResponde *SÍ* para continuar o cualquier otra cosa para cancelar.');
@@ -1281,6 +1253,8 @@ async function procesarFlujoPagos(message, from) {
                     estado: ESTADO_CONFIRMAR_PAGO,
                     timestamp: Date.now()
                 });
+
+                console.log(`💳 MODO_PAGO activado para ${from.replace('whatsapp:', '')} - Bot conversacional BLOQUEADO`);
                 return 'Solicitando confirmación de pago';
             }
             else {
@@ -1308,8 +1282,10 @@ async function procesarFlujoPagos(message, from) {
             } else {
                 // Usuario cancela
                 estadoPagos.delete(from);
+                estadoConversacion.set(from, MODO_BOT); // Volver a modo bot
                 await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
                     '✅ Entendido. No se registrará ningún pago.');
+                console.log(`🤖 MODO_BOT restaurado para ${from.replace('whatsapp:', '')} - Pago cancelado`);
                 return 'Pago cancelado por usuario';
             }
         }
@@ -1337,8 +1313,10 @@ async function procesarFlujoPagos(message, from) {
 
             if (pacienteExiste.rows.length === 0) {
                 estadoPagos.delete(from);
+                estadoConversacion.set(from, MODO_BOT); // Volver a modo bot
                 await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
                     `❌ No encontramos ningún paciente con cédula ${documento} en nuestro sistema.\n\n¿Deseas agendar un examen? Escribe "agendar" para comenzar.`);
+                console.log(`🤖 MODO_BOT restaurado para ${from.replace('whatsapp:', '')} - Documento no encontrado`);
                 return 'Documento no encontrado';
             }
 
@@ -1347,9 +1325,11 @@ async function procesarFlujoPagos(message, from) {
             // NUEVO: Validar que ya fue atendido (no está PENDIENTE)
             if (paciente.atendido === 'PENDIENTE') {
                 estadoPagos.delete(from);
+                estadoConversacion.set(from, MODO_BOT); // Volver a modo bot
                 const nombre = `${paciente.primerNombre || ''} ${paciente.primerApellido || ''}`.trim();
                 await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
                     `⚠️ ${nombre}, tu examen aún no ha sido realizado.\n\nEl pago solo se registra después del examen. Por favor completa tu cita primero.`);
+                console.log(`🤖 MODO_BOT restaurado para ${from.replace('whatsapp:', '')} - Paciente no atendido`);
                 return 'Paciente no atendido';
             }
 
@@ -1370,6 +1350,7 @@ async function procesarFlujoPagos(message, from) {
 
                 // Limpiar estado
                 estadoPagos.delete(from);
+                estadoConversacion.set(from, MODO_HUMANO); // Cambiar a modo humano (bot desactivado)
 
                 // Detener bot
                 await pool.query(`
@@ -1389,7 +1370,7 @@ async function procesarFlujoPagos(message, from) {
                     AND m.leido_por_agente = false
                 `, [from.replace('whatsapp:', '')]);
 
-                console.log(`✅ Pago procesado exitosamente para ${documento} - Conversación marcada como leída`);
+                console.log(`✅ Pago procesado exitosamente para ${documento} - MODO_HUMANO activado (bot desactivado)`);
                 return 'Pago confirmado';
             } else {
                 // No se encontró el registro
@@ -1398,6 +1379,8 @@ async function procesarFlujoPagos(message, from) {
 
                 // Limpiar estado
                 estadoPagos.delete(from);
+                estadoConversacion.set(from, MODO_BOT); // Volver a modo bot
+                console.log(`🤖 MODO_BOT restaurado para ${from.replace('whatsapp:', '')} - Documento no encontrado en BD`);
                 return 'Documento no encontrado';
             }
         }
@@ -1417,6 +1400,8 @@ async function procesarFlujoPagos(message, from) {
 
         // Limpiar estado en caso de error
         estadoPagos.delete(from);
+        estadoConversacion.set(from, MODO_BOT); // Volver a modo bot en caso de error
+        console.log(`🤖 MODO_BOT restaurado para ${from.replace('whatsapp:', '')} - Error en flujo de pagos`);
 
         return 'Error en flujo de pagos';
     }
@@ -4453,6 +4438,17 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
         // 🤖 SISTEMA DE BOT CON IA - Respuestas automáticas cuando stopBot = false
         if (Body && numMedia === 0) {
             try {
+                // NUEVO: Verificar el modo de conversación actual
+                const modoActual = estadoConversacion.get(From) || MODO_BOT;
+
+                console.log(`🤖 Bot check para ${numeroCliente}: modo=${modoActual}`);
+
+                // REGLA 1: Si está en MODO_PAGO, NO responder con bot (ya procesado en procesarFlujoPagos)
+                if (modoActual === MODO_PAGO) {
+                    console.log(`💳 MODO_PAGO activo para ${numeroCliente} - Bot BLOQUEADO`);
+                    return res.status(200).send('OK');
+                }
+
                 // Verificar si el bot debe responder
                 const convData = await pool.query(`
                     SELECT "stopBot", bot_activo FROM conversaciones_whatsapp
@@ -4461,9 +4457,14 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
 
                 const stopBot = convData.rows[0]?.stopBot || false;
 
-                console.log(`🤖 Bot check para ${numeroCliente}: stopBot=${stopBot}`);
+                // REGLA 2: Si stopBot = true o MODO_HUMANO, NO responder con bot
+                if (stopBot || modoActual === MODO_HUMANO) {
+                    console.log(`👤 MODO_HUMANO o stopBot=true para ${numeroCliente} - Bot bloqueado`);
+                    return res.status(200).send('OK');
+                }
 
-                if (!stopBot) {
+                // REGLA 3: Solo si está en MODO_BOT, responder con IA
+                if (modoActual === MODO_BOT && !stopBot) {
                     // 🚫 Verificar si el paciente pertenece a una empresa diferente a SANITHELP-JJ
                     const celularLimpio = numeroCliente.replace(/\D/g, '').replace(/^57/, '');
                     const celularCon57 = '57' + celularLimpio;
@@ -4495,20 +4496,25 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
                     // Recuperar historial de mensajes
                     const historial = await recuperarMensajesBot(pool, conversacionId, 10);
 
-                    // Generar respuesta con OpenAI + RAG (sin contexto de cita)
-                    const respuestaBot = await getAIResponseBot(pool, Body, historial, '');
+                    // Agregar mensaje del usuario al historial
+                    historial.push({ role: 'user', content: Body });
+
+                    // Generar respuesta con OpenAI (solo prompt base + historial)
+                    const respuestaBot = await getAIResponseBot(historial);
 
                     console.log(`🤖 Respuesta del bot: ${respuestaBot.substring(0, 100)}...`);
 
                     // Verificar comandos especiales en la respuesta
                     if (respuestaBot.includes('...transfiriendo con asesor')) {
-                        // Activar stopBot para transferir a humano
+                        // Cambiar a MODO_HUMANO y activar stopBot
+                        estadoConversacion.set(From, MODO_HUMANO);
+
                         await pool.query(`
                             UPDATE conversaciones_whatsapp
                             SET "stopBot" = true, bot_activo = false
                             WHERE id = $1
                         `, [conversacionId]);
-                        console.log(`🛑 Bot auto-detenido para ${numeroCliente} (transferencia a asesor)`);
+                        console.log(`🛑 Bot auto-detenido para ${numeroCliente} (transferencia a asesor) - MODO_HUMANO activado`);
                     }
 
                     // Enviar respuesta por Twilio (solo si no es comando especial interno)
