@@ -34,8 +34,9 @@ Responder preguntas sobre servicios, precios y proceso de agendamiento usando SO
 🚨 REGLAS ESTRICTAS:
 1. NUNCA inventes información
 2. NUNCA busques datos de pacientes (no tienes acceso)
-3. Si preguntan por su examen/certificado/pago → Responde: "...transfiriendo con asesor"
-4. Si no sabes algo → Responde: "...transfiriendo con asesor"
+3. NUNCA menciones citas, horas, fechas o confirmaciones (no tienes esa información)
+4. Si preguntan por su examen/certificado/pago/cita → Responde: "...transfiriendo con asesor"
+5. Si no sabes algo → Responde: "...transfiriendo con asesor"
 
 📋 INFORMACIÓN QUE TIENES:
 
@@ -4144,6 +4145,8 @@ app.post('/api/admin/whatsapp/conversaciones/:id/mensajes', authMiddleware, requ
             });
         }
 
+        // OPTIMIZACIÓN: Incluir datos actualizados en respuesta para evitar peticiones adicionales
+        const ahora = new Date();
         res.json({
             success: true,
             mensaje: {
@@ -4152,7 +4155,17 @@ app.post('/api/admin/whatsapp/conversaciones/:id/mensajes', authMiddleware, requ
                 direccion: 'saliente',
                 sid_twilio: twilioResult.sid,
                 tipo_mensaje: 'text',
-                timestamp: new Date()
+                timestamp: ahora,
+                fecha_envio: ahora
+            },
+            conversacion_actualizada: {
+                id: parseInt(id),
+                fecha_ultima_actividad: ahora,
+                ultimo_mensaje: {
+                    contenido: contenido,
+                    direccion: 'saliente',
+                    fecha_envio: ahora
+                }
             },
             twilio: twilioResult
         });
