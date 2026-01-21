@@ -1231,36 +1231,79 @@ async function procesarFlujoPagos(message, from) {
             console.log(`⬇️ [PASO 1/4] URL: ${mediaUrl}`);
 
             let imageResponse;
-            try {
-                imageResponse = await axios.get(mediaUrl, {
-                    auth: {
-                        username: accountSid,
-                        password: authToken
-                    },
-                    responseType: 'arraybuffer',
-                    timeout: 60000
-                });
-            } catch (downloadError) {
-                console.error(`❌ [PASO 1/4] Error descargando imagen:`, downloadError.message);
-                console.error(`❌ [PASO 1/4] Status: ${downloadError.response?.status}`);
+            let lastError;
+            const maxRetries = 3;
+            const retryDelays = [1000, 2000, 3000]; // 1s, 2s, 3s
 
-                if (downloadError.response?.status === 404) {
-                    // Error 404: La imagen no está disponible en Twilio (expiró o URL inválida)
+            // Intentar descargar con reintentos (para cuando Twilio aún está procesando)
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    if (attempt > 0) {
+                        console.log(`⏳ [PASO 1/4] Reintento ${attempt + 1}/${maxRetries} después de ${retryDelays[attempt - 1]}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, retryDelays[attempt - 1]));
+                    }
+
+                    imageResponse = await axios.get(mediaUrl, {
+                        auth: {
+                            username: accountSid,
+                            password: authToken
+                        },
+                        responseType: 'arraybuffer',
+                        timeout: 60000
+                    });
+
+                    // Si llegamos aquí, la descarga fue exitosa
+                    break;
+                } catch (downloadError) {
+                    lastError = downloadError;
+                    console.error(`❌ [PASO 1/4] Intento ${attempt + 1}/${maxRetries} falló:`, downloadError.message);
+                    console.error(`❌ [PASO 1/4] Status: ${downloadError.response?.status}`);
+
+                    // Si es 404, vale la pena reintentar (Twilio puede estar procesando)
+                    if (downloadError.response?.status === 404 && attempt < maxRetries - 1) {
+                        console.log(`⏳ [PASO 1/4] 404 detectado - Twilio puede estar procesando la imagen, reintentando...`);
+                        continue;
+                    }
+
+                    // Si es timeout o no es 404, no reintentar
+                    if (downloadError.code === 'ECONNABORTED' || downloadError.code === 'ETIMEDOUT') {
+                        break;
+                    }
+
+                    // Si es el último intento, romper el loop
+                    if (attempt === maxRetries - 1) {
+                        break;
+                    }
+                }
+            }
+
+            // Si después de todos los intentos no tenemos respuesta, manejar el error
+            if (!imageResponse) {
+                console.error(`❌ [PASO 1/4] Error después de ${maxRetries} intentos:`, lastError.message);
+
+                if (lastError.response?.status === 404) {
+                    // Error 404: La imagen no está disponible en Twilio después de reintentos
                     await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
-                        '⚠️ No pude acceder a la imagen que enviaste.\n\nPor favor:\n1. Envía el comprobante nuevamente\n2. O contacta a un asesor para registrar tu pago manualmente');
+                        '⚠️ No pude acceder a la imagen que enviaste después de varios intentos.\n\n' +
+                        'Posibles causas:\n' +
+                        '• La imagen aún se está procesando en WhatsApp\n' +
+                        '• Problema temporal con el servidor\n\n' +
+                        'Por favor:\n' +
+                        '1. Espera 30 segundos y envía el comprobante nuevamente\n' +
+                        '2. O contacta a un asesor para registrar tu pago manualmente');
 
-                    console.log(`❌ [PASO 1/4] Imagen no disponible (404) - URL expirada o inválida`);
+                    console.log(`❌ [PASO 1/4] Imagen no disponible (404) después de ${maxRetries} intentos`);
                     return 'Imagen no disponible en Twilio';
-                } else if (downloadError.code === 'ECONNABORTED' || downloadError.code === 'ETIMEDOUT') {
+                } else if (lastError.code === 'ECONNABORTED' || lastError.code === 'ETIMEDOUT') {
                     // Timeout
                     await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
                         '⏱️ La descarga de tu imagen tardó demasiado.\n\nPor favor envía una imagen más pequeña o contacta a un asesor.');
 
-                    console.log(`❌ [PASO 1/4] Timeout descargando imagen (${downloadError.code})`);
+                    console.log(`❌ [PASO 1/4] Timeout descargando imagen (${lastError.code})`);
                     return 'Timeout descargando imagen';
                 } else {
                     // Otro error de descarga
-                    throw downloadError; // Re-lanzar para que lo capture el catch general
+                    throw lastError; // Re-lanzar para que lo capture el catch general
                 }
             }
 
