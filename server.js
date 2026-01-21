@@ -1213,7 +1213,7 @@ async function procesarFlujoPagos(message, from) {
         const numMedia = parseInt(message.NumMedia) || 0;
         const estadoPago = estadoPagos.get(from);
 
-        console.log(`📸 Procesando flujo de pagos - Usuario: ${from}, Media: ${numMedia}, Estado: ${estadoPago}`);
+        console.log(`📸 Procesando flujo de pagos - Usuario: ${from}, Media: ${numMedia}, Estado: ${estadoPago ? estadoPago.estado : 'sin estado'}`);
 
         // Caso 1: Usuario envía IMAGEN (nueva)
         if (numMedia > 0) {
@@ -1221,12 +1221,13 @@ async function procesarFlujoPagos(message, from) {
             const mediaType = message.MediaContentType0 || 'image/jpeg';
 
             // Descargar imagen desde Twilio
-            console.log(`⬇️ Descargando imagen desde Twilio: ${mediaUrl}`);
+            console.log(`⬇️ [PASO 1/4] Descargando imagen desde Twilio: ${mediaUrl}`);
 
             const axios = require('axios');
             const accountSid = process.env.TWILIO_ACCOUNT_SID;
             const authToken = process.env.TWILIO_AUTH_TOKEN;
 
+            console.log(`⬇️ [PASO 1/4] Iniciando descarga con axios...`);
             const imageResponse = await axios.get(mediaUrl, {
                 auth: {
                     username: accountSid,
@@ -1236,17 +1237,23 @@ async function procesarFlujoPagos(message, from) {
                 timeout: 60000
             });
 
+            console.log(`✅ [PASO 1/4] Imagen descargada: ${(imageResponse.data.length / 1024).toFixed(1)} KB`);
+
             const base64Image = Buffer.from(imageResponse.data).toString('base64');
 
             // Clasificar imagen con OpenAI
+            console.log(`🔍 [PASO 2/4] Clasificando imagen con OpenAI...`);
             const clasificacion = await clasificarImagen(base64Image, mediaType);
+            console.log(`✅ [PASO 2/4] Clasificación completada: ${clasificacion}`);
 
             // Router de clasificación
+            console.log(`🔀 [PASO 3/4] Procesando clasificación: ${clasificacion}`);
             if (clasificacion === 'comprobante_pago') {
                 // ACTIVAR MODO_PAGO - el bot conversacional se bloqueará
                 estadoConversacion.set(from, MODO_PAGO);
 
                 // NUEVO: Preguntar primero si desea registrar el pago
+                console.log(`💬 [PASO 4/4] Enviando mensaje de confirmación...`);
                 await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
                     '💳 ¿Deseas registrar un pago con este comprobante?\n\nResponde *SÍ* para continuar o cualquier otra cosa para cancelar.');
 
@@ -1255,7 +1262,7 @@ async function procesarFlujoPagos(message, from) {
                     timestamp: Date.now()
                 });
 
-                console.log(`💳 MODO_PAGO activado para ${from.replace('whatsapp:', '')} - Bot conversacional BLOQUEADO`);
+                console.log(`✅ [PASO 4/4] MODO_PAGO activado para ${from.replace('whatsapp:', '')} - Bot conversacional BLOQUEADO`);
                 return 'Solicitando confirmación de pago';
             }
             else {
@@ -1268,10 +1275,12 @@ async function procesarFlujoPagos(message, from) {
 
         // Caso 2A: Usuario responde a confirmación de pago (SÍ/NO)
         if (messageText && estadoPago && estadoPago.estado === ESTADO_CONFIRMAR_PAGO) {
+            console.log(`💬 [CONFIRMAR_PAGO] Usuario respondió: "${messageText}"`);
             const respuesta = messageText.toLowerCase();
 
             if (respuesta === 'si' || respuesta === 'sí' || respuesta === 'yes') {
                 // Usuario confirma pago
+                console.log(`✅ [CONFIRMAR_PAGO] Usuario confirmó - solicitando documento`);
                 estadoPagos.set(from, {
                     estado: ESTADO_ESPERANDO_DOCUMENTO,
                     timestamp: Date.now()
@@ -1282,6 +1291,7 @@ async function procesarFlujoPagos(message, from) {
                 return 'Esperando documento después de confirmación';
             } else {
                 // Usuario cancela
+                console.log(`❌ [CONFIRMAR_PAGO] Usuario canceló el pago`);
                 estadoPagos.delete(from);
                 estadoConversacion.set(from, MODO_BOT); // Volver a modo bot
                 await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
@@ -1294,16 +1304,20 @@ async function procesarFlujoPagos(message, from) {
         // Caso 2B: Usuario envía TEXTO (documento) con flujo activo
         const estadoActivo = estadoPago && estadoPago.estado === ESTADO_ESPERANDO_DOCUMENTO;
         if (messageText && estadoActivo) {
+            console.log(`📝 [ESPERANDO_DOCUMENTO] Usuario envió: "${messageText}"`);
             const documento = messageText.trim();
 
             // Validar formato de documento
+            console.log(`🔍 [ESPERANDO_DOCUMENTO] Validando formato de documento...`);
             if (!esCedula(documento)) {
+                console.log(`❌ [ESPERANDO_DOCUMENTO] Formato de documento inválido`);
                 await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
                     'Por favor envía solo números, sin puntos ni guiones.\n\nEjemplo: 1234567890');
                 return 'Documento inválido';
             }
 
             // NUEVO: Validar que el paciente existe
+            console.log(`🔍 [ESPERANDO_DOCUMENTO] Buscando paciente con documento: ${documento}`);
             const pacienteExiste = await pool.query(
                 `SELECT _id, "primerNombre", "primerApellido", "numeroId", atendido
                  FROM "HistoriaClinica"
@@ -1311,6 +1325,7 @@ async function procesarFlujoPagos(message, from) {
                  LIMIT 1`,
                 [documento]
             );
+            console.log(`✅ [ESPERANDO_DOCUMENTO] Query completada: ${pacienteExiste.rows.length} resultados`);
 
             if (pacienteExiste.rows.length === 0) {
                 estadoPagos.delete(from);
@@ -1335,12 +1350,14 @@ async function procesarFlujoPagos(message, from) {
             }
 
             // Marcar como pagado en base de datos
-            console.log(`⏳ Procesando pago para documento: ${documento}`);
+            console.log(`⏳ [ESPERANDO_DOCUMENTO] Procesando pago para documento: ${documento}`);
 
             await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
                 `⏳ Procesando pago para ${paciente.primerNombre} ${paciente.primerApellido}...`);
 
+            console.log(`💾 [ESPERANDO_DOCUMENTO] Marcando como pagado en BD...`);
             const resultado = await marcarPagadoHistoriaClinica(documento);
+            console.log(`✅ [ESPERANDO_DOCUMENTO] Resultado de marcarPagadoHistoriaClinica: success=${resultado.success}`);
 
             if (resultado.success) {
                 const data = resultado.data;
@@ -1391,6 +1408,9 @@ async function procesarFlujoPagos(message, from) {
 
     } catch (error) {
         console.error('❌ Error en procesarFlujoPagos:', error);
+        console.error('❌ Error stack:', error.stack);
+        console.error('❌ Error name:', error.name);
+        console.error('❌ Error message:', error.message);
 
         try {
             await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
