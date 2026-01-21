@@ -4517,12 +4517,6 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
 
                 console.log(`🤖 Bot check para ${numeroCliente}: modo=${modoActual}`);
 
-                // REGLA 1: Si está en MODO_PAGO, NO responder con bot (ya procesado en procesarFlujoPagos)
-                if (modoActual === MODO_PAGO) {
-                    console.log(`💳 MODO_PAGO activo para ${numeroCliente} - Bot BLOQUEADO`);
-                    return res.status(200).send('OK');
-                }
-
                 // Verificar si el bot debe responder
                 const convData = await pool.query(`
                     SELECT "stopBot", bot_activo FROM conversaciones_whatsapp
@@ -4531,13 +4525,13 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
 
                 const stopBot = convData.rows[0]?.stopBot || false;
 
-                // REGLA 2: Si stopBot = true o MODO_HUMANO, NO responder con bot
-                if (stopBot || modoActual === MODO_HUMANO) {
-                    console.log(`👤 MODO_HUMANO o stopBot=true para ${numeroCliente} - Bot bloqueado`);
+                // REGLA 1: Si stopBot = true, MODO_HUMANO o MODO_PAGO, NO responder con bot
+                if (stopBot || modoActual === MODO_HUMANO || modoActual === MODO_PAGO) {
+                    console.log(`👤 Bot bloqueado para ${numeroCliente} - modo=${modoActual}, stopBot=${stopBot}`);
                     return res.status(200).send('OK');
                 }
 
-                // REGLA 3: Solo si está en MODO_BOT, responder con IA
+                // REGLA 2: Solo si está en MODO_BOT, responder con IA
                 if (modoActual === MODO_BOT && !stopBot) {
                     // 🚫 Verificar si el paciente pertenece a una empresa diferente a SANITHELP-JJ
                     const celularLimpio = numeroCliente.replace(/\D/g, '').replace(/^57/, '');
