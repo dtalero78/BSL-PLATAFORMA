@@ -1228,14 +1228,41 @@ async function procesarFlujoPagos(message, from) {
             const authToken = process.env.TWILIO_AUTH_TOKEN;
 
             console.log(`⬇️ [PASO 1/4] Iniciando descarga con axios...`);
-            const imageResponse = await axios.get(mediaUrl, {
-                auth: {
-                    username: accountSid,
-                    password: authToken
-                },
-                responseType: 'arraybuffer',
-                timeout: 60000
-            });
+            console.log(`⬇️ [PASO 1/4] URL: ${mediaUrl}`);
+
+            let imageResponse;
+            try {
+                imageResponse = await axios.get(mediaUrl, {
+                    auth: {
+                        username: accountSid,
+                        password: authToken
+                    },
+                    responseType: 'arraybuffer',
+                    timeout: 60000
+                });
+            } catch (downloadError) {
+                console.error(`❌ [PASO 1/4] Error descargando imagen:`, downloadError.message);
+                console.error(`❌ [PASO 1/4] Status: ${downloadError.response?.status}`);
+
+                if (downloadError.response?.status === 404) {
+                    // Error 404: La imagen no está disponible en Twilio (expiró o URL inválida)
+                    await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
+                        '⚠️ No pude acceder a la imagen que enviaste.\n\nPor favor:\n1. Envía el comprobante nuevamente\n2. O contacta a un asesor para registrar tu pago manualmente');
+
+                    console.log(`❌ [PASO 1/4] Imagen no disponible (404) - URL expirada o inválida`);
+                    return 'Imagen no disponible en Twilio';
+                } else if (downloadError.code === 'ECONNABORTED' || downloadError.code === 'ETIMEDOUT') {
+                    // Timeout
+                    await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
+                        '⏱️ La descarga de tu imagen tardó demasiado.\n\nPor favor envía una imagen más pequeña o contacta a un asesor.');
+
+                    console.log(`❌ [PASO 1/4] Timeout descargando imagen (${downloadError.code})`);
+                    return 'Timeout descargando imagen';
+                } else {
+                    // Otro error de descarga
+                    throw downloadError; // Re-lanzar para que lo capture el catch general
+                }
+            }
 
             console.log(`✅ [PASO 1/4] Imagen descargada: ${(imageResponse.data.length / 1024).toFixed(1)} KB`);
 
