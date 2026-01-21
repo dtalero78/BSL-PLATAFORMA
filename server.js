@@ -4343,8 +4343,9 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
     try {
         const { From, Body, MessageSid, ProfileName, NumMedia } = req.body;
 
-        // Extraer número sin prefijo whatsapp:
-        const numeroCliente = From.replace('whatsapp:', '');
+        // Extraer número sin prefijo whatsapp: y normalizar (quitar + si existe)
+        // IMPORTANTE: Normalizar para evitar duplicados (573XX vs +573XX)
+        const numeroCliente = From.replace('whatsapp:', '').replace('+', '');
 
         // Capturar archivos multimedia si existen
         const numMedia = parseInt(NumMedia) || 0;
