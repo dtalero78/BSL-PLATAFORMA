@@ -4343,8 +4343,8 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
     try {
         const { From, Body, MessageSid, ProfileName, NumMedia } = req.body;
 
-        // Extraer número sin prefijo whatsapp:
-        const numeroCliente = From.replace('whatsapp:', '');
+        // Extraer número sin prefijo whatsapp: y normalizar (quitar +)
+        const numeroCliente = From.replace('whatsapp:', '').replace('+', '');
 
         // Capturar archivos multimedia si existen
         const numMedia = parseInt(NumMedia) || 0;
@@ -6216,7 +6216,9 @@ app.post('/api/ordenes', async (req, res) => {
 
         // Gestionar registro en tabla conversaciones_whatsapp
         try {
-            const celularConPrefijo = `57${celular}`; // Agregar prefijo 57 a Colombia
+            // Normalizar celular: quitar + si existe, y asegurar formato 57XXXXXXXXXX
+            const celularNormalizado = celular.replace(/\+/g, '').replace(/^57/, '');
+            const celularConPrefijo = `57${celularNormalizado}`; // Agregar prefijo 57 a Colombia
             console.log('📱 Gestionando conversación WhatsApp para:', celularConPrefijo);
 
             // Verificar si ya existe un registro con ese celular
