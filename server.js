@@ -11909,6 +11909,27 @@ app.post('/api/enviar-link-prueba', async (req, res) => {
 
         console.log(`✅ Link de ${tipoPrueba} enviado a ${telefonoCompleto} para orden ${ordenId}`);
 
+        // Guardar mensaje en la base de datos para que aparezca en twilio-chat.html
+        try {
+            const contenidoMensaje = `📋 Link de ${nombrePrueba} enviado para ${nombreEmpresa}`;
+            const twilioSid = resultWhatsApp.sid || `template_${Date.now()}`;
+
+            await guardarMensajeSaliente(
+                telefonoCompleto,
+                contenidoMensaje,
+                twilioSid,
+                'template', // tipo de mensaje
+                null, // sin mediaUrl
+                null, // sin mediaType
+                nombreCompleto // nombre del paciente
+            );
+
+            console.log(`💾 Mensaje guardado en conversación para ${telefonoCompleto}`);
+        } catch (dbError) {
+            console.error('⚠️ Error al guardar mensaje en BD:', dbError.message);
+            // No bloqueamos la respuesta si falla el guardado
+        }
+
         res.json({
             success: true,
             message: `Link de ${nombrePrueba} enviado correctamente`,
