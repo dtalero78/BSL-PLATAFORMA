@@ -93,10 +93,19 @@ Responder preguntas sobre servicios, precios y proceso de agendamiento usando SO
 
 ¿Cuál te interesa?"
 
-**Preguntas sobre su examen/certificado/pago:**
-"Para consultar tu examen o certificado, necesito transferirte con un asesor que pueda verificar tu información. ¿Te parece?"
+**Preguntas sobre su examen/certificado/resultado/estado:**
+SIEMPRE busca información en el CONTEXTO DEL PACIENTE que se proporciona al final.
+- Si hay información de cita/examen: responde con los datos específicos (fecha, hora, estado)
+- Si el paciente está ATENDIDO: "Tu examen ya fue realizado. Puedes consultar tu certificado aquí: https://bsl-plataforma.com/consulta-orden.html"
+- Si el paciente está PENDIENTE con fecha: "Tu cita está programada para el [fecha] a las [hora]. El médico te contactará por este medio."
+- Si NO hay información en el contexto: "Déjame verificar tu información con un asesor. ¿Te parece?"
 
-**Si dicen SÍ:**
+**Preguntas sobre pago:**
+- Si ya pagó: "Tu pago ya está registrado ✅"
+- Si no ha pagado y está ATENDIDO: "Puedes pagar $52.000 y enviar el comprobante por acá. Datos: Bancolombia 44291192456, Daviplata 3014400818, Nequi 3008021701"
+- Si está PENDIENTE: "El pago se realiza DESPUÉS del examen médico"
+
+**Si dicen SÍ a hablar con asesor:**
 "...transfiriendo con asesor"
 
 **Exámenes antiguos (del año pasado, 2023, etc.):**
@@ -381,16 +390,21 @@ async function recuperarMensajesBot(poolRef, conversacionId, limite = 10) {
 // Ya no se busca información de citas automáticamente por celular o documento
 
 /**
- * Genera respuesta del bot usando OpenAI + RAG
- * @param {string} userMessage - Mensaje del usuario
+ * Genera respuesta del bot usando OpenAI con contexto del paciente
  * @param {Array} conversationHistory - Historial de conversación
- * @param {string} contextoPaciente - Contexto del paciente
+ * @param {string} contextoPaciente - Contexto del paciente (opcional)
  * @returns {Promise<string>} - Respuesta del bot
  */
-async function getAIResponseBot(conversationHistory = []) {
+async function getAIResponseBot(conversationHistory = [], contextoPaciente = '') {
     try {
+        // Construir prompt del sistema con contexto del paciente si existe
+        let systemContent = systemPromptBot;
+        if (contextoPaciente) {
+            systemContent += contextoPaciente;
+        }
+
         const messages = [
-            { role: 'system', content: systemPromptBot }, // Solo el prompt base
+            { role: 'system', content: systemContent },
             ...conversationHistory
         ];
 
@@ -4599,20 +4613,24 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
 
                 // REGLA 2: Solo si está en MODO_BOT, responder con IA
                 if (modoActual === MODO_BOT && !stopBot) {
-                    // 🚫 Verificar si el paciente pertenece a una empresa diferente a SANITHELP-JJ
+                    // 🚫 Verificar empresa Y obtener datos del paciente para contexto
                     const celularLimpio = numeroCliente.replace(/\D/g, '').replace(/^57/, '');
                     const celularCon57 = '57' + celularLimpio;
                     const celularConPlus = '+57' + celularLimpio;
 
-                    const empresaCheck = await pool.query(`
-                        SELECT "codEmpresa" FROM "HistoriaClinica"
+                    const pacienteData = await pool.query(`
+                        SELECT
+                            "codEmpresa",
+                            "primerNombre", "segundoNombre", "primerApellido", "segundoApellido",
+                            "fechaAtencion", "horaAtencion", "atendido", "pagado"
+                        FROM "HistoriaClinica"
                         WHERE "celular" IN ($1, $2, $3)
                         ORDER BY "_createdDate" DESC
                         LIMIT 1
                     `, [celularLimpio, celularCon57, celularConPlus]);
 
-                    if (empresaCheck.rows.length > 0) {
-                        const codEmpresa = empresaCheck.rows[0].codEmpresa;
+                    if (pacienteData.rows.length > 0) {
+                        const codEmpresa = pacienteData.rows[0].codEmpresa;
                         if (codEmpresa && codEmpresa !== 'SANITHELP-JJ') {
                             console.log(`🚫 Bot NO responde a ${numeroCliente} - Empresa: ${codEmpresa} (solo SANITHELP-JJ)`);
                             // Detener el bot para esta conversación
@@ -4627,14 +4645,42 @@ app.post('/api/whatsapp/webhook', async (req, res) => {
 
                     console.log(`🤖 Bot ACTIVO para ${numeroCliente} - Generando respuesta con IA`);
 
+                    // Construir contexto del paciente para el bot
+                    let contextoPaciente = '';
+                    if (pacienteData.rows.length > 0) {
+                        const p = pacienteData.rows[0];
+                        const nombreCompleto = `${p.primerNombre || ''} ${p.segundoNombre || ''} ${p.primerApellido || ''} ${p.segundoApellido || ''}`.trim();
+
+                        contextoPaciente = `\n\n📋 CONTEXTO DEL PACIENTE:\n`;
+                        contextoPaciente += `Nombre: ${nombreCompleto}\n`;
+
+                        if (p.fechaAtencion) {
+                            const fecha = new Date(p.fechaAtencion);
+                            const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Bogota' };
+                            const fechaFormateada = fecha.toLocaleDateString('es-CO', opciones);
+                            contextoPaciente += `Fecha de cita: ${fechaFormateada}\n`;
+
+                            if (p.horaAtencion) {
+                                contextoPaciente += `Hora de cita: ${p.horaAtencion}\n`;
+                            }
+                        }
+
+                        contextoPaciente += `Estado del examen: ${p.atendido || 'PENDIENTE'}\n`;
+                        contextoPaciente += `Estado de pago: ${p.pagado ? 'PAGADO ✅' : 'PENDIENTE'}\n`;
+
+                        if (p.atendido === 'ATENDIDO') {
+                            contextoPaciente += `Link de certificado: https://bsl-plataforma.com/consulta-orden.html\n`;
+                        }
+                    }
+
                     // Recuperar historial de mensajes
                     const historial = await recuperarMensajesBot(pool, conversacionId, 10);
 
                     // Agregar mensaje del usuario al historial
                     historial.push({ role: 'user', content: Body });
 
-                    // Generar respuesta con OpenAI (solo prompt base + historial)
-                    const respuestaBot = await getAIResponseBot(historial);
+                    // Generar respuesta con OpenAI (prompt base + contexto paciente + historial)
+                    const respuestaBot = await getAIResponseBot(historial, contextoPaciente);
 
                     console.log(`🤖 Respuesta del bot: ${respuestaBot.substring(0, 100)}...`);
 
