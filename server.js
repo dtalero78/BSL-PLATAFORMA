@@ -11830,9 +11830,9 @@ app.post('/api/enviar-link-prueba', async (req, res) => {
             return res.status(400).json({ success: false, message: 'ordenId y tipoPrueba son requeridos' });
         }
 
-        // Obtener datos del paciente
+        // Obtener datos del paciente incluyendo empresa
         const ordenResult = await pool.query(
-            'SELECT "primerNombre", "primerApellido", "celular", "numeroId" FROM "HistoriaClinica" WHERE "_id" = $1',
+            'SELECT "primerNombre", "primerApellido", "celular", "numeroId", "empresa", "codEmpresa" FROM "HistoriaClinica" WHERE "_id" = $1',
             [ordenId]
         );
 
@@ -11841,58 +11841,82 @@ app.post('/api/enviar-link-prueba', async (req, res) => {
         }
 
         const paciente = ordenResult.rows[0];
-        const primerNombre = paciente.primerNombre || 'Paciente';
+        const nombreCompleto = `${paciente.primerNombre || 'Paciente'} ${paciente.primerApellido || ''}`.trim();
         const celular = paciente.celular;
+        const nombreEmpresa = paciente.empresa || paciente.codEmpresa || 'BSL';
 
         if (!celular) {
             return res.status(400).json({ success: false, message: 'El paciente no tiene número de celular registrado' });
         }
 
-        // Limpiar número de teléfono
-        const telefonoLimpio = celular.replace(/\s+/g, '').replace(/[^0-9]/g, '');
-        const toNumber = telefonoLimpio.startsWith('57') ? telefonoLimpio : `57${telefonoLimpio}`;
+        // Normalizar teléfono a formato 57XXXXXXXXXX
+        const telefonoCompleto = normalizarTelefonoConPrefijo57(celular);
 
-        // Determinar URL según tipo de prueba
-        const baseUrl = 'https://bsl-plataforma.com';
-        let url = '';
+        if (!telefonoCompleto) {
+            return res.status(400).json({ success: false, message: 'Número de teléfono inválido' });
+        }
+
+        // Determinar template SID y nombre de prueba según tipo
+        let templateSid = '';
         let nombrePrueba = '';
 
         switch (tipoPrueba) {
             case 'formulario':
-                url = `${baseUrl}/?_id=${ordenId}`;
+                templateSid = 'HX2e0e080a03a13676a7ee377487dcd'; // link_formulario
                 nombrePrueba = 'Formulario Médico';
                 break;
             case 'adc':
-                url = `${baseUrl}/pruebas-adc.html?ordenId=${ordenId}`;
+                templateSid = 'HXf8ef26b43318e958fd0c319932e3b68'; // link_pruebas_adc
                 nombrePrueba = 'Pruebas Psicotécnicas ADC';
                 break;
             case 'audiometria':
-                url = `${baseUrl}/audiometria-virtual.html?ordenId=${ordenId}`;
+                templateSid = 'HX7e42d815979b97199f3bc9602520ce4a'; // link_audiometria
                 nombrePrueba = 'Audiometría Virtual';
                 break;
             case 'visiometria':
-                url = `${baseUrl}/visiometria-virtual.html?ordenId=${ordenId}`;
+                templateSid = 'HX932c80997c064594a79bfa03a4777e5'; // link_visuales
                 nombrePrueba = 'Prueba Visual';
                 break;
             default:
                 return res.status(400).json({ success: false, message: 'Tipo de prueba no válido' });
         }
 
-        // Construir mensaje
-        const mensaje = `Hola ${primerNombre}, te enviamos el enlace para completar tu *${nombrePrueba}*:\n\n${url}\n\n_BSL - Salud Ocupacional_`;
+        // Variables del template:
+        // {{1}} = Nombre completo del paciente
+        // {{2}} = ordenId (_id de la orden)
+        // {{3}} = Nombre de la empresa
+        const variables = {
+            "1": nombreCompleto,
+            "2": ordenId,
+            "3": nombreEmpresa
+        };
 
-        // Enviar mensaje por WhatsApp
-        await sendWhatsAppMessage(toNumber, mensaje);
+        // Enviar mensaje por WhatsApp usando template de Twilio
+        const resultWhatsApp = await sendWhatsAppMessage(
+            telefonoCompleto,
+            null, // No hay mensaje de texto libre
+            variables,
+            templateSid
+        );
 
-        console.log(`📱 Link de ${tipoPrueba} enviado a ${toNumber} para orden ${ordenId}`);
+        if (!resultWhatsApp.success) {
+            console.error(`⚠️ Error al enviar link de ${tipoPrueba}:`, resultWhatsApp.error);
+            return res.status(500).json({
+                success: false,
+                message: `No se pudo enviar el mensaje: ${resultWhatsApp.error}`
+            });
+        }
+
+        console.log(`✅ Link de ${tipoPrueba} enviado a ${telefonoCompleto} para orden ${ordenId}`);
 
         res.json({
             success: true,
             message: `Link de ${nombrePrueba} enviado correctamente`,
             enviado: {
-                telefono: toNumber,
+                telefono: telefonoCompleto,
                 prueba: tipoPrueba,
-                url: url
+                template: templateSid,
+                variables: variables
             }
         });
 
