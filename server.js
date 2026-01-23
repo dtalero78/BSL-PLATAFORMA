@@ -1408,7 +1408,7 @@ async function procesarFlujoPagos(message, from) {
                 const nombre = `${data.primerNombre || ''} ${data.primerApellido || ''}`.trim();
 
                 await sendWhatsAppFreeText(from.replace('whatsapp:', ''),
-                    `🎉 *¡Pago registrado exitosamente!*\n\n👤 ${nombre}\n📄 Documento: ${documento}\n\n✅ Tu pago ha sido validado. Puedes descargar tu certificado médico desde:\n\n🔗 https://bsl-plataforma.com/consulta-orden.html\n\nGracias por confiar en BSL.`);
+                    `🎉 *¡Pago registrado exitosamente!*\n\n👤 ${nombre}\n📄 Documento: ${documento}\n\n✅ Tu pago ha sido validado. Puedes descargar tu certificado médico desde:\n\n🔗 https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${paciente._id}\n\nGracias por confiar en BSL.`);
 
                 // Limpiar estado
                 estadoPagos.delete(from);
@@ -10557,22 +10557,6 @@ async function procesarRegistroNubia(registro) {
             `, [historiaId]);
 
             console.log(`✅ [procesarRegistroNubia] Marcado como ATENDIDO: ${primerNombre} ${primerApellido || ''} (ID: ${historiaId})`);
-
-            // Enviar mensaje de confirmación si tiene celular
-            if (celular) {
-                const telefonoLimpio = celular.replace(/\s+/g, '');
-                const toNumber = telefonoLimpio.startsWith('57') ? telefonoLimpio : `57${telefonoLimpio}`;
-
-                // Enviar mensaje de WhatsApp al paciente
-                const messageBody = `Hola ${primerNombre}, gracias por asistir a tu cita médico ocupacional. Puedes descargar tu certificado en el siguiente link: www.bsl.com.co/descargar`;
-
-                try {
-                    await sendWhatsAppMessage(toNumber, messageBody);
-                    console.log(`📱 [procesarRegistroNubia] Mensaje enviado a ${primerNombre} (${toNumber})`);
-                } catch (sendError) {
-                    console.error(`Error enviando mensaje a ${toNumber}:`, sendError);
-                }
-            }
         } catch (updateError) {
             console.error(`Error actualizando registro de NUBIA ${historiaId}:`, updateError);
         }
@@ -10718,7 +10702,7 @@ app.post('/api/nubia/atender/:id', async (req, res) => {
             const telefonoLimpio = paciente.celular.replace(/\s+/g, '').replace(/[^\d]/g, '');
             const toNumber = telefonoLimpio.startsWith('57') ? telefonoLimpio : `57${telefonoLimpio}`;
 
-            const mensaje = `👋 Hola ${paciente.primerNombre}. Te escribimos de BSL. 🏥 Tu certificado médico ya está listo. 📄\n\nRevísalo haciendo clic en este link: 👉 www.bsl.com.co/descargar`;
+            const mensaje = `👋 Hola ${paciente.primerNombre}. Te escribimos de BSL. 🏥 Tu certificado médico ya está listo. 📄\n\nRevísalo haciendo clic en este link: 👉 https://bsl-utilidades-yp78a.ondigitalocean.app/static/solicitar-certificado.html?id=${id}`;
 
             try {
                 // Usar sendWhatsAppFreeText para enviar texto libre (requiere ventana de 24h)
