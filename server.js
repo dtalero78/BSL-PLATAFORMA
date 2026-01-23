@@ -94,14 +94,10 @@ Responder preguntas sobre servicios, precios y proceso de agendamiento usando SO
 ¿Cuál te interesa?"
 
 **Preguntas sobre certificado o resultado de examen:**
-"Para consultar tu certificado o resultado, ingresa aquí con tu número de cédula: https://bsl-plataforma.com/consulta-orden.html
-
-Si necesitas ayuda con eso, puedo conectarte con un asesor."
+"Para consultar tu certificado o resultado, ingresa aquí con tu número de cédula: https://bsl-plataforma.com/consulta-orden.html"
 
 **Preguntas sobre estado de su cita/examen:**
-"Para verificar el estado de tu cita o examen, te recomiendo consultar en: https://bsl-plataforma.com/consulta-orden.html
-
-Si tienes alguna duda específica, ¿deseas hablar con un asesor?"
+"Para verificar el estado de tu cita o examen, te recomiendo consultar en: https://bsl-plataforma.com/consulta-orden.html"
 
 **Preguntas sobre pago:**
 "El pago se realiza DESPUÉS de que el médico revise y apruebe tu examen.
