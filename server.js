@@ -3987,7 +3987,8 @@ app.get('/api/admin/whatsapp/conversaciones', authMiddleware, requireAdmin, asyn
                         '^57',
                         ''
                     ) as celular_normalizado,
-                    "codEmpresa"
+                    "codEmpresa",
+                    atendido
                 FROM "HistoriaClinica"
                 WHERE "celular" IS NOT NULL
                   AND "celular" != ''
@@ -4018,7 +4019,8 @@ app.get('/api/admin/whatsapp/conversaciones', authMiddleware, requireAdmin, asyn
                 c."stopBot",
                 c.agente_asignado as agente_nombre,
                 lm.ultimo_mensaje,
-                cc."codEmpresa" as cod_empresa
+                cc."codEmpresa" as cod_empresa,
+                cc.atendido as estado_atencion
             FROM conversaciones_filtradas c
             LEFT JOIN unread_counts u ON u.conversacion_id = c.id
             LEFT JOIN last_messages lm ON lm.conversacion_id = c.id

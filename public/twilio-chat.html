@@ -409,6 +409,37 @@
             background: #FFE0B2;
         }
 
+        /* Tags de estado atendido/pendiente */
+        .tag-estado-atencion {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid;
+            transition: all 0.2s ease;
+        }
+
+        .tag-estado-atencion.atendido {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border-color: #A5D6A7;
+        }
+
+        .tag-estado-atencion.pendiente {
+            background: #FFF3E0;
+            color: #E65100;
+            border-color: #FFB74D;
+        }
+
+        .tag-estado-atencion.sin-datos {
+            background: #F5F5F5;
+            color: #757575;
+            border-color: #E0E0E0;
+        }
+
         /* Modal de edición */
         .modal-overlay {
             display: none;
@@ -1415,6 +1446,7 @@
                         <span class="whatsapp-chat-numero" id="chatNumero">+57 300 000 0000</span>
                         <div class="chat-tags-row">
                             <div id="chatEmpresaContainer"></div>
+                            <div id="chatEstadoAtencionContainer"></div>
                             <button id="btnWhatsAppRapido"
                                     class="btn-icono-whatsapp"
                                     onclick="enviarWhatsAppRapido()"
@@ -2199,6 +2231,37 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                         Sin empresa
                     </span>
                 `;
+            }
+
+            // Mostrar estado de atención (ATENDIDO/PENDIENTE)
+            const estadoAtencionContainer = document.getElementById('chatEstadoAtencionContainer');
+            if (conversacion.estado_atencion) {
+                const esAtendido = conversacion.estado_atencion === 'ATENDIDO';
+                const esPendiente = conversacion.estado_atencion === 'PENDIENTE';
+
+                if (esAtendido) {
+                    estadoAtencionContainer.innerHTML = `
+                        <span class="tag-estado-atencion atendido" title="Paciente atendido">
+                            ✓ ATENDIDO
+                        </span>
+                    `;
+                } else if (esPendiente) {
+                    estadoAtencionContainer.innerHTML = `
+                        <span class="tag-estado-atencion pendiente" title="Paciente pendiente de atención">
+                            ⏳ PENDIENTE
+                        </span>
+                    `;
+                } else {
+                    // Otros estados
+                    estadoAtencionContainer.innerHTML = `
+                        <span class="tag-estado-atencion sin-datos" title="Estado: ${conversacion.estado_atencion}">
+                            ${conversacion.estado_atencion}
+                        </span>
+                    `;
+                }
+            } else {
+                // Sin datos de estado
+                estadoAtencionContainer.innerHTML = '';
             }
 
             // Actualizar estado del bot en el badge
