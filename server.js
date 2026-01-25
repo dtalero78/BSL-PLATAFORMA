@@ -4418,13 +4418,11 @@ app.get('/api/estadisticas/movimiento', authMiddleware, requireAdmin, async (req
             });
         }
 
-        // Convertir fechas a objetos Date y ajustar horas
-        const fechaInicialDate = new Date(fechaInicial);
-        const fechaFinalDate = new Date(fechaFinal);
-        fechaInicialDate.setHours(0, 0, 0, 0);
-        fechaFinalDate.setHours(23, 59, 59, 999);
+        // Convertir fechas a strings en formato SQL (sin conversión UTC)
+        const fechaInicialStr = `${fechaInicial} 00:00:00`;
+        const fechaFinalStr = `${fechaFinal} 23:59:59`;
 
-        console.log(`📊 Generando estadísticas de movimiento: ${fechaInicialDate.toISOString()} - ${fechaFinalDate.toISOString()}`);
+        console.log(`📊 Generando estadísticas de movimiento: ${fechaInicialStr} - ${fechaFinalStr}`);
 
         // Consultas de conteo en paralelo
         const [
@@ -4439,7 +4437,7 @@ app.get('/api/estadisticas/movimiento', authMiddleware, requireAdmin, async (req
                 SELECT COUNT(*) as count
                 FROM "HistoriaClinica"
                 WHERE "fechaAtencion" BETWEEN $1 AND $2
-            `, [fechaInicialDate, fechaFinalDate]),
+            `, [fechaInicialStr, fechaFinalStr]),
 
             // Presenciales atendidos (con fechaConsulta Y atendido = 'ATENDIDO')
             pool.query(`
@@ -4448,7 +4446,7 @@ app.get('/api/estadisticas/movimiento', authMiddleware, requireAdmin, async (req
                 WHERE "medico" = 'PRESENCIAL'
                 AND "fechaConsulta" BETWEEN $1 AND $2
                 AND ("atendido" = 'ATENDIDO' OR "fechaConsulta" IS NOT NULL)
-            `, [fechaInicialDate, fechaFinalDate]),
+            `, [fechaInicialStr, fechaFinalStr]),
 
             // Virtuales atendidos (con fechaConsulta Y atendido = 'ATENDIDO')
             pool.query(`
@@ -4458,7 +4456,7 @@ app.get('/api/estadisticas/movimiento', authMiddleware, requireAdmin, async (req
                 AND "medico" IS NOT NULL
                 AND "fechaConsulta" BETWEEN $1 AND $2
                 AND ("atendido" = 'ATENDIDO' OR "fechaConsulta" IS NOT NULL)
-            `, [fechaInicialDate, fechaFinalDate]),
+            `, [fechaInicialStr, fechaFinalStr]),
 
             // Total atendidos (con fechaConsulta Y atendido = 'ATENDIDO')
             pool.query(`
@@ -4466,7 +4464,7 @@ app.get('/api/estadisticas/movimiento', authMiddleware, requireAdmin, async (req
                 FROM "HistoriaClinica"
                 WHERE "fechaConsulta" BETWEEN $1 AND $2
                 AND ("atendido" = 'ATENDIDO' OR "fechaConsulta" IS NOT NULL)
-            `, [fechaInicialDate, fechaFinalDate]),
+            `, [fechaInicialStr, fechaFinalStr]),
 
             // Sin atender (sin fechaConsulta O atendido = 'PENDIENTE')
             pool.query(`
@@ -4474,7 +4472,7 @@ app.get('/api/estadisticas/movimiento', authMiddleware, requireAdmin, async (req
                 FROM "HistoriaClinica"
                 WHERE "fechaAtencion" BETWEEN $1 AND $2
                 AND ("fechaConsulta" IS NULL OR "atendido" = 'PENDIENTE')
-            `, [fechaInicialDate, fechaFinalDate])
+            `, [fechaInicialStr, fechaFinalStr])
         ]);
 
         // Obtener todos los registros atendidos para análisis detallado
@@ -4491,7 +4489,7 @@ app.get('/api/estadisticas/movimiento', authMiddleware, requireAdmin, async (req
             WHERE "fechaConsulta" BETWEEN $1 AND $2
             AND ("atendido" = 'ATENDIDO' OR "fechaConsulta" IS NOT NULL)
             ORDER BY "fechaConsulta" DESC
-        `, [fechaInicialDate, fechaFinalDate]);
+        `, [fechaInicialStr, fechaFinalStr]);
 
         // Procesar conteo por empresa
         const conteoPorEmpresa = {};
@@ -4537,7 +4535,7 @@ app.get('/api/estadisticas/movimiento', authMiddleware, requireAdmin, async (req
             AND "fechaConsulta" IS NOT NULL
             AND "fechaConsulta" BETWEEN $1 AND $2
             AND ("atendido" = 'ATENDIDO' OR "fechaConsulta" IS NOT NULL)
-        `, [fechaInicialDate, fechaFinalDate]);
+        `, [fechaInicialStr, fechaFinalStr]);
 
         let totalTiempoVirtual = 0;
         let contadorVirtual = 0;
