@@ -1445,7 +1445,6 @@
                         <span class="whatsapp-chat-numero" id="chatNumero">+57 300 000 0000</span>
                         <div class="chat-tags-row">
                             <div id="chatEmpresaContainer"></div>
-                            <div id="chatEstadoAtencionContainer"></div>
                             <button id="btnWhatsAppRapido"
                                     class="btn-icono-whatsapp"
                                     onclick="enviarWhatsAppRapido()"
@@ -2236,37 +2235,6 @@ https://bsl-plataforma.com/consulta-orden.html`
                         Sin empresa
                     </span>
                 `;
-            }
-
-            // Mostrar estado de atención (ATENDIDO/PENDIENTE)
-            const estadoAtencionContainer = document.getElementById('chatEstadoAtencionContainer');
-            if (conversacion.estado_atencion) {
-                const esAtendido = conversacion.estado_atencion === 'ATENDIDO';
-                const esPendiente = conversacion.estado_atencion === 'PENDIENTE';
-
-                if (esAtendido) {
-                    estadoAtencionContainer.innerHTML = `
-                        <span class="tag-estado-atencion atendido" title="Paciente atendido">
-                            ✓ ATENDIDO
-                        </span>
-                    `;
-                } else if (esPendiente) {
-                    estadoAtencionContainer.innerHTML = `
-                        <span class="tag-estado-atencion pendiente" title="Paciente pendiente de atención">
-                            ⏳ PENDIENTE
-                        </span>
-                    `;
-                } else {
-                    // Otros estados
-                    estadoAtencionContainer.innerHTML = `
-                        <span class="tag-estado-atencion sin-datos" title="Estado: ${conversacion.estado_atencion}">
-                            ${conversacion.estado_atencion}
-                        </span>
-                    `;
-                }
-            } else {
-                // Sin datos de estado
-                estadoAtencionContainer.innerHTML = '';
             }
 
             // Actualizar estado del bot en el badge
