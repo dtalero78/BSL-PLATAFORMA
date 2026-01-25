@@ -3284,6 +3284,9 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                 const isPagado = pacienteActualEdicion.pvEstado === 'Pagado';
                 actualizarTagPago(isPagado);
 
+                // Estado de atención en el modal
+                actualizarTagEstadoAtencionModal(pacienteActualEdicion.atendido);
+
                 // Cargar exámenes
                 const examenesStr = pacienteActualEdicion.examenes || '';
                 examenesSeleccionados = examenesStr
@@ -3327,6 +3330,25 @@ https://bsl-plataforma.com/nuevaorden1.html`,
             const tag = document.getElementById('tagPago');
             const isPagado = tag.classList.contains('pagado');
             actualizarTagPago(!isPagado);
+        }
+
+        function actualizarTagEstadoAtencionModal(estadoAtencion) {
+            const tag = document.getElementById('tagEstadoAtencionModal');
+            if (!tag) return;
+
+            if (estadoAtencion === 'ATENDIDO') {
+                tag.className = 'tag-estado-atencion atendido';
+                tag.textContent = '✓ ATENDIDO';
+            } else if (estadoAtencion === 'PENDIENTE') {
+                tag.className = 'tag-estado-atencion pendiente';
+                tag.textContent = '⏳ PENDIENTE';
+            } else if (estadoAtencion) {
+                tag.className = 'tag-estado-atencion sin-datos';
+                tag.textContent = estadoAtencion;
+            } else {
+                tag.className = 'tag-estado-atencion sin-datos';
+                tag.textContent = 'SIN DATOS';
+            }
         }
 
         function renderExamenesEdicion() {
@@ -3605,7 +3627,15 @@ https://bsl-plataforma.com/nuevaorden1.html`,
             <div class="modal-body">
                 <input type="hidden" id="edit-hc-id">
 
-                <div class="form-section-title">Datos Personales</div>
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <div class="form-section-title" style="margin: 0;">Datos Personales</div>
+                    <span id="tagPago" class="payment-tag no-pagado" onclick="togglePago()" style="cursor: pointer;">
+                        <span class="payment-dot"></span>NO PAGADO
+                    </span>
+                    <span id="tagEstadoAtencionModal" class="tag-estado-atencion sin-datos">
+                        SIN DATOS
+                    </span>
+                </div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">Primer Nombre</label>
@@ -3638,12 +3668,6 @@ https://bsl-plataforma.com/nuevaorden1.html`,
                     <div class="form-group">
                         <label class="form-label">Fecha de Nacimiento</label>
                         <input type="date" class="form-input" id="edit-fechaNacimiento">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Estado de Pago</label>
-                        <span id="tagPago" class="payment-tag no-pagado" onclick="togglePago()">
-                            <span class="payment-dot"></span>NO PAGADO
-                        </span>
                     </div>
                 </div>
 
