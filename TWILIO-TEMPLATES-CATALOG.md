@@ -78,11 +78,11 @@ Variable de entorno: TWILIO_TEMPLATE_RECORDATORIO_CITA
 
 **Uso**:
 - Recordatorio de cita médica virtual
-- Envío de link de consulta 10 minutos antes de la cita
+- Envío de link de consulta a la hora exacta de la cita
 
 **Mensaje**:
 ```
-Hola {nombre}, tu cita está próxima..
+Hola {nombre}, es la hora de tu cita.
 
 Comunícate ya haciendo clic en este link
 ```
@@ -260,9 +260,10 @@ https://console.twilio.com/us1/monitor/logs/sms?ContentSid=HX10034ddb435237059b7
 | 14 Ene 2026 | Template general configurado | HX10034ddb435237059b7115fdb7646da2 | Sistema |
 | 14 Ene 2026 | Template confirmación de proceso agregado | HX156f42644eaf38f9775d32e9ca39c73a | Daniel Talero |
 | 14 Ene 2026 | Template recordatorio de cita próxima agregado | HX46fddaf93f19f21d72720743b836d237 | Daniel Talero |
+| 25 Ene 2026 | Cambio en envío de link NUBIA: de 5-15 min antes a hora exacta | HX46fddaf93f19f21d72720743b836d237 | Daniel Talero |
 
 ---
 
-**Última actualización**: 14 Enero 2026
+**Última actualización**: 25 Enero 2026
 **Mantenido por**: Equipo BSL
 **Documento**: TWILIO-TEMPLATES-CATALOG.md

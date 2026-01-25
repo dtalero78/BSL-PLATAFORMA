@@ -10501,19 +10501,20 @@ app.delete('/api/examenes/:id', async (req, res) => {
 });
 
 // ==========================================
-// BARRIDO NUBIA - Enviar link médico virtual (5-15 min antes)
+// BARRIDO NUBIA - Enviar link médico virtual (a la hora exacta de la cita)
 // ==========================================
 async function barridoNubiaEnviarLink() {
     console.log("🔗 [barridoNubiaEnviarLink] Iniciando ejecución...");
     try {
         const ahora = new Date();
-        // Buscar citas que están entre 5 y 15 minutos en el futuro
+        // Buscar citas que están en una ventana de ±5 minutos alrededor de la hora actual
+        // Esto permite capturar citas cuya hora exacta coincide con "ahora"
+        const cincoMinAtras = new Date(ahora.getTime() - 5 * 60 * 1000);
         const cincoMinFuturo = new Date(ahora.getTime() + 5 * 60 * 1000);
-        const quinceMinFuturo = new Date(ahora.getTime() + 15 * 60 * 1000);
 
-        console.log(`📅 [barridoNubiaEnviarLink] Buscando citas de NUBIA entre ${cincoMinFuturo.toISOString()} y ${quinceMinFuturo.toISOString()}`);
+        console.log(`📅 [barridoNubiaEnviarLink] Buscando citas de NUBIA entre ${cincoMinAtras.toISOString()} y ${cincoMinFuturo.toISOString()}`);
 
-        // Busca registros con cita próxima que no tengan el recordatorio enviado
+        // Busca registros con cita en ventana actual que no tengan el recordatorio enviado
         const result = await pool.query(`
             SELECT * FROM "HistoriaClinica"
             WHERE "fechaAtencion" >= $1
@@ -10521,7 +10522,7 @@ async function barridoNubiaEnviarLink() {
               AND "medico" ILIKE '%NUBIA%'
               AND ("recordatorioLinkEnviado" IS NULL OR "recordatorioLinkEnviado" = false)
             LIMIT 20
-        `, [cincoMinFuturo.toISOString(), quinceMinFuturo.toISOString()]);
+        `, [cincoMinAtras.toISOString(), cincoMinFuturo.toISOString()]);
 
         console.log(`📊 [barridoNubiaEnviarLink] Registros encontrados: ${result.rows.length}`);
 
@@ -10545,7 +10546,7 @@ async function barridoNubiaEnviarLink() {
 
             // URL del formulario médico virtual
             const url = `https://sea-lion-app-qcttp.ondigitalocean.app/?_id=${historiaId}`;
-            const messageBody = `Hola ${primerNombre}, tu cita está próxima..\n\nComunícate ya haciendo clic en este link:\n\n${url}`;
+            const messageBody = `Hola ${primerNombre}, es la hora de tu cita.\n\nComunícate ya haciendo clic en este link:\n\n${url}`;
 
             try {
                 // Usar template específico de recordatorio de cita
@@ -13355,7 +13356,7 @@ app.get('/api/certificado-pdf/:id', async (req, res) => {
 cron.schedule('*/5 * * * *', async () => {
     console.log('⏰ [CRON] Ejecutando barrido NUBIA automático...');
     try {
-        // 1. Enviar link médico virtual a citas próximas (5-15 min antes)
+        // 1. Enviar link médico virtual a la hora exacta de la cita
         await barridoNubiaEnviarLink();
 
         // 2. Marcar como ATENDIDO citas que ya pasaron
