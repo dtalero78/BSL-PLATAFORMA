@@ -1522,14 +1522,18 @@
 
                 <!-- Botones de comandos rápidos -->
                 <div class="whatsapp-comandos-rapidos" id="comandosRapidos" style="display: none;">
+                    <!-- Info general -->
                     <button class="cmd-btn" onclick="enviarComandoRapido('/1')" title="Saludo">1</button>
                     <button class="cmd-btn" onclick="enviarComandoRapido('/2')" title="Instrucciones">2</button>
-                    <button class="cmd-btn" onclick="enviarComandoRapido('/8')" title="Consultar">8</button>
-                    <button class="cmd-btn" onclick="enviarComandoRapido('/c')" title="Datos pago">C</button>
                     <button class="cmd-btn" onclick="enviarComandoRapido('/p')" title="Precios">$</button>
-                    <button class="cmd-btn" onclick="enviarComandoInfoCita('/i')" title="Info de cita">🩺</button>
+
+                    <!-- Separador -->
+                    <span style="color: #cbd5e0; margin: 0 4px; font-size: 20px; user-select: none;">|</span>
+
+                    <!-- Acciones -->
                     <button class="cmd-btn" onclick="enviarComandoRapido('/l')" title="Nuevo examen">L</button>
-                    <button class="cmd-btn" onclick="enviarComandoRapido('/a')" title="Asesor">A</button>
+                    <button class="cmd-btn" onclick="enviarComandoInfoCita('/i')" title="Info de cita">🩺</button>
+                    <button class="cmd-btn" onclick="enviarComandoRapido('/c')" title="Datos pago">C</button>
                 </div>
 
                 <!-- Menú de plantillas -->
@@ -1615,12 +1619,10 @@
         const plantillasInfo = {
             '/1': { titulo: 'Saludo', descripcion: 'Mensaje de saludo simple' },
             '/2': { titulo: 'Instrucciones teleconsulta', descripcion: 'Guía completa para agendar' },
-            '/8': { titulo: 'Link consulta orden', descripcion: 'Enlace para consultar estado' },
-            '/c': { titulo: 'Datos de pago', descripcion: 'Información bancaria' },
             '/p': { titulo: 'Precios', descripcion: 'Opciones Virtual y Presencial' },
-            '/i': { titulo: 'Info de cita', descripcion: 'Información de la cita programada' },
             '/l': { titulo: 'Link nuevo examen', descripcion: 'Enlace para diligenciar examen' },
-            '/a': { titulo: 'Transferir asesor', descripcion: 'Transfiriendo a un asesor humano' }
+            '/i': { titulo: 'Info de cita', descripcion: 'Información de la cita programada' },
+            '/c': { titulo: 'Datos de pago', descripcion: 'Información bancaria' }
         };
 
         // Plantillas de mensajes rápidos
@@ -1641,25 +1643,19 @@ Paga después de la consulta usando Bancolombia, Nequi o Daviplata
 *Para comenzar:*
 
 https://bsl-plataforma.com/nuevaorden1.html`,
-            '/8': `Revisa acá:
+            '/p': `🩺 Nuestras opciones:
+• Virtual – $52.000 COP
+• Presencial – $69.000 COP`,
+            '/l': `La persona que va a hacer el examen debe diligenciar el siguiente link:
 
-https://bsl-plataforma.com/consulta-orden.html`,
+https://bsl-plataforma.com/nuevaorden1.html`,
             '/c': `Bancolombia Ahorros: 442 9119 2456
 Cédula: 79 981 585
 
 Daviplata: 3014400818
 Nequi: 3008021701
 
-Llave Breb: @talero585`,
-            '/p': `🩺 Nuestras opciones:
-• Virtual – $52.000 COP
-• Presencial – $69.000 COP
-
-¿Cuál te interesa?`,
-            '/l': `La persona que va a hacer el examen debe diligenciar el siguiente link:
-
-https://bsl-plataforma.com/nuevaorden1.html`,
-            '/a': '...transfiriendo con asesor'
+Llave Breb: @talero585`
         };
 
         // Inicializar
